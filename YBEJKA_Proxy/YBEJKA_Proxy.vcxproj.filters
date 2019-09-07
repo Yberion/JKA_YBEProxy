@@ -30,6 +30,12 @@
     <ClCompile Include="Proxy_SystemCalls.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="Proxy_Imports.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="Proxy_Wrappers.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Proxy_Header.h">

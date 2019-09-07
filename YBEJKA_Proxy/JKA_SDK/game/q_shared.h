@@ -574,7 +574,7 @@ typedef enum {
 
 
 
-typedef enum
+enum
 {
 	SABER_RED,
 	SABER_ORANGE,
@@ -587,7 +587,7 @@ typedef enum
 };
 typedef int saber_colors_t;
 
-typedef enum
+enum
 {
 	FP_FIRST = 0,//marker
 	FP_HEAL = 0,//instant
@@ -840,7 +840,7 @@ typedef struct
 } saberInfo_t;
 #define MAX_SABERS 2
 
-typedef enum
+enum
 {
 	FORCE_LEVEL_0,
 	FORCE_LEVEL_1,
@@ -964,7 +964,7 @@ enum sharedEIKMoveState
 };
 
 //material stuff needs to be shared
-typedef enum //# material_e
+enum //# material_e
 {
 	MAT_METAL = 0,	// scorched blue-grey metal
 	MAT_GLASS,		// not a real chunk type, just plays an effect with glass sprites
@@ -1239,7 +1239,7 @@ float Q_rsqrt( float f );		// reciprocal square root
 signed char ClampChar( int i );
 signed short ClampShort( int i );
 
-float powf ( float x, int y );
+//float powf ( float x, int y );
 
 // this isn't a real cheap function to call!
 int DirToByte( vec3_t dir );
@@ -1942,7 +1942,7 @@ typedef struct {
 // sound channels
 // channel 0 never willingly overrides
 // other channels will allways override a playing sound on that channel
-typedef enum {
+enum {
 	CHAN_AUTO,	//## %s !!"W:\game\base\!!sound\*.wav;*.mp3" # Auto-picks an empty channel to play sound on
 	CHAN_LOCAL,	//## %s !!"W:\game\base\!!sound\*.wav;*.mp3" # menu sounds, etc
 	CHAN_WEAPON,//## %s !!"W:\game\base\!!sound\*.wav;*.mp3" 
@@ -3029,7 +3029,7 @@ typedef struct qtime_s {
 #define AS_MPLAYER			3 // (Obsolete)
 
 // cinematic states
-typedef enum {
+enum {
 	FMV_IDLE,
 	FMV_PLAY,		// play
 	FMV_EOF,		// all other conditions, i.e. stop/EOF/abort
@@ -3040,7 +3040,7 @@ typedef enum {
 };
 typedef int e_status;
 
-typedef enum _flag_status {
+enum _flag_status {
 	FLAG_ATBASE = 0,
 	FLAG_TAKEN,			// CTF
 	FLAG_TAKEN_RED,		// One Flag CTF
@@ -3083,7 +3083,7 @@ typedef struct {
 
 // For ghoul2 axis use
 
-typedef enum Eorientations
+enum Eorientations
 {
 	ORIGIN = 0, 
 	POSITIVE_X,
@@ -3101,7 +3101,7 @@ Ghoul2 Insert End
 // define the new memory tags for the zone, used by all modules now
 //
 #define TAGDEF(blah) TAG_ ## blah
-typedef enum {
+enum {
 	#include "../qcommon/tags.h"
 };
 typedef char memtag_t;

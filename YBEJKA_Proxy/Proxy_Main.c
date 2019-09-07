@@ -1,8 +1,13 @@
+// ==================================================
+// YBEJKA_Proxy by Yberion
+// Inspired by JMPProxy by DeathSpike (https://github.com/Deathspike/JMPProxy)
+// ==================================================
+
 #include "Proxy_Header.h"
 
 Proxy_t proxy = { 0 };
 
-__declspec(dllexport) int vmMain(int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11)
+Q_EXPORT int vmMain(int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11)
 {
 	switch (command)
 	{
@@ -10,7 +15,30 @@ __declspec(dllexport) int vmMain(int command, int arg0, int arg1, int arg2, int 
 		{
 			// (int levelTime, int randomSeed, int restart)
 
-			proxy.jampgameHandle = LoadLibrary(L"Base/YBEJKA_Proxy.dll");
+			char fs_gameBuffer[MAX_OSPATH];
+			size_t pathLength = 0;
+			size_t tmpLength = 0;
+
+			fs_gameBuffer[0] = 0;
+
+			trap_Cvar_VariableStringBuffer(FS_GAME_CVAR, fs_gameBuffer, sizeof(fs_gameBuffer));
+
+			pathLength = strlen(fs_gameBuffer);
+
+			// length 0 means that fs_game is set to the default value which is the default base game folder name
+			if (pathLength == 0)
+			{
+				pathLength += strlen(DEFAULT_BASE_GAME_FOLDER_NAME);
+				memcpy(fs_gameBuffer, DEFAULT_BASE_GAME_FOLDER_NAME, pathLength);
+			}
+
+			tmpLength = strlen(PROXY_LIBRARY);
+			memcpy(fs_gameBuffer + pathLength, PROXY_LIBRARY, tmpLength);
+			pathLength += tmpLength;
+
+			fs_gameBuffer[pathLength] = '\0';
+
+			proxy.jampgameHandle = YbeProxy_OpenLibrary(fs_gameBuffer, RTLD_NOW | RTLD_GLOBAL);
 
 			if (proxy.jampgameHandle == NULL)
 			{
@@ -18,10 +46,10 @@ __declspec(dllexport) int vmMain(int command, int arg0, int arg1, int arg2, int 
 			}
 			else
 			{
-				proxy.originalDllEntry = (dllEntryFuncPtr_t)GetProcAddress(proxy.jampgameHandle, "dllEntry");
-				proxy.originalVmMain = (vmMainFuncPtr_t) GetProcAddress(proxy.jampgameHandle, "vmMain");
+				proxy.originalDllEntry = (dllEntryFuncPtr_t)YbeProxy_GetFunctionAddress(proxy.jampgameHandle, "dllEntry");
+				proxy.originalVmMain = (vmMainFuncPtr_t)YbeProxy_GetFunctionAddress(proxy.jampgameHandle, "vmMain");
 
-				proxy.originalDllEntry(proxy.originalSystemCall);
+				proxy.originalDllEntry(&Proxy_systemCall);
 			}
 
 			break;
@@ -32,9 +60,13 @@ __declspec(dllexport) int vmMain(int command, int arg0, int arg1, int arg2, int 
 
 			if (proxy.jampgameHandle)
 			{
+				// Send the shutdown signal to the original game module and store the response
 				proxy.originalVmMainResponse = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-				FreeLibrary(proxy.jampgameHandle);
+				
+				// We can close the proxy library
+				YbeProxy_CloseLibrary(proxy.jampgameHandle);
 
+				// Return the response of the original game module after the shutdown
 				return proxy.originalVmMainResponse;
 			}
 
@@ -46,7 +78,7 @@ __declspec(dllexport) int vmMain(int command, int arg0, int arg1, int arg2, int 
 
 			if ((qboolean)arg1 && !(qboolean)arg2)
 			{
-				trap_SendServerCommand(arg0, "print \"Proxy Anticheat par Yberion\"");
+				trap_SendServerCommand(arg0, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
 			}
 		}
 		default:
@@ -57,7 +89,7 @@ __declspec(dllexport) int vmMain(int command, int arg0, int arg1, int arg2, int 
 }
 
 // The engine sends the system call function pointer the the game module through dllEntry
-__declspec(dllexport) void dllEntry(systemCallFuncPtr_t systemCallFuncPtdr)
+Q_EXPORT void dllEntry(systemCallFuncPtr_t systemCallFuncPtdr)
 {
 	proxy.originalSystemCall = systemCallFuncPtdr;
 }
