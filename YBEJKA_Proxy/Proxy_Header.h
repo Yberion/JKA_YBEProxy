@@ -1,6 +1,6 @@
 // ==================================================
 // YBEJKA_Proxy by Yberion
-// Inspired by JMPProxy by DeathSpike (https://github.com/Deathspike/JMPProxy)
+// Inspired by JMPProxy from DeathSpike (https://github.com/Deathspike/JMPProxy)
 // ==================================================
 
 #pragma once
@@ -8,9 +8,6 @@
 // ==================================================
 // INCLUDES
 // ==================================================
-
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "JKA_SDK/game/g_local.h"
 

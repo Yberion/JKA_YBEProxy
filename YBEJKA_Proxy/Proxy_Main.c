@@ -1,6 +1,6 @@
 // ==================================================
 // YBEJKA_Proxy by Yberion
-// Inspired by JMPProxy by DeathSpike (https://github.com/Deathspike/JMPProxy)
+// Inspired by JMPProxy from DeathSpike (https://github.com/Deathspike/JMPProxy)
 // ==================================================
 
 #include "Proxy_Header.h"
@@ -63,7 +63,7 @@ Q_EXPORT int vmMain(int command, int arg0, int arg1, int arg2, int arg3, int arg
 				// Send the shutdown signal to the original game module and store the response
 				proxy.originalVmMainResponse = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
 				
-				// We can close the proxy library
+				// We can close our proxy library
 				YbeProxy_CloseLibrary(proxy.jampgameHandle);
 
 				// Return the response of the original game module after the shutdown
