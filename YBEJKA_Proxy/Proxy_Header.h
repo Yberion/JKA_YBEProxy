@@ -15,7 +15,7 @@
 // PLATFORM SPECIFIC STUFF
 // ==================================================
 
-#ifdef WIN32
+#ifdef _MSC_VER
 	#include <windows.h>
 
 	#define PROXY_LIBRARY_EXT "dll"
@@ -26,9 +26,25 @@
 	#define YbeProxy_CloseLibrary(a) FreeLibrary(a)
 	#define YbeProxy_GetFunctionAddress(a, b) GetProcAddress(a, b)
 #else
+	#include <dlfcn.h>
+
 	#define PROXY_LIBRARY_EXT "so"
 
-	#define Q_EXPORT
+	#if !defined(__GNUC__) && !defined(__attribute__)
+		#define __attribute__(x)
+	#endif
+
+	#if defined(__GNUC__)
+		#define UNUSED_VAR __attribute__((unused))
+	#else
+		#define UNUSED_VAR
+	#endif
+
+	#if ((__GNUC__ >= 3) && (!__EMX__) && (!sun))
+		#define Q_EXPORT __attribute__((visibility("default")))
+	#else
+		#define Q_EXPORT
+	#endif
 
 	#define YbeProxy_OpenLibrary(a, b) dlopen(a, b)
 	#define YbeProxy_CloseLibrary(a) dlclose(a)
