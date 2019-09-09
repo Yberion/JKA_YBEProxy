@@ -19,15 +19,15 @@
 cmake_minimum_required(VERSION 3.1)
 
 # For checks in subdirectories
-set(InYBEProxy_JKA TRUE)
+set(InJKA_YBEProxy TRUE)
 
 # Project name
-set(ProjectName "YBEProxy_JKA" CACHE STRING "Project Name")
+set(ProjectName "JKA_YBEProxy" CACHE STRING "Project Name")
 project(${ProjectName})
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-option(BuildYBEProxy_JKA "Whether to create projects for the YBEProxy_JKA library (jampgame)" ON)
+option(BuildJKA_YBEProxy "Whether to create projects for the JKA_YBEProxy library (jampgame)" ON)
 
 # Configure the use of bundled libraries.  By default, we assume the user is on
 # a platform that does not require any bundling.
@@ -106,10 +106,10 @@ get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 message(STATUS "Git revision is ${GIT_SHA1}")
 
 # Binary names
-set(YBEProxy_JKA "jampgame${Architecture}")
+set(JKA_YBEProxy "jampgame${Architecture}")
 
 # Paths
-set(YBEProxy_JKADir "${CMAKE_SOURCE_DIR}/YBEJKA_Proxy")
+set(JKA_YBEProxyDir "${CMAKE_SOURCE_DIR}/src")
 
 # Operating settings
 if(WIN64)
@@ -141,7 +141,7 @@ if(MSVC)
 	configure_msvc_runtime()
 
 	# We don't try to control symbol visibility under MSVC.
-	set(YBEProxy_JKA_VISIBILITY_FLAGS "")
+	set(JKA_YBEProxy_VISIBILITY_FLAGS "")
 
 elseif (("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU") OR ("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel") OR ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang"))
 	# I hope this doesn't come back to bite me in the butt later on.
@@ -152,7 +152,7 @@ elseif (("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU") OR ("${CMAKE_C_COMPILER_ID}" S
 	# ZLib explicitly declares symbols hidden, rather than defaulting to hidden.
 	#
 	# Note that -fvisibility=hidden is stronger than -fvisibility-inlines-hidden.
-	set(YBEProxy_JKA_VISIBILITY_FLAGS "-fvisibility=hidden")
+	set(JKA_YBEProxy_VISIBILITY_FLAGS "-fvisibility=hidden")
 
 	# removes the -rdynamic flag at linking (which causes crashes for some reason)
 	set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
@@ -259,4 +259,4 @@ if (NOT ("$ENV{SOURCE_DATE_EPOCH}" STREQUAL ""))
 endif()
 
 # Add projects
-add_subdirectory(${YBEProxy_JKADir})
+add_subdirectory(${JKA_YBEProxyDir})
