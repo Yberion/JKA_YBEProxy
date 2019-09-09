@@ -20,15 +20,15 @@
 
 	#define PROXY_LIBRARY_EXT "dll"
 
-	#define YbeProxy_OpenLibrary(a) LoadLibrary(a)
-	#define YbeProxy_CloseLibrary(a) FreeLibrary(a)
-	#define YbeProxy_GetFunctionAddress(a, b) GetProcAddress(a, b)
+	#define YbeProxy_OpenLibrary(a) (void *)LoadLibrary(a)
+	#define YbeProxy_CloseLibrary(a) FreeLibrary((HMODULE)a)
+	#define YbeProxy_GetFunctionAddress(a, b) GetProcAddress((HMODULE)a, b)
 #else
 	#include <dlfcn.h>
 
 	#define PROXY_LIBRARY_EXT "so"
 
-	#define YbeProxy_OpenLibrary(a, b) dlopen(a, b)
+	#define YbeProxy_OpenLibrary(a, b) dlopen(a, RTLD_NOW)
 	#define YbeProxy_CloseLibrary(a) dlclose(a)
 	#define YbeProxy_GetFunctionAddress(a, b) dlsym(a, b)
 #endif

@@ -40,7 +40,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 
 			fs_gameBuffer[pathLength] = '\0';
 
-			proxy.jampgameHandle = YbeProxy_OpenLibrary(fs_gameBuffer, RTLD_NOW | RTLD_GLOBAL);
+			proxy.jampgameHandle = YbeProxy_OpenLibrary(fs_gameBuffer);
 
 			if (proxy.jampgameHandle == NULL)
 			{
