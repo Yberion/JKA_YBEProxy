@@ -20,17 +20,17 @@
 
 	#define PROXY_LIBRARY_EXT "dll"
 
-	#define YbeProxy_OpenLibrary(a) (void *)LoadLibrary(a)
-	#define YbeProxy_CloseLibrary(a) FreeLibrary((HMODULE)a)
-	#define YbeProxy_GetFunctionAddress(a, b) GetProcAddress((HMODULE)a, b)
+	#define YBEProxy_OpenLibrary(a) (void *)LoadLibrary(a)
+	#define YBEProxy_CloseLibrary(a) FreeLibrary((HMODULE)a)
+	#define YBEProxy_GetFunctionAddress(a, b) GetProcAddress((HMODULE)a, b)
 #else
 	#include <dlfcn.h>
 
 	#define PROXY_LIBRARY_EXT "so"
 
-	#define YbeProxy_OpenLibrary(a, b) dlopen(a, RTLD_NOW)
-	#define YbeProxy_CloseLibrary(a) dlclose(a)
-	#define YbeProxy_GetFunctionAddress(a, b) dlsym(a, b)
+	#define YBEProxy_OpenLibrary(a, b) dlopen(a, RTLD_NOW)
+	#define YBEProxy_CloseLibrary(a) dlclose(a)
+	#define YBEProxy_GetFunctionAddress(a, b) dlsym(a, b)
 #endif
 
 // ==================================================
@@ -56,7 +56,7 @@
 // ==================================================
 
 typedef intptr_t	(QDECL *systemCallFuncPtr_t)(intptr_t command, ...);
-typedef intptr_t	(*vmMainFuncPtr_t)(int command, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t);
+typedef intptr_t	(*vmMainFuncPtr_t)(intptr_t command, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t);
 typedef void		(*dllEntryFuncPtr_t)(void *);
 
 // ==================================================
@@ -88,16 +88,16 @@ extern Proxy_t proxy;
 // ==================================================
 
 // ------------------------
-// Proxy_SystemCalls
+// Proxy_Files
 // ------------------------
 
-void TranslateSystemcalls(void);
+void Proxy_LoadOriginalGameLibrary(void);
 
 // ------------------------
 // Proxy_Imports 
 // ------------------------
 
-char	*QDECL va(const char* format, ...);
+char* QDECL va(const char* format, ...);
 
 #if defined (_MSC_VER)
 	// vsnprintf is ISO/IEC 9899:1999
@@ -106,6 +106,18 @@ char	*QDECL va(const char* format, ...);
 #else // not using MSVC
 	#define Q_vsnprintf vsnprintf
 #endif
+
+// ------------------------
+// Proxy_Main
+// ------------------------
+
+void Proxy_Init(void);
+
+// ------------------------
+// Proxy_SystemCalls
+// ------------------------
+
+void TranslateSystemcalls(void);
 
 // ------------------------
 // Proxy_Wrappers
