@@ -71,6 +71,14 @@ typedef struct Proxy_s {
 	systemCallFuncPtr_t		originalSystemCall;
 
 	intptr_t				originalVmMainResponse;
+
+	gameImport_t* trap;
+
+	gameImport_t* originalNewAPIGameImportTable;
+	gameExport_t* originalNewAPIGameExportTable;
+
+	gameImport_t* copyNewAPIGameImportTable;
+	gameExport_t* copyNewAPIGameExportTable;
 } Proxy_t;
 
 // ==================================================
@@ -112,6 +120,16 @@ char* QDECL va(const char* format, ...);
 // ------------------------
 
 void Proxy_Init(void);
+
+// ------------------------
+// Proxy_NewAPIWrappers
+// ------------------------
+
+void Proxy_NewAPI_InitLayerExportTable(void);
+void Proxy_NewAPI_InitLayerImportTable(void);
+
+char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
+void Proxy_NewAPI_ShutdownGame(int restart);
 
 // ------------------------
 // Proxy_SystemCalls

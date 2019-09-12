@@ -8,7 +8,7 @@ void Proxy_LoadOriginalGameLibrary(void)
 
 	fs_gameBuffer[0] = 0;
 
-	trap->Cvar_VariableStringBuffer(FS_GAME_CVAR, fs_gameBuffer, sizeof(fs_gameBuffer));
+	proxy.trap->Cvar_VariableStringBuffer(FS_GAME_CVAR, fs_gameBuffer, sizeof(fs_gameBuffer));
 
 	pathLength = strlen(fs_gameBuffer);
 
