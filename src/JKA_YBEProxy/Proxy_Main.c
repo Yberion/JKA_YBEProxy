@@ -14,7 +14,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 	{
 		case GAME_INIT: // (int levelTime, int randomSeed, int restart)
 		{
-			Proxy_Init();
+			Proxy_OldAPI_Init();
 
 			break;
 		}
@@ -64,12 +64,12 @@ Q_EXPORT gameExport_t* QDECL GetModuleAPI(int apiVersion, gameImport_t* import)
 
 	assert(import);
 
+	// Needed for trap_... calls inside of the proxy
+	proxy.trap = import;
+
 	proxy.originalNewAPIGameImportTable = import;
 	memcpy(&copyNewAPIGameImportTable_, import, sizeof(gameImport_t));
 	proxy.copyNewAPIGameImportTable = &copyNewAPIGameImportTable_;
-
-	// Needed for trap_... calls inside of the proxy
-	proxy.trap = import;
 
 	if (apiVersion != GAME_API_VERSION)
 	{
@@ -79,9 +79,9 @@ Q_EXPORT gameExport_t* QDECL GetModuleAPI(int apiVersion, gameImport_t* import)
 
 	Proxy_LoadOriginalGameLibrary();
 
-	GetGameAPI_t jampGameModuleAPI = (GetGameAPI_t)YBEProxy_GetFunctionAddress(proxy.jampgameHandle, "GetModuleAPI");
+	GetGameAPI_t jampGameGetModuleAPI = (GetGameAPI_t)YBEProxy_GetFunctionAddress(proxy.jampgameHandle, "GetModuleAPI");
 	
-	proxy.originalNewAPIGameExportTable = jampGameModuleAPI(apiVersion, &copyNewAPIGameImportTable_);
+	proxy.originalNewAPIGameExportTable = jampGameGetModuleAPI(apiVersion, &copyNewAPIGameImportTable_);
 	memcpy(&copyNewAPIGameExportTable_, proxy.originalNewAPIGameExportTable, sizeof(gameExport_t));
 	proxy.copyNewAPIGameExportTable = &copyNewAPIGameExportTable_;
 
@@ -91,7 +91,7 @@ Q_EXPORT gameExport_t* QDECL GetModuleAPI(int apiVersion, gameImport_t* import)
 	return proxy.copyNewAPIGameExportTable;
 }
 
-void Proxy_Init(void)
+void Proxy_OldAPI_Init(void)
 {
 	Proxy_LoadOriginalGameLibrary();
 

@@ -119,7 +119,7 @@ char* QDECL va(const char* format, ...);
 // Proxy_Main
 // ------------------------
 
-void Proxy_Init(void);
+void Proxy_OldAPI_Init(void);
 
 // ------------------------
 // Proxy_NewAPIWrappers
@@ -130,6 +130,7 @@ void Proxy_NewAPI_InitLayerImportTable(void);
 
 char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 void Proxy_NewAPI_ShutdownGame(int restart);
+void Proxy_NewAPI_RunFrame(int levelTime);
 
 // ------------------------
 // Proxy_SystemCalls
