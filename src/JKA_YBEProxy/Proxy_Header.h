@@ -28,7 +28,7 @@
 
 	#define PROXY_LIBRARY_EXT "so"
 
-	#define YBEProxy_OpenLibrary(a, b) dlopen(a, RTLD_NOW)
+	#define YBEProxy_OpenLibrary(a) dlopen(a, RTLD_NOW)
 	#define YBEProxy_CloseLibrary(a) dlclose(a)
 	#define YBEProxy_GetFunctionAddress(a, b) dlsym(a, b)
 #endif
@@ -107,13 +107,15 @@ void Proxy_LoadOriginalGameLibrary(void);
 
 char* QDECL va(const char* format, ...);
 
+/*
 #if defined (_MSC_VER)
 	// vsnprintf is ISO/IEC 9899:1999
 	// abstracting this to make it portable
-	int Q_vsnprintf(char* str, size_t size, const char* format, va_list args);
+	int Q_vsnprintf(char* str, size_t size, const char* format, va_list ap);
 #else // not using MSVC
 	#define Q_vsnprintf vsnprintf
 #endif
+*/
 
 // ------------------------
 // Proxy_Main

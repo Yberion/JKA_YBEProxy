@@ -59,23 +59,23 @@ Q_EXPORT void dllEntry(systemCallFuncPtr_t systemCallFuncPtdr) {
 
 Q_EXPORT gameExport_t* QDECL GetModuleAPI(int apiVersion, gameImport_t* import)
 {
-	static gameImport_t copyNewAPIGameImportTable_ = { 0 };
-	static gameExport_t copyNewAPIGameExportTable_ = { 0 };
-
 	assert(import);
 
 	// Needed for trap_... calls inside of the proxy
 	proxy.trap = import;
-
-	proxy.originalNewAPIGameImportTable = import;
-	memcpy(&copyNewAPIGameImportTable_, import, sizeof(gameImport_t));
-	proxy.copyNewAPIGameImportTable = &copyNewAPIGameImportTable_;
 
 	if (apiVersion != GAME_API_VERSION)
 	{
 		proxy.trap->Print("Mismatched GAME_API_VERSION: expected %i, got %i\n", GAME_API_VERSION, apiVersion);
 		return NULL;
 	}
+
+	static gameImport_t copyNewAPIGameImportTable_ = { 0 };
+	static gameExport_t copyNewAPIGameExportTable_ = { 0 };
+
+	proxy.originalNewAPIGameImportTable = import;
+	memcpy(&copyNewAPIGameImportTable_, import, sizeof(gameImport_t));
+	proxy.copyNewAPIGameImportTable = &copyNewAPIGameImportTable_;
 
 	Proxy_LoadOriginalGameLibrary();
 
