@@ -35,8 +35,9 @@ set(JKA_YBEProxyMainFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Imports.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Main.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_NewAPIWrappers.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_OldAPIWrappers.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SystemCalls.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Wrappers.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SharedAPI.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Header.h"
 	)
 source_group("JKA_YBEProxy" FILES ${JKA_YBEProxyMainFiles})

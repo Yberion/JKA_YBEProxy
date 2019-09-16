@@ -72,13 +72,26 @@ typedef struct Proxy_s {
 
 	intptr_t				originalVmMainResponse;
 
-	gameImport_t* trap;
+	gameImport_t*			trap;
 
-	gameImport_t* originalNewAPIGameImportTable;
-	gameExport_t* originalNewAPIGameExportTable;
+	gameImport_t*			originalNewAPIGameImportTable;
+	gameExport_t*			originalNewAPIGameExportTable;
 
-	gameImport_t* copyNewAPIGameImportTable;
-	gameExport_t* copyNewAPIGameExportTable;
+	gameImport_t*			copyNewAPIGameImportTable;
+	gameExport_t*			copyNewAPIGameExportTable;
+
+	struct locatedGameData_s {
+		sharedEntity_t*		g_entities;
+		int					g_entitySize;
+		int					num_entities;
+
+		playerState_t*		g_clients;
+		int					g_clientSize;
+	} locatedGameData;
+
+	struct proxyClientData_s {
+		qboolean isConnected;
+	} proxyClientData[MAX_CLIENTS];
 } Proxy_t;
 
 // ==================================================
@@ -102,11 +115,16 @@ extern Proxy_t proxy;
 void Proxy_LoadOriginalGameLibrary(void);
 
 // ------------------------
-// Proxy_Imports 
+// Proxy_Imports
 // ------------------------
 
+// -- server engine
+playerState_t* Proxy_GetPlayerStateByClientNum(int num);
+
+// --  q_shared
 char* QDECL va(const char* format, ...);
 
+// -- q_string
 /*
 #if defined (_MSC_VER)
 	// vsnprintf is ISO/IEC 9899:1999
@@ -117,11 +135,10 @@ char* QDECL va(const char* format, ...);
 #endif
 */
 
-// ------------------------
-// Proxy_Main
-// ------------------------
+int Q_stricmpn(const char* s1, const char* s2, int n);
 
-void Proxy_OldAPI_Init(void);
+// -- other
+char* ConcatArgs(int start);
 
 // ------------------------
 // Proxy_NewAPIWrappers
@@ -130,20 +147,38 @@ void Proxy_OldAPI_Init(void);
 void Proxy_NewAPI_InitLayerExportTable(void);
 void Proxy_NewAPI_InitLayerImportTable(void);
 
-char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
+// -- Import table
+void Proxy_NewAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient);
+
+// -- Export table
 void Proxy_NewAPI_ShutdownGame(int restart);
+char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
+void Proxy_NewAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
+void Proxy_NewAPI_ClientCommand(int clientNum);
 void Proxy_NewAPI_RunFrame(int levelTime);
+
+// ------------------------
+// Proxy_OldAPIWrappers
+// ------------------------
+
+// VM_DllSyscall can handle up to 1 (command) + 15 args
+intptr_t QDECL Proxy_OldAPI_systemCall(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_t arg2, intptr_t arg3, intptr_t arg4, intptr_t arg5,
+	intptr_t arg6, intptr_t arg7, intptr_t arg8, intptr_t arg9, intptr_t arg10, intptr_t arg11, intptr_t arg12, intptr_t arg13, intptr_t arg14);
+
+// ------------------------
+// Proxy_SharedAPI
+// ------------------------
+
+// -- Import table
+void Proxy_Shared_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient);
+
+// -- Export table
+void Proxy_Shared_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
+void Proxy_Shared_ClientBegin(int clientNum, qboolean allowTeamReset);
+qboolean Proxy_Shared_ClientCommand(int clientNum);
 
 // ------------------------
 // Proxy_SystemCalls
 // ------------------------
 
 void TranslateSystemcalls(void);
-
-// ------------------------
-// Proxy_Wrappers
-// ------------------------
-
-// VM_DllSyscall can handle up to 1 (command) + 15 args
-intptr_t QDECL Proxy_systemCall(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_t arg2, intptr_t arg3, intptr_t arg4, intptr_t arg5,
-	intptr_t arg6, intptr_t arg7, intptr_t arg8, intptr_t arg9, intptr_t arg10, intptr_t arg11, intptr_t arg12, intptr_t arg13, intptr_t arg14);

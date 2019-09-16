@@ -1,5 +1,23 @@
 #include "Proxy_Header.h"
 
+// ==================================================
+// server engine
+// ==================================================
+
+// playerState_t* SV_GameClientNum(int num)
+playerState_t* Proxy_GetPlayerStateByClientNum(int num)
+{
+	playerState_t* ps;
+	
+	ps = (playerState_t*)((byte*)proxy.locatedGameData.g_clients + proxy.locatedGameData.g_clientSize * (num));
+
+	return ps;
+}
+
+// ==================================================
+// q_shared
+// ==================================================
+
 /*
 ============
 va
@@ -26,6 +44,10 @@ char *QDECL va(const char* format, ...)
 
 	return buf;
 }
+
+// ==================================================
+// q_string
+// ==================================================
 
 #if defined(_MSC_VER)
 /*
@@ -58,3 +80,86 @@ int Q_vsnprintf(char* str, size_t size, const char* format, va_list ap)
 	return retval;
 }
 #endif
+
+int Q_stricmpn(const char* s1, const char* s2, int n)
+{
+	int		c1, c2;
+
+	if (s1 == NULL)
+	{
+		if (s2 == NULL)
+			return 0;
+		else
+			return -1;
+	}
+	else if (s2 == NULL)
+		return 1;
+
+	do
+	{
+		c1 = *s1++;
+		c2 = *s2++;
+
+		if (!n--)
+		{
+			return 0;		// strings are equal until end point
+		}
+
+		if (c1 != c2)
+		{
+			if (c1 >= 'a' && c1 <= 'z')
+			{
+				c1 -= ('a' - 'A');
+			}
+
+			if (c2 >= 'a' && c2 <= 'z')
+			{
+				c2 -= ('a' - 'A');
+			}
+
+			if (c1 != c2) {
+				return c1 < c2 ? -1 : 1;
+			}
+		}
+	} while (c1);
+
+	return 0;		// strings are equal
+}
+
+// ==================================================
+// other
+// ==================================================
+
+char* ConcatArgs(int start) {
+	int		i, c, tlen;
+	static char	line[MAX_STRING_CHARS];
+	int		len;
+	char	arg[MAX_STRING_CHARS];
+
+	len = 0;
+	c = proxy.trap->Argc();
+
+	for (i = start; i < c; i++)
+	{
+		proxy.trap->Argv(i, arg, sizeof(arg));
+		tlen = strlen(arg);
+
+		if (len + tlen >= MAX_STRING_CHARS - 1)
+		{
+			break;
+		}
+
+		memcpy(line + len, arg, tlen);
+		len += tlen;
+
+		if (i != c - 1)
+		{
+			line[len] = ' ';
+			len++;
+		}
+	}
+
+	line[len] = 0;
+
+	return line;
+}

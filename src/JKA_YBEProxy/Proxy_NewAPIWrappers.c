@@ -2,35 +2,32 @@
 
 void Proxy_NewAPI_InitLayerExportTable(void)
 {
-	proxy.copyNewAPIGameExportTable->ClientConnect = Proxy_NewAPI_ClientConnect;
 	proxy.copyNewAPIGameExportTable->ShutdownGame = Proxy_NewAPI_ShutdownGame;
+	proxy.copyNewAPIGameExportTable->ClientConnect = Proxy_NewAPI_ClientConnect;
+	proxy.copyNewAPIGameExportTable->ClientBegin = Proxy_NewAPI_ClientBegin;
+	proxy.copyNewAPIGameExportTable->ClientCommand = Proxy_NewAPI_ClientCommand;
 	proxy.copyNewAPIGameExportTable->RunFrame = Proxy_NewAPI_RunFrame;
 }
 
 void Proxy_NewAPI_InitLayerImportTable(void)
 {
-
+	proxy.copyNewAPIGameImportTable->LocateGameData = Proxy_NewAPI_LocateGameData;
 }
 
 // ==================================================
 // IMPORT TABLE
 // ==================================================
 
+void Proxy_NewAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient)
+{
+	Proxy_Shared_LocateGameData(gEnts, numGEntities, sizeofGEntity_t, clients, sizeofGameClient);
+
+	proxy.originalNewAPIGameImportTable->LocateGameData(gEnts, numGEntities, sizeofGEntity_t, clients, sizeofGameClient);
+}
+
 // ==================================================
 // EXPORT TABLE
 // ==================================================
-
-char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
-{
-	/*
-	// Doesn't work on the new API
-	if (firstTime && !isBot)
-	{
-		proxy.trap->SendServerCommand(-1, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
-	}
-	*/
-	return proxy.originalNewAPIGameExportTable->ClientConnect(clientNum, firstTime, isBot);
-}
 
 void Proxy_NewAPI_ShutdownGame(int restart)
 {
@@ -41,6 +38,30 @@ void Proxy_NewAPI_ShutdownGame(int restart)
 		// We can close our proxy library
 		YBEProxy_CloseLibrary(proxy.jampgameHandle);
 	}
+}
+
+char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
+{
+	Proxy_Shared_ClientConnect(clientNum, firstTime, isBot);
+
+	return proxy.originalNewAPIGameExportTable->ClientConnect(clientNum, firstTime, isBot);
+}
+
+void Proxy_NewAPI_ClientBegin(int clientNum, qboolean allowTeamReset)
+{
+	Proxy_Shared_ClientBegin(clientNum, allowTeamReset);
+
+	proxy.originalNewAPIGameExportTable->ClientBegin(clientNum, allowTeamReset);
+}
+
+void Proxy_NewAPI_ClientCommand(int clientNum)
+{
+	if (!Proxy_Shared_ClientCommand(clientNum))
+	{
+		return;
+	}
+
+	proxy.originalNewAPIGameExportTable->ClientCommand(clientNum);
 }
 
 void Proxy_NewAPI_RunFrame(int levelTime)
