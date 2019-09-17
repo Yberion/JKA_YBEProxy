@@ -48,18 +48,63 @@ qboolean Proxy_Shared_ClientCommand(int clientNum)
 
 	if (!Q_stricmpn(&cmd[0], "jkaDST_", 7))
 	{
-		proxy.trap->DropClient(clientNum, "^3(Anticheat system) you got kicked cause of cheating^7");
-		proxy.trap->SendServerCommand(-1, "chat \"^3(Anticheat system) ^7X^3 got kicked cause of cheating^7\"");
+		proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
+		proxy.trap->SendServerCommand(-1, "chat \"^3(Anti-Cheat system) ^7X^3 got kicked cause of cheating^7\"");
 
 		return qfalse;
 	}
 
+	if (!Q_stricmpn(&cmd[0], "say", 3) || !Q_stricmpn(&cmd[0], "say_team", 8) || !Q_stricmpn(&cmd[0], "tell", 4))
+	{
+		char* message = ConcatArgs(1);
+
+		// 256 because we don't need more, the chat can handle 150 max char
+		// and allowing 256 prevent a message to not be sent instead of being truncated
+		// if this is a bit more than 150
+		if (strlen(message) > 256)
+		{
+			return qfalse;
+		}
+	}
+
 	char cmd_arg1[MAX_TOKEN_CHARS] = { 0 };
 	char cmd_arg2[MAX_TOKEN_CHARS] = { 0 };
-	//char* message;
 
-	//message = ConcatArgs(1);
-	//proxy.trap->Print("cmd: %s, message: %s\n", cmd, message);
+	proxy.trap->Argv(1, cmd_arg1, sizeof(cmd_arg1));
+	proxy.trap->Argv(2, cmd_arg2, sizeof(cmd_arg2));
+
+	// Fix: crach gc
+	if (!Q_stricmpn(&cmd[0], "gc", 2) && atoi(cmd_arg1) >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients"))
+	{
+		return qfalse;
+	}
+
+	// Fix: crash npc spawn
+	if (!Q_stricmpn(&cmd[0], "npc", 3) && !Q_stricmpn(&cmd_arg1[0], "spawn", 5) && (!Q_stricmpn(&cmd_arg2[0], "ragnos", 6) || !Q_stricmpn(&cmd_arg2[0], "saber_droid", 6)))
+	{
+		return qfalse;
+	}
+
+	// Fix: team crash
+	if (!Q_stricmpn(&cmd[0], "team", 4) && (!Q_stricmpn(&cmd_arg1[0], "follow1", 7) || !Q_stricmpn(&cmd_arg1[0], "follow2", 7)))
+	{
+		return qfalse;
+	}
+
+	// Disable: callteamvote, useless in basejka and can lead to a bugged UI on custom client
+	if (!Q_stricmpn(&cmd[0], "callteamvote", 12))
+	{
+		return qfalse;
+	}
+
+	// Fix: callvote fraglimit/timelimit with negative value
+	if (!Q_stricmpn(&cmd[0], "callvote", 8) && (!Q_stricmpn(&cmd_arg1[0], "fraglimit", 9) || !Q_stricmpn(&cmd_arg1[0], "timelimit", 9)) && atoi(cmd_arg2) < 0)
+	{
+		return qfalse;
+	}
+
+	// Fix \r \n and ; in the command
+	// Fix bugged model in userinfo changed
 
 	return qtrue;
 }
