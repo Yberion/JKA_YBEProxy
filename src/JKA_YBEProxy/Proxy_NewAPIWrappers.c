@@ -6,12 +6,14 @@ void Proxy_NewAPI_InitLayerExportTable(void)
 	proxy.copyNewAPIGameExportTable->ClientConnect = Proxy_NewAPI_ClientConnect;
 	proxy.copyNewAPIGameExportTable->ClientBegin = Proxy_NewAPI_ClientBegin;
 	proxy.copyNewAPIGameExportTable->ClientCommand = Proxy_NewAPI_ClientCommand;
+	proxy.copyNewAPIGameExportTable->ClientUserinfoChanged = Proxy_NewAPI_ClientUserinfoChanged;
 	proxy.copyNewAPIGameExportTable->RunFrame = Proxy_NewAPI_RunFrame;
 }
 
 void Proxy_NewAPI_InitLayerImportTable(void)
 {
 	proxy.copyNewAPIGameImportTable->LocateGameData = Proxy_NewAPI_LocateGameData;
+	proxy.copyNewAPIGameImportTable->GetUsercmd = Proxy_NewAPI_GetUsercmd;
 }
 
 // ==================================================
@@ -23,6 +25,13 @@ void Proxy_NewAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int si
 	Proxy_Shared_LocateGameData(gEnts, numGEntities, sizeofGEntity_t, clients, sizeofGameClient);
 
 	proxy.originalNewAPIGameImportTable->LocateGameData(gEnts, numGEntities, sizeofGEntity_t, clients, sizeofGameClient);
+}
+
+void Proxy_NewAPI_GetUsercmd(int clientNum, usercmd_t* cmd)
+{
+	Proxy_Shared_GetUsercmd(clientNum, cmd);
+
+	proxy.originalNewAPIGameImportTable->GetUsercmd(clientNum, cmd);
 }
 
 // ==================================================
@@ -62,6 +71,16 @@ void Proxy_NewAPI_ClientCommand(int clientNum)
 	}
 
 	proxy.originalNewAPIGameExportTable->ClientCommand(clientNum);
+}
+
+qboolean Proxy_NewAPI_ClientUserinfoChanged(int clientNum)
+{
+	if (!Proxy_Shared_ClientUserinfoChanged(clientNum))
+	{
+		return qfalse;
+	}
+
+	return proxy.originalNewAPIGameExportTable->ClientUserinfoChanged(clientNum);
 }
 
 void Proxy_NewAPI_RunFrame(int levelTime)

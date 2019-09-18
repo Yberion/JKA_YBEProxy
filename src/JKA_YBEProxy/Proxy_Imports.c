@@ -45,6 +45,64 @@ char *QDECL va(const char* format, ...)
 	return buf;
 }
 
+/*
+===============
+Info_ValueForKey
+
+Searches the string for the given
+key and returns the associated value, or an empty string.
+FIXME: overflow check?
+===============
+*/
+char* Info_ValueForKey(const char* s, const char* key) {
+	char	pkey[BIG_INFO_KEY];
+	static	char value[2][BIG_INFO_VALUE];	// use two buffers so compares
+											// work without stomping on each other
+	static	int	valueindex = 0;
+	char* o;
+
+	if (!s || !key) {
+		return "";
+	}
+
+	if (strlen(s) >= BIG_INFO_STRING) {
+		Com_Error(ERR_DROP, "Info_ValueForKey: oversize infostring");
+	}
+
+	valueindex ^= 1;
+	if (*s == '\\')
+		s++;
+	while (1)
+	{
+		o = pkey;
+		while (*s != '\\')
+		{
+			if (!*s)
+				return "";
+			*o++ = *s++;
+		}
+		*o = 0;
+		s++;
+
+		o = value[valueindex];
+
+		while (*s != '\\' && *s)
+		{
+			*o++ = *s++;
+		}
+		*o = 0;
+
+		if (!Q_stricmp(key, pkey))
+			return value[valueindex];
+
+		if (!*s)
+			break;
+		s++;
+	}
+
+	return "";
+}
+
 // ==================================================
 // q_string
 // ==================================================
@@ -124,6 +182,37 @@ int Q_stricmpn(const char* s1, const char* s2, int n)
 	} while (c1);
 
 	return 0;		// strings are equal
+}
+
+int Q_stricmp(const char* s1, const char* s2) {
+	return (s1 && s2) ? Q_stricmpn(s1, s2, 99999) : -1;
+}
+
+/*
+Q_strchrs
+
+Description:	Find any characters in a string. Think of it as a shorthand strchr loop.
+Mutates:		--
+Return:			first instance of any characters found
+otherwise NULL
+*/
+
+const char* Q_strchrs(const char* string, const char* search)
+{
+	const char* p = string, * s = search;
+
+	while (*p != '\0')
+	{
+		for (s = search; *s; s++)
+		{
+			if (*p == *s)
+				return p;
+		}
+
+		p++;
+	}
+
+	return NULL;
 }
 
 // ==================================================

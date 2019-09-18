@@ -123,6 +123,7 @@ playerState_t* Proxy_GetPlayerStateByClientNum(int num);
 
 // --  q_shared
 char* QDECL va(const char* format, ...);
+char* Info_ValueForKey(const char* s, const char* key);
 
 // -- q_string
 /*
@@ -136,6 +137,8 @@ char* QDECL va(const char* format, ...);
 */
 
 int Q_stricmpn(const char* s1, const char* s2, int n);
+int Q_stricmp(const char* s1, const char* s2);
+const char* Q_strchrs(const char* string, const char* search);
 
 // -- other
 char* ConcatArgs(int start);
@@ -149,12 +152,14 @@ void Proxy_NewAPI_InitLayerImportTable(void);
 
 // -- Import table
 void Proxy_NewAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient);
+void Proxy_NewAPI_GetUsercmd(int clientNum, usercmd_t* cmd);
 
 // -- Export table
 void Proxy_NewAPI_ShutdownGame(int restart);
 char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 void Proxy_NewAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 void Proxy_NewAPI_ClientCommand(int clientNum);
+qboolean Proxy_NewAPI_ClientUserinfoChanged(int clientNum);
 void Proxy_NewAPI_RunFrame(int levelTime);
 
 // ------------------------
@@ -171,11 +176,13 @@ intptr_t QDECL Proxy_OldAPI_systemCall(intptr_t command, intptr_t arg0, intptr_t
 
 // -- Import table
 void Proxy_Shared_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient);
+void Proxy_Shared_GetUsercmd(int clientNum, usercmd_t* cmd);
 
 // -- Export table
 void Proxy_Shared_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 void Proxy_Shared_ClientBegin(int clientNum, qboolean allowTeamReset);
 qboolean Proxy_Shared_ClientCommand(int clientNum);
+qboolean Proxy_Shared_ClientUserinfoChanged(int clientNum);
 
 // ------------------------
 // Proxy_SystemCalls

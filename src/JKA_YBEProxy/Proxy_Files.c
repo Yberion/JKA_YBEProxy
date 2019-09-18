@@ -2,6 +2,7 @@
 
 void Proxy_LoadOriginalGameLibrary(void)
 {
+	// Todo: Check for fs_basegame
 	char fs_gameBuffer[MAX_OSPATH];
 	size_t pathLength = 0;
 	size_t tmpLength = 0;

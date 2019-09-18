@@ -14,6 +14,12 @@ void Proxy_Shared_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int si
 	proxy.locatedGameData.g_clientSize = sizeofGameClient;
 }
 
+void Proxy_Shared_GetUsercmd(int clientNum, usercmd_t* cmd)
+{
+	cmd->forcesel = 0xFFu;
+	cmd->angles[ROLL] = 0;
+}
+
 // ==================================================
 // EXPORT TABLE
 // ==================================================
@@ -43,6 +49,7 @@ qboolean Proxy_Shared_ClientCommand(int clientNum)
 	}
 
 	char cmd[MAX_TOKEN_CHARS] = { 0 };
+	qboolean sayCmd = qfalse;
 
 	proxy.trap->Argv(0, cmd, sizeof(cmd));
 
@@ -54,14 +61,16 @@ qboolean Proxy_Shared_ClientCommand(int clientNum)
 		return qfalse;
 	}
 
+	char* argsConcat = ConcatArgs(1);
+
 	if (!Q_stricmpn(&cmd[0], "say", 3) || !Q_stricmpn(&cmd[0], "say_team", 8) || !Q_stricmpn(&cmd[0], "tell", 4))
 	{
-		char* message = ConcatArgs(1);
+		sayCmd = qtrue;
 
 		// 256 because we don't need more, the chat can handle 150 max char
 		// and allowing 256 prevent a message to not be sent instead of being truncated
 		// if this is a bit more than 150
-		if (strlen(message) > 256)
+		if (strlen(argsConcat) > 256)
 		{
 			return qfalse;
 		}
@@ -103,8 +112,30 @@ qboolean Proxy_Shared_ClientCommand(int clientNum)
 		return qfalse;
 	}
 
-	// Fix \r \n and ; in the command
-	// Fix bugged model in userinfo changed
+	if (Q_strchrs(argsConcat, "\r\n"))
+	{
+		return qfalse;
+	}
+
+	if (!sayCmd && Q_strchrs(argsConcat, ";"))
+	{
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+qboolean Proxy_Shared_ClientUserinfoChanged(int clientNum)
+{
+	// WIP
+	// Fix bugged model 
+	// Clean name
+
+	char userinfo[MAX_INFO_STRING] = { 0 };
+
+	proxy.trap->Argv(1, userinfo, sizeof(userinfo));
+
+	proxy.trap->Print("AAA : %s \n", Info_ValueForKey(userinfo, "name"));
 
 	return qtrue;
 }

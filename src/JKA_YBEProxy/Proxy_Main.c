@@ -61,7 +61,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 			break;
 		}
 		//==================================================
-		case GAME_CLIENT_BEGIN:
+		case GAME_CLIENT_BEGIN: // (int clientNum, qboolean allowTeamReset)
 		//==================================================
 		{
 			Proxy_Shared_ClientBegin(arg0, (qboolean)arg1);
@@ -69,10 +69,21 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 			break;
 		}
 		//==================================================
-		case GAME_CLIENT_COMMAND:
+		case GAME_CLIENT_COMMAND: // (int clientNum)
 		//==================================================
 		{
 			if (!Proxy_Shared_ClientCommand(arg0))
+			{
+				return 0;
+			}
+
+			break;
+		}
+		//==================================================
+		case GAME_CLIENT_USERINFO_CHANGED: // (int clientNum)
+		//==================================================
+		{
+			if (!Proxy_Shared_ClientUserinfoChanged(arg0))
 			{
 				return 0;
 			}

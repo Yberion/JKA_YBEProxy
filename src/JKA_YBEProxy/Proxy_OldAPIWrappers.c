@@ -13,6 +13,14 @@ intptr_t QDECL Proxy_OldAPI_systemCall(intptr_t command, intptr_t arg0, intptr_t
 
 			break;
 		}
+		//==================================================
+		case G_GET_USERCMD: // (int clientNum, usercmd_t* cmd)
+		//==================================================
+		{
+			Proxy_Shared_GetUsercmd((int)arg0, (usercmd_t*)arg1);
+
+			break;
+		}
 		default:
 			break;
 	}
