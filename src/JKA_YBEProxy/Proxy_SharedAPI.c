@@ -55,9 +55,8 @@ qboolean Proxy_Shared_ClientCommand(int clientNum)
 
 	if (!Q_stricmpn(&cmd[0], "jkaDST_", 7))
 	{
+		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.proxyClientData->cleanName));
 		proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
-		// Todo: put the name here
-		proxy.trap->SendServerCommand(-1, "chat \"^3(Anti-Cheat system) ^7X^3 got kicked cause of cheating^7\"");
 
 		return qfalse;
 	}
@@ -127,18 +126,54 @@ qboolean Proxy_Shared_ClientCommand(int clientNum)
 	return qtrue;
 }
 
-qboolean Proxy_Shared_ClientUserinfoChanged(int clientNum)
+void Proxy_Shared_ClientUserinfoChanged(int clientNum)
 {
 	// WIP
-	// Fix bugged model 
-	// Clean name
-	// Todo: Check for empty userinfo
+	// Todo: Force power fix
 
-	char userinfo[MAX_INFO_STRING] = { 0 };
+	char userinfo[MAX_INFO_STRING];
+	char *val = NULL;
 
-	proxy.trap->Argv(1, userinfo, sizeof(userinfo));
+	proxy.trap->GetUserinfo(clientNum, userinfo, sizeof(userinfo));
 
-	proxy.trap->Print("AAA : %s \n", Info_ValueForKey(userinfo, "name"));
+	if (strlen(userinfo) <= 0)
+	{
+		return;
+	}
 
-	return qtrue;
+	val = Info_ValueForKey(userinfo, "name");
+
+	// Fix bad names
+	Proxy_ClientCleanName(val, proxy.proxyClientData->cleanName, sizeof(proxy.proxyClientData->cleanName));
+	Info_SetValueForKey(userinfo, "name", proxy.proxyClientData->cleanName);
+
+	val = Info_ValueForKey(userinfo, "model");
+
+	// Fix bugged models
+	if (val)
+	{
+		int len = (int)strlen(val);
+
+		if (!Q_stricmpn(val, "darksidetools", len))
+		{
+			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.proxyClientData->cleanName));
+			proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
+		}
+		
+		qboolean badModel = qfalse;
+
+		if (!Q_stricmpn(val, "jedi_", 5) && (!Q_stricmpn(val, "jedi_/red", len) || !Q_stricmpn(val, "jedi_/blue", len)))
+			badModel = qtrue;
+		else if (!Q_stricmpn(val, "rancor", len))
+			badModel = qtrue;
+		else if (!Q_stricmpn(val, "wampa", len))
+			badModel = qtrue;
+
+		if (badModel)
+			Info_SetValueForKey(userinfo, "model", "kyle");
+	}
+
+	proxy.trap->SetUserinfo(clientNum, userinfo);
+
+	return;
 }

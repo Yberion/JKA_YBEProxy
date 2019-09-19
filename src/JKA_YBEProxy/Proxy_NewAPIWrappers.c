@@ -75,10 +75,7 @@ void Proxy_NewAPI_ClientCommand(int clientNum)
 
 qboolean Proxy_NewAPI_ClientUserinfoChanged(int clientNum)
 {
-	if (!Proxy_Shared_ClientUserinfoChanged(clientNum))
-	{
-		return qfalse;
-	}
+	Proxy_Shared_ClientUserinfoChanged(clientNum);
 
 	return proxy.originalNewAPIGameExportTable->ClientUserinfoChanged(clientNum);
 }

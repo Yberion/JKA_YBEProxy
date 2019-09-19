@@ -14,6 +14,83 @@ playerState_t* Proxy_GetPlayerStateByClientNum(int num)
 	return ps;
 }
 
+/*
+===========
+SV_ClientCleanName
+
+Gamecode to engine port (from OpenJK)
+============
+*/
+// void SV_ClientCleanName(const char* in, char* out, int outSize)
+void Proxy_ClientCleanName(const char* in, char* out, int outSize)
+{
+	int outpos = 0, colorlessLen = 0;
+
+	// discard leading spaces
+	for (; *in == ' '; in++);
+
+	// discard leading asterisk's (fail raven for using * as a skipnotify)
+	// apparently .* causes the issue too so... derp
+	for (; *in == '*'; in++);
+
+	for (; *in && outpos < outSize - 1; in++)
+	{
+		out[outpos] = *in;
+
+		if (*(in + 1) && *(in + 1) != '\0' && *(in + 2) && *(in + 2) != '\0')
+		{
+			if (*in == ' ' && *(in + 1) == ' ' && *(in + 2) == ' ') // don't allow more than 3 consecutive spaces
+				continue;
+
+			if (*in == '@' && *(in + 1) == '@' && *(in + 2) == '@') // don't allow too many consecutive @ signs
+				continue;
+		}
+
+		if ((byte)* in < 0x20)
+			continue;
+
+		switch ((byte)* in)
+		{
+		default:
+			break;
+		case 0x81:
+		case 0x8D:
+		case 0x8F:
+		case 0x90:
+		case 0x9D:
+		case 0xA0:
+		case 0xAD:
+			continue;
+			break;
+		}
+
+		if (outpos > 0 && out[outpos - 1] == Q_COLOR_ESCAPE)
+		{
+			if (Q_IsColorStringExt(&out[outpos - 1]))
+			{
+				colorlessLen--;
+			}
+			else
+			{
+				//spaces = ats = 0;
+				colorlessLen++;
+			}
+		}
+		else
+		{
+			//spaces = ats = 0;
+			colorlessLen++;
+		}
+		outpos++;
+	}
+
+	out[outpos] = '\0';
+
+	// don't allow empty names
+	if (*out == '\0' || colorlessLen == 0)
+		Q_strncpyz(out, "Padawan", outSize);
+}
+
 // ==================================================
 // q_shared
 // ==================================================
@@ -101,6 +178,115 @@ char* Info_ValueForKey(const char* s, const char* key) {
 	}
 
 	return "";
+}
+
+/*
+===================
+Info_RemoveKey
+===================
+*/
+void Info_RemoveKey(char* s, const char* key) {
+	char* start = NULL, * o = NULL;
+	char	pkey[MAX_INFO_KEY] = { 0 };
+	char	value[MAX_INFO_VALUE] = { 0 };
+
+	if (strlen(s) >= MAX_INFO_STRING) {
+		Com_Error(ERR_DROP, "Info_RemoveKey: oversize infostring");
+		return;
+	}
+
+	if (strchr(key, '\\')) {
+		return;
+	}
+
+	while (1)
+	{
+		start = s;
+		if (*s == '\\')
+			s++;
+		o = pkey;
+		while (*s != '\\')
+		{
+			if (!*s)
+				return;
+			*o++ = *s++;
+		}
+		*o = 0;
+		s++;
+
+		o = value;
+		while (*s != '\\' && *s)
+		{
+			if (!*s)
+				return;
+			*o++ = *s++;
+		}
+		*o = 0;
+
+		//OJKNOTE: static analysis pointed out pkey may not be null-terminated
+		if (!strcmp(key, pkey))
+		{
+			memmove(start, s, strlen(s) + 1);	// remove this part
+			return;
+		}
+
+		if (!*s)
+			return;
+	}
+}
+
+/*
+==================
+Info_SetValueForKey
+
+Changes or adds a key/value pair
+==================
+*/
+void Info_SetValueForKey(char* s, const char* key, const char* value) {
+	char	newi[MAX_INFO_STRING];
+	const char* blacklist = "\\;\"";
+
+	if (strlen(s) >= MAX_INFO_STRING) {
+		Com_Error(ERR_DROP, "Info_SetValueForKey: oversize infostring");
+	}
+
+	for (; *blacklist; ++blacklist)
+	{
+		if (strchr(key, *blacklist) || strchr(value, *blacklist))
+		{
+			Com_Printf(S_COLOR_YELLOW "Can't use keys or values with a '%c': %s = %s\n", *blacklist, key, value);
+			return;
+		}
+	}
+
+	Info_RemoveKey(s, key);
+	if (!value || !strlen(value))
+		return;
+
+	Com_sprintf(newi, sizeof(newi), "\\%s\\%s", key, value);
+
+	if (strlen(newi) + strlen(s) >= MAX_INFO_STRING)
+	{
+		Com_Printf("Info string length exceeded: %s\n", s);
+		return;
+	}
+
+	strcat(newi, s);
+	strcpy(s, newi);
+}
+
+int QDECL Com_sprintf(char* dest, int size, const char* fmt, ...) {
+	int		len;
+	va_list		argptr;
+
+	va_start(argptr, fmt);
+	len = Q_vsnprintf(dest, size, fmt, argptr);
+	va_end(argptr);
+
+	if (len >= size)
+		Com_Printf("Com_sprintf: Output length %d too short, require %d bytes.\n", size, len + 1);
+
+	return len;
 }
 
 // ==================================================
@@ -213,6 +399,22 @@ const char* Q_strchrs(const char* string, const char* search)
 	}
 
 	return NULL;
+}
+
+/*
+=============
+Q_strncpyz
+
+Safe strncpy that ensures a trailing zero
+=============
+*/
+void Q_strncpyz(char* dest, const char* src, int destsize) {
+	assert(src);
+	assert(dest);
+	assert(destsize);
+
+	strncpy(dest, src, destsize - 1);
+	dest[destsize - 1] = 0;
 }
 
 // ==================================================

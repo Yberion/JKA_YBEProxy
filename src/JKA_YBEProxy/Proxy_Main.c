@@ -83,10 +83,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 		case GAME_CLIENT_USERINFO_CHANGED: // (int clientNum)
 		//==================================================
 		{
-			if (!Proxy_Shared_ClientUserinfoChanged(arg0))
-			{
-				return 0;
-			}
+			Proxy_Shared_ClientUserinfoChanged((int)arg0);
 
 			break;
 		}

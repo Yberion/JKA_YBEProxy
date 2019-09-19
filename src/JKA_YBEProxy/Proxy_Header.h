@@ -90,7 +90,8 @@ typedef struct Proxy_s {
 	} locatedGameData;
 
 	struct proxyClientData_s {
-		qboolean isConnected;
+		qboolean			isConnected;
+		char				cleanName[MAX_NETNAME];
 	} proxyClientData[MAX_CLIENTS];
 } Proxy_t;
 
@@ -120,10 +121,14 @@ void Proxy_LoadOriginalGameLibrary(void);
 
 // -- server engine
 playerState_t* Proxy_GetPlayerStateByClientNum(int num);
+void Proxy_ClientCleanName(const char* in, char* out, int outSize);
 
 // --  q_shared
 char* QDECL va(const char* format, ...);
 char* Info_ValueForKey(const char* s, const char* key);
+void Info_RemoveKey(char* s, const char* key);
+void Info_SetValueForKey(char* s, const char* key, const char* value);
+int QDECL Com_sprintf(char* dest, int size, const char* fmt, ...);
 
 // -- q_string
 /*
@@ -139,6 +144,7 @@ char* Info_ValueForKey(const char* s, const char* key);
 int Q_stricmpn(const char* s1, const char* s2, int n);
 int Q_stricmp(const char* s1, const char* s2);
 const char* Q_strchrs(const char* string, const char* search);
+void Q_strncpyz(char* dest, const char* src, int destsize);
 
 // -- other
 char* ConcatArgs(int start);
@@ -182,7 +188,7 @@ void Proxy_Shared_GetUsercmd(int clientNum, usercmd_t* cmd);
 void Proxy_Shared_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 void Proxy_Shared_ClientBegin(int clientNum, qboolean allowTeamReset);
 qboolean Proxy_Shared_ClientCommand(int clientNum);
-qboolean Proxy_Shared_ClientUserinfoChanged(int clientNum);
+void Proxy_Shared_ClientUserinfoChanged(int clientNum);
 
 // ------------------------
 // Proxy_SystemCalls
