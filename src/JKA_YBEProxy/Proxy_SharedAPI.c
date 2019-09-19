@@ -56,11 +56,13 @@ qboolean Proxy_Shared_ClientCommand(int clientNum)
 	if (!Q_stricmpn(&cmd[0], "jkaDST_", 7))
 	{
 		proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
+		// Todo: put the name here
 		proxy.trap->SendServerCommand(-1, "chat \"^3(Anti-Cheat system) ^7X^3 got kicked cause of cheating^7\"");
 
 		return qfalse;
 	}
 
+	// Todo (not sure): Check in the entier command + args?
 	char* argsConcat = ConcatArgs(1);
 
 	if (!Q_stricmpn(&cmd[0], "say", 3) || !Q_stricmpn(&cmd[0], "say_team", 8) || !Q_stricmpn(&cmd[0], "tell", 4))
@@ -130,6 +132,7 @@ qboolean Proxy_Shared_ClientUserinfoChanged(int clientNum)
 	// WIP
 	// Fix bugged model 
 	// Clean name
+	// Todo: Check for empty userinfo
 
 	char userinfo[MAX_INFO_STRING] = { 0 };
 

@@ -17,7 +17,11 @@ intptr_t QDECL Proxy_OldAPI_systemCall(intptr_t command, intptr_t arg0, intptr_t
 		case G_GET_USERCMD: // (int clientNum, usercmd_t* cmd)
 		//==================================================
 		{
+			int response = proxy.originalSystemCall(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
+			
 			Proxy_Shared_GetUsercmd((int)arg0, (usercmd_t*)arg1);
+			
+			return response;
 
 			break;
 		}

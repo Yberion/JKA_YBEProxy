@@ -36,7 +36,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 			break;
 		}
 		//==================================================
-		case GAME_SHUTDOWN: //(int restart)
+		case GAME_SHUTDOWN: // (int restart)
 		//==================================================
 		{
 			if (proxy.jampgameHandle)
@@ -53,7 +53,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 			break;
 		}
 		//==================================================
-		case GAME_CLIENT_CONNECT: //(int clientNum, qboolean firstTime, qboolean isBot)
+		case GAME_CLIENT_CONNECT: // (int clientNum, qboolean firstTime, qboolean isBot)
 		//==================================================
 		{
 			Proxy_Shared_ClientConnect(arg0, (qboolean)arg1, (qboolean)arg2);
