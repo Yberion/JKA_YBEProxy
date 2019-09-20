@@ -22,14 +22,14 @@ void Proxy_NewAPI_InitLayerImportTable(void)
 
 void Proxy_NewAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient)
 {
-	Proxy_Shared_LocateGameData(gEnts, numGEntities, sizeofGEntity_t, clients, sizeofGameClient);
+	Proxy_SharedAPI_LocateGameData(gEnts, numGEntities, sizeofGEntity_t, clients, sizeofGameClient);
 
 	proxy.originalNewAPIGameImportTable->LocateGameData(gEnts, numGEntities, sizeofGEntity_t, clients, sizeofGameClient);
 }
 
 void Proxy_NewAPI_GetUsercmd(int clientNum, usercmd_t* cmd)
 {
-	Proxy_Shared_GetUsercmd(clientNum, cmd);
+	Proxy_SharedAPI_GetUsercmd(clientNum, cmd);
 
 	proxy.originalNewAPIGameImportTable->GetUsercmd(clientNum, cmd);
 }
@@ -51,21 +51,21 @@ void Proxy_NewAPI_ShutdownGame(int restart)
 
 char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
 {
-	Proxy_Shared_ClientConnect(clientNum, firstTime, isBot);
+	Proxy_SharedAPI_ClientConnect(clientNum, firstTime, isBot);
 
 	return proxy.originalNewAPIGameExportTable->ClientConnect(clientNum, firstTime, isBot);
 }
 
 void Proxy_NewAPI_ClientBegin(int clientNum, qboolean allowTeamReset)
 {
-	Proxy_Shared_ClientBegin(clientNum, allowTeamReset);
+	Proxy_SharedAPI_ClientBegin(clientNum, allowTeamReset);
 
 	proxy.originalNewAPIGameExportTable->ClientBegin(clientNum, allowTeamReset);
 }
 
 void Proxy_NewAPI_ClientCommand(int clientNum)
 {
-	if (!Proxy_Shared_ClientCommand(clientNum))
+	if (!Proxy_SharedAPI_ClientCommand(clientNum))
 	{
 		return;
 	}
@@ -75,7 +75,7 @@ void Proxy_NewAPI_ClientCommand(int clientNum)
 
 qboolean Proxy_NewAPI_ClientUserinfoChanged(int clientNum)
 {
-	Proxy_Shared_ClientUserinfoChanged(clientNum);
+	Proxy_SharedAPI_ClientUserinfoChanged(clientNum);
 
 	return proxy.originalNewAPIGameExportTable->ClientUserinfoChanged(clientNum);
 }

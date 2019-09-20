@@ -56,7 +56,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 		case GAME_CLIENT_CONNECT: // (int clientNum, qboolean firstTime, qboolean isBot)
 		//==================================================
 		{
-			Proxy_Shared_ClientConnect(arg0, (qboolean)arg1, (qboolean)arg2);
+			Proxy_SharedAPI_ClientConnect(arg0, (qboolean)arg1, (qboolean)arg2);
 
 			break;
 		}
@@ -64,7 +64,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 		case GAME_CLIENT_BEGIN: // (int clientNum, qboolean allowTeamReset)
 		//==================================================
 		{
-			Proxy_Shared_ClientBegin(arg0, (qboolean)arg1);
+			Proxy_SharedAPI_ClientBegin(arg0, (qboolean)arg1);
 
 			break;
 		}
@@ -72,7 +72,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 		case GAME_CLIENT_COMMAND: // (int clientNum)
 		//==================================================
 		{
-			if (!Proxy_Shared_ClientCommand(arg0))
+			if (!Proxy_SharedAPI_ClientCommand(arg0))
 			{
 				return 0;
 			}
@@ -83,7 +83,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 		case GAME_CLIENT_USERINFO_CHANGED: // (int clientNum)
 		//==================================================
 		{
-			Proxy_Shared_ClientUserinfoChanged((int)arg0);
+			Proxy_SharedAPI_ClientUserinfoChanged((int)arg0);
 
 			break;
 		}
@@ -100,7 +100,7 @@ Q_EXPORT void dllEntry(systemCallFuncPtr_t systemCallFuncPtdr) {
 
 	// Create trap calls available directly within the proxy
 	// this way we can use trap_ calls
-	TranslateSystemcalls();
+	TranslateSystemCalls();
 }
 
 Q_EXPORT gameExport_t* QDECL GetModuleAPI(int apiVersion, gameImport_t* import)

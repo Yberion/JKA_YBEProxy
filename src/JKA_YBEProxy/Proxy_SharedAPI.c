@@ -4,7 +4,7 @@
 // IMPORT TABLE
 // ==================================================
 
-void Proxy_Shared_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient)
+void Proxy_SharedAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient)
 {
 	proxy.locatedGameData.g_entities = gEnts;
 	proxy.locatedGameData.num_entities = numGEntities;
@@ -14,7 +14,7 @@ void Proxy_Shared_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int si
 	proxy.locatedGameData.g_clientSize = sizeofGameClient;
 }
 
-void Proxy_Shared_GetUsercmd(int clientNum, usercmd_t* cmd)
+void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* cmd)
 {
 	cmd->forcesel = 0xFFu;
 	cmd->angles[ROLL] = 0;
@@ -24,7 +24,7 @@ void Proxy_Shared_GetUsercmd(int clientNum, usercmd_t* cmd)
 // EXPORT TABLE
 // ==================================================
 
-void Proxy_Shared_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
+void Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
 {
 	// Doesn't work on the new API
 	if (firstTime && !isBot)
@@ -33,17 +33,17 @@ void Proxy_Shared_ClientConnect(int clientNum, qboolean firstTime, qboolean isBo
 	}
 }
 
-void Proxy_Shared_ClientBegin(int clientNum, qboolean allowTeamReset)
+void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset)
 {
 	if (clientNum >= 0 && clientNum < MAX_CLIENTS)
 	{
-		proxy.proxyClientData[clientNum].isConnected = qtrue;
+		proxy.clientData[clientNum].isConnected = qtrue;
 	}
 }
 
-qboolean Proxy_Shared_ClientCommand(int clientNum)
+qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 {
-	if (!proxy.proxyClientData[clientNum].isConnected)
+	if (!proxy.clientData[clientNum].isConnected)
 	{
 		return qfalse;
 	}
@@ -55,7 +55,7 @@ qboolean Proxy_Shared_ClientCommand(int clientNum)
 
 	if (!Q_stricmpn(&cmd[0], "jkaDST_", 7))
 	{
-		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.proxyClientData->cleanName));
+		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData->cleanName));
 		proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
 
 		return qfalse;
@@ -126,14 +126,10 @@ qboolean Proxy_Shared_ClientCommand(int clientNum)
 	return qtrue;
 }
 
-void Proxy_Shared_ClientUserinfoChanged(int clientNum)
+void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 {
-	// WIP
-	// Todo: Force power fix
-
 	char userinfo[MAX_INFO_STRING];
-	char *val = NULL;
-
+	
 	proxy.trap->GetUserinfo(clientNum, userinfo, sizeof(userinfo));
 
 	if (strlen(userinfo) <= 0)
@@ -141,22 +137,25 @@ void Proxy_Shared_ClientUserinfoChanged(int clientNum)
 		return;
 	}
 
+	int len = 0;
+	char* val = NULL;
+
 	val = Info_ValueForKey(userinfo, "name");
 
 	// Fix bad names
-	Proxy_ClientCleanName(val, proxy.proxyClientData->cleanName, sizeof(proxy.proxyClientData->cleanName));
-	Info_SetValueForKey(userinfo, "name", proxy.proxyClientData->cleanName);
+	Proxy_ClientCleanName(val, proxy.clientData->cleanName, sizeof(proxy.clientData->cleanName));
+	Info_SetValueForKey(userinfo, "name", proxy.clientData->cleanName);
 
 	val = Info_ValueForKey(userinfo, "model");
 
 	// Fix bugged models
 	if (val)
 	{
-		int len = (int)strlen(val);
+		len = (int)strlen(val);
 
 		if (!Q_stricmpn(val, "darksidetools", len))
 		{
-			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.proxyClientData->cleanName));
+			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData->cleanName));
 			proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
 		}
 		
@@ -172,6 +171,60 @@ void Proxy_Shared_ClientUserinfoChanged(int clientNum)
 		if (badModel)
 			Info_SetValueForKey(userinfo, "model", "kyle");
 	}
+
+	//Fix force crash
+	char forcePowers[30];
+	
+	Q_strncpyz(forcePowers, Info_ValueForKey(userinfo, "forcepowers"), sizeof(forcePowers));
+
+	len = (int)strlen(forcePowers);
+
+	qboolean badForce = qfalse;
+
+	if (len >= 22 && len <= 24)
+	{
+		byte seps = 0;
+
+		for (int i = 0; i < len; i++)
+		{
+			if (forcePowers[i] != '-' && (forcePowers[i] < '0' || forcePowers[i] > '9'))
+			{
+				badForce = qtrue;
+				break;
+			}
+
+			if (forcePowers[i] == '-' && (i < 1 || i > 5))
+			{
+				badForce = qtrue;
+				break;
+			}
+
+			if (i && forcePowers[i - 1] == '-' && forcePowers[i] == '-')
+			{
+				badForce = qtrue;
+				break;
+			}
+
+			if (forcePowers[i] == '-')
+			{
+				seps++;
+			}
+		}
+
+		if (seps != 2)
+		{
+			badForce = qtrue;
+		}
+	}
+	else
+	{
+		badForce = qtrue;
+	}
+
+	if (badForce)
+		Q_strncpyz(forcePowers, "7-1-030000000000003332", sizeof(forcePowers));
+
+	Info_SetValueForKey(userinfo, "forcepowers", forcePowers);
 
 	proxy.trap->SetUserinfo(clientNum, userinfo);
 

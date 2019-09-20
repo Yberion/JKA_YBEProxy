@@ -92,7 +92,7 @@ typedef struct Proxy_s {
 	struct proxyClientData_s {
 		qboolean			isConnected;
 		char				cleanName[MAX_NETNAME];
-	} proxyClientData[MAX_CLIENTS];
+	} clientData[MAX_CLIENTS];
 } Proxy_t;
 
 // ==================================================
@@ -181,17 +181,17 @@ intptr_t QDECL Proxy_OldAPI_systemCall(intptr_t command, intptr_t arg0, intptr_t
 // ------------------------
 
 // -- Import table
-void Proxy_Shared_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient);
-void Proxy_Shared_GetUsercmd(int clientNum, usercmd_t* cmd);
+void Proxy_SharedAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient);
+void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* cmd);
 
 // -- Export table
-void Proxy_Shared_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
-void Proxy_Shared_ClientBegin(int clientNum, qboolean allowTeamReset);
-qboolean Proxy_Shared_ClientCommand(int clientNum);
-void Proxy_Shared_ClientUserinfoChanged(int clientNum);
+void Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
+void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
+qboolean Proxy_SharedAPI_ClientCommand(int clientNum);
+void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum);
 
 // ------------------------
 // Proxy_SystemCalls
 // ------------------------
 
-void TranslateSystemcalls(void);
+void TranslateSystemCalls(void);

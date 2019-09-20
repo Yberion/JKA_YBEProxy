@@ -1053,7 +1053,7 @@ void QDECL G_Printf(const char* msg, ...) {
 		trap_Print(text);
 }
 
-void TranslateSystemcalls(void) {
+void TranslateSystemCalls(void) {
 	static gameImport_t import = { 0 };
 
 	proxy.trap = &import;

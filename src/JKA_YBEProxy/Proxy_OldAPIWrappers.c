@@ -9,7 +9,7 @@ intptr_t QDECL Proxy_OldAPI_systemCall(intptr_t command, intptr_t arg0, intptr_t
 		case G_LOCATE_GAME_DATA: // (sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient)
 		//==================================================
 		{
-			Proxy_Shared_LocateGameData((sharedEntity_t*)arg0, (int)arg1, (int)arg2, (playerState_t*)arg3, (int)arg4);
+			Proxy_SharedAPI_LocateGameData((sharedEntity_t*)arg0, (int)arg1, (int)arg2, (playerState_t*)arg3, (int)arg4);
 
 			break;
 		}
@@ -19,7 +19,7 @@ intptr_t QDECL Proxy_OldAPI_systemCall(intptr_t command, intptr_t arg0, intptr_t
 		{
 			int response = proxy.originalSystemCall(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
 			
-			Proxy_Shared_GetUsercmd((int)arg0, (usercmd_t*)arg1);
+			Proxy_SharedAPI_GetUsercmd((int)arg0, (usercmd_t*)arg1);
 			
 			return response;
 
