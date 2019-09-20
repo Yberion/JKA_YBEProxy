@@ -172,7 +172,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 			Info_SetValueForKey(userinfo, "model", "kyle");
 	}
 
-	//Fix force crash
+	//Fix forcepowers crash
 	char forcePowers[30];
 	
 	Q_strncpyz(forcePowers, Info_ValueForKey(userinfo, "forcepowers"), sizeof(forcePowers));
