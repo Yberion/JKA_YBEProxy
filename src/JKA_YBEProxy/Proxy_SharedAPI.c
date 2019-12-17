@@ -16,7 +16,7 @@ void Proxy_SharedAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int
 
 void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* cmd)
 {
-	cmd->forcesel = 0xFFu;
+	cmd->forcesel = 0xFFU;
 	cmd->angles[ROLL] = 0;
 }
 
@@ -132,7 +132,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	
 	proxy.trap->GetUserinfo(clientNum, userinfo, sizeof(userinfo));
 
-	if (strlen(userinfo) <= 0)
+	if (strlen(userinfo) == 0)
 	{
 		return;
 	}
@@ -158,18 +158,13 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData->cleanName));
 			proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
 		}
-		
-		qboolean badModel = qfalse;
 
-		if (!Q_stricmpn(val, "jedi_", 5) && (!Q_stricmpn(val, "jedi_/red", len) || !Q_stricmpn(val, "jedi_/blue", len)))
-			badModel = qtrue;
-		else if (!Q_stricmpn(val, "rancor", len))
-			badModel = qtrue;
-		else if (!Q_stricmpn(val, "wampa", len))
-			badModel = qtrue;
-
-		if (badModel)
+		if ((!Q_stricmpn(val, "jedi_", 5) && (!Q_stricmpn(val, "jedi_/red", len) || !Q_stricmpn(val, "jedi_/blue", len)))
+			|| !Q_stricmpn(val, "rancor", len)
+			|| !Q_stricmpn(val, "wampa", len))
+		{
 			Info_SetValueForKey(userinfo, "model", "kyle");
+		}
 	}
 
 	//Fix forcepowers crash
@@ -193,7 +188,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 				break;
 			}
 
-			if (forcePowers[i] == '-' && (i < 1 || i > 5))
+			if ((i < 1 || i > 5) && forcePowers[i] == '-')
 			{
 				badForce = qtrue;
 				break;
@@ -222,7 +217,9 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	}
 
 	if (badForce)
+	{
 		Q_strncpyz(forcePowers, "7-1-030000000000003332", sizeof(forcePowers));
+	}
 
 	Info_SetValueForKey(userinfo, "forcepowers", forcePowers);
 

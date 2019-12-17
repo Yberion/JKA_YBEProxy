@@ -89,7 +89,7 @@ typedef struct Proxy_s {
 		int					g_clientSize;
 	} locatedGameData;
 
-	struct proxyClientData_s {
+	struct clientData_s {
 		qboolean			isConnected;
 		char				cleanName[MAX_NETNAME];
 	} clientData[MAX_CLIENTS];
@@ -124,11 +124,11 @@ playerState_t* Proxy_GetPlayerStateByClientNum(int num);
 void Proxy_ClientCleanName(const char* in, char* out, int outSize);
 
 // --  q_shared
-char* QDECL va(const char* format, ...);
-char* Info_ValueForKey(const char* s, const char* key);
-void Info_RemoveKey(char* s, const char* key);
-void Info_SetValueForKey(char* s, const char* key, const char* value);
-int QDECL Com_sprintf(char* dest, int size, const char* fmt, ...);
+//char* QDECL va(const char* format, ...);
+//char* Info_ValueForKey(const char* s, const char* key);
+//void Info_RemoveKey(char* s, const char* key);
+//void Info_SetValueForKey(char* s, const char* key, const char* value);
+//int QDECL Com_sprintf(char* dest, int size, const char* fmt, ...);
 
 // -- q_string
 /*
@@ -141,10 +141,10 @@ int QDECL Com_sprintf(char* dest, int size, const char* fmt, ...);
 #endif
 */
 
-int Q_stricmpn(const char* s1, const char* s2, int n);
-int Q_stricmp(const char* s1, const char* s2);
-const char* Q_strchrs(const char* string, const char* search);
-void Q_strncpyz(char* dest, const char* src, int destsize);
+//int Q_stricmpn(const char* s1, const char* s2, int n);
+//int Q_stricmp(const char* s1, const char* s2);
+//const char* Q_strchrs(const char* string, const char* search);
+//void Q_strncpyz(char* dest, const char* src, size_t destsize);
 
 // -- other
 char* ConcatArgs(int start);
@@ -165,8 +165,9 @@ void Proxy_NewAPI_ShutdownGame(int restart);
 char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 void Proxy_NewAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 void Proxy_NewAPI_ClientCommand(int clientNum);
-qboolean Proxy_NewAPI_ClientUserinfoChanged(int clientNum);
 void Proxy_NewAPI_RunFrame(int levelTime);
+void Proxy_NewAPI_ClientThink(int clientNum, usercmd_t* ucmd);
+qboolean Proxy_NewAPI_ClientUserinfoChanged(int clientNum);
 
 // ------------------------
 // Proxy_OldAPIWrappers

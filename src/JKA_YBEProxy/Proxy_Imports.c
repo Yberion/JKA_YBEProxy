@@ -24,30 +24,43 @@ Gamecode to engine port (from OpenJK)
 // void SV_ClientCleanName(const char* in, char* out, int outSize)
 void Proxy_ClientCleanName(const char* in, char* out, int outSize)
 {
-	int outpos = 0, colorlessLen = 0;
+	int outpos = 0;
+	int colorlessLen = 0;
 
 	// discard leading spaces
-	for (; *in == ' '; in++);
+	for (; *in == ' '; in++)
+	{
+
+	}
 
 	// discard leading asterisk's (fail raven for using * as a skipnotify)
 	// apparently .* causes the issue too so... derp
-	for (; *in == '*'; in++);
+	for (; *in == '*'; in++)
+	{
+
+	}
 
 	for (; *in && outpos < outSize - 1; in++)
 	{
 		out[outpos] = *in;
 
-		if (*(in + 1) && *(in + 1) != '\0' && *(in + 2) && *(in + 2) != '\0')
+		if (*(in + 1) && *(in + 2))
 		{
 			if (*in == ' ' && *(in + 1) == ' ' && *(in + 2) == ' ') // don't allow more than 3 consecutive spaces
+			{
 				continue;
+			}
 
 			if (*in == '@' && *(in + 1) == '@' && *(in + 2) == '@') // don't allow too many consecutive @ signs
+			{
 				continue;
+			}
 		}
 
-		if ((byte)* in < 0x20)
+		if ((byte)*in < 0x20)
+		{
 			continue;
+		}
 
 		switch ((byte)* in)
 		{
@@ -88,7 +101,9 @@ void Proxy_ClientCleanName(const char* in, char* out, int outSize)
 
 	// don't allow empty names
 	if (*out == '\0' || colorlessLen == 0)
+	{
 		Q_strncpyz(out, "Padawan", outSize);
+	}
 }
 
 // ==================================================
@@ -111,11 +126,11 @@ char *QDECL va(const char* format, ...)
 {
 	va_list		argptr;
 	static char	string[MAX_VA_BUFFERS][MAX_VA_STRING];	// in case va is called by nested functions
-	static int	index = 0;
+	static size_t	index = 0;
 	char* buf;
 
 	va_start(argptr, format);
-	buf = (char *)& string[index++ & 3];
+	buf = (char *) &string[index++ & 3];
 	Q_vsnprintf(buf, sizeof(*string), format, argptr);
 	va_end(argptr);
 
@@ -135,8 +150,7 @@ char* Info_ValueForKey(const char* s, const char* key) {
 	char	pkey[BIG_INFO_KEY];
 	static	char value[2][BIG_INFO_VALUE];	// use two buffers so compares
 											// work without stomping on each other
-	static	int	valueindex = 0;
-	char* o;
+	static	size_t	valueindex = 0;
 
 	if (!s || !key) {
 		return "";
@@ -147,15 +161,23 @@ char* Info_ValueForKey(const char* s, const char* key) {
 	}
 
 	valueindex ^= 1;
+
 	if (*s == '\\')
+	{
 		s++;
+	}
+
 	while (1)
 	{
+		char* o;
+
 		o = pkey;
 		while (*s != '\\')
 		{
 			if (!*s)
+			{
 				return "";
+			}
 			*o++ = *s++;
 		}
 		*o = 0;
@@ -170,10 +192,14 @@ char* Info_ValueForKey(const char* s, const char* key) {
 		*o = 0;
 
 		if (!Q_stricmp(key, pkey))
+		{
 			return value[valueindex];
+		}
 
 		if (!*s)
+		{
 			break;
+		}
 		s++;
 	}
 
@@ -186,7 +212,8 @@ Info_RemoveKey
 ===================
 */
 void Info_RemoveKey(char* s, const char* key) {
-	char* start = NULL, * o = NULL;
+	char* start = NULL;
+	char* o = NULL;
 	char	pkey[MAX_INFO_KEY] = { 0 };
 	char	value[MAX_INFO_VALUE] = { 0 };
 
@@ -203,12 +230,16 @@ void Info_RemoveKey(char* s, const char* key) {
 	{
 		start = s;
 		if (*s == '\\')
+		{
 			s++;
+		}
 		o = pkey;
 		while (*s != '\\')
 		{
 			if (!*s)
+			{
 				return;
+			}
 			*o++ = *s++;
 		}
 		*o = 0;
@@ -218,7 +249,9 @@ void Info_RemoveKey(char* s, const char* key) {
 		while (*s != '\\' && *s)
 		{
 			if (!*s)
+			{
 				return;
+			}
 			*o++ = *s++;
 		}
 		*o = 0;
@@ -227,11 +260,15 @@ void Info_RemoveKey(char* s, const char* key) {
 		if (!strcmp(key, pkey))
 		{
 			memmove(start, s, strlen(s) + 1);	// remove this part
-			return;
+			{
+				return;
+			}
 		}
 
 		if (!*s)
+		{
 			return;
+		}
 	}
 }
 
@@ -261,7 +298,9 @@ void Info_SetValueForKey(char* s, const char* key, const char* value) {
 
 	Info_RemoveKey(s, key);
 	if (!value || !strlen(value))
+	{
 		return;
+	}
 
 	Com_sprintf(newi, sizeof(newi), "\\%s\\%s", key, value);
 
@@ -284,7 +323,9 @@ int QDECL Com_sprintf(char* dest, int size, const char* fmt, ...) {
 	va_end(argptr);
 
 	if (len >= size)
+	{
 		Com_Printf("Com_sprintf: Output length %d too short, require %d bytes.\n", size, len + 1);
+	}
 
 	return len;
 }
@@ -302,11 +343,11 @@ Special wrapper function for Microsoft's broken _vsnprintf() function.
 MinGW comes with its own snprintf() which is not broken.
 =============
 */
-int Q_vsnprintf(char* str, size_t size, const char* format, va_list ap)
+int Q_vsnprintf(char* str, size_t size, const char* format, va_list args)
 {
 	int retval;
 
-	retval = _vsnprintf(str, size, format, ap);
+	retval = _vsnprintf(str, size, format, args);
 
 	if (retval < 0 || retval == size)
 	{
@@ -327,22 +368,26 @@ int Q_vsnprintf(char* str, size_t size, const char* format, va_list ap)
 
 int Q_stricmpn(const char* s1, const char* s2, int n)
 {
-	int		c1, c2;
+	int		c1;
 
 	if (s1 == NULL)
 	{
 		if (s2 == NULL)
+		{
 			return 0;
-		else
-			return -1;
+		}
+
+		return -1;
 	}
 	else if (s2 == NULL)
+	{
 		return 1;
+	}
 
 	do
 	{
 		c1 = *s1++;
-		c2 = *s2++;
+		int c2 = *s2++;
 
 		if (!n--)
 		{
@@ -385,14 +430,17 @@ otherwise NULL
 
 const char* Q_strchrs(const char* string, const char* search)
 {
-	const char* p = string, * s = search;
+	const char* p = string;
+	const char *s;
 
 	while (*p != '\0')
 	{
 		for (s = search; *s; s++)
 		{
 			if (*p == *s)
+			{
 				return p;
+			}
 		}
 
 		p++;
@@ -408,7 +456,7 @@ Q_strncpyz
 Safe strncpy that ensures a trailing zero
 =============
 */
-void Q_strncpyz(char* dest, const char* src, int destsize) {
+void Q_strncpyz(char* dest, const char* src, size_t destsize) {
 	assert(src);
 	assert(dest);
 	assert(destsize);
@@ -422,9 +470,10 @@ void Q_strncpyz(char* dest, const char* src, int destsize) {
 // ==================================================
 
 char* ConcatArgs(int start) {
-	int		i, c, tlen;
+	int		i;
+	int		c;
 	static char	line[MAX_STRING_CHARS];
-	int		len;
+	size_t	len;
 	char	arg[MAX_STRING_CHARS];
 
 	len = 0;
@@ -433,7 +482,7 @@ char* ConcatArgs(int start) {
 	for (i = start; i < c; i++)
 	{
 		proxy.trap->Argv(i, arg, sizeof(arg));
-		tlen = strlen(arg);
+		size_t tlen = strlen(arg);
 
 		if (len + tlen >= MAX_STRING_CHARS - 1)
 		{

@@ -22,8 +22,6 @@ intptr_t QDECL Proxy_OldAPI_systemCall(intptr_t command, intptr_t arg0, intptr_t
 			Proxy_SharedAPI_GetUsercmd((int)arg0, (usercmd_t*)arg1);
 			
 			return response;
-
-			break;
 		}
 		default:
 			break;

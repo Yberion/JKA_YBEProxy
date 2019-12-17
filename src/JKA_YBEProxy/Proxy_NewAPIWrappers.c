@@ -6,8 +6,8 @@ void Proxy_NewAPI_InitLayerExportTable(void)
 	proxy.copyNewAPIGameExportTable->ClientConnect = Proxy_NewAPI_ClientConnect;
 	proxy.copyNewAPIGameExportTable->ClientBegin = Proxy_NewAPI_ClientBegin;
 	proxy.copyNewAPIGameExportTable->ClientCommand = Proxy_NewAPI_ClientCommand;
-	proxy.copyNewAPIGameExportTable->ClientUserinfoChanged = Proxy_NewAPI_ClientUserinfoChanged;
 	proxy.copyNewAPIGameExportTable->RunFrame = Proxy_NewAPI_RunFrame;
+	proxy.copyNewAPIGameExportTable->ClientUserinfoChanged = Proxy_NewAPI_ClientUserinfoChanged;
 }
 
 void Proxy_NewAPI_InitLayerImportTable(void)
@@ -73,14 +73,14 @@ void Proxy_NewAPI_ClientCommand(int clientNum)
 	proxy.originalNewAPIGameExportTable->ClientCommand(clientNum);
 }
 
+void Proxy_NewAPI_RunFrame(int levelTime)
+{
+	proxy.originalNewAPIGameExportTable->RunFrame(levelTime);
+}
+
 qboolean Proxy_NewAPI_ClientUserinfoChanged(int clientNum)
 {
 	Proxy_SharedAPI_ClientUserinfoChanged(clientNum);
 
 	return proxy.originalNewAPIGameExportTable->ClientUserinfoChanged(clientNum);
-}
-
-void Proxy_NewAPI_RunFrame(int levelTime)
-{
-	proxy.originalNewAPIGameExportTable->RunFrame(levelTime);
 }
