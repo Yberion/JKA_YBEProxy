@@ -10,6 +10,7 @@
 // ==================================================
 
 #include "game/g_local.h"
+#include "DetourPatcher/DetourPatcher.h"
 
 // ==================================================
 // PLATFORM SPECIFIC STUFF
@@ -196,3 +197,10 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum);
 // ------------------------
 
 void TranslateSystemCalls(void);
+
+// ------------------------
+// Proxy_EnginePatch
+// ------------------------
+
+void Proxy_EnginePatch_Attach(void);
+void Proxy_EnginePatch_Detach(void);

@@ -32,6 +32,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 		//==================================================
 		{
 			Proxy_OldAPI_Init();
+			Proxy_EnginePatch_Attach();
 
 			break;
 		}
@@ -39,6 +40,8 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 		case GAME_SHUTDOWN: // (int restart)
 		//==================================================
 		{
+			Proxy_EnginePatch_Detach();
+
 			if (proxy.jampgameHandle)
 			{
 				// Send the shutdown signal to the original game module and store the response
