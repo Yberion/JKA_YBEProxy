@@ -126,6 +126,17 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	return qtrue;
 }
 
+void Proxy_SharedAPI_ClientThink(int clientNum)
+{
+	if (clientNum < 0 || clientNum >= MAX_CLIENTS || !proxy.clientData->isConnected)
+	{
+		return;
+	}
+
+	playerState_t* ps = Proxy_GetPlayerStateByClientNum(clientNum);
+	proxy.trap->Print("PING : %d\n", ps->ping);
+}
+
 void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 {
 	char userinfo[MAX_INFO_STRING];
