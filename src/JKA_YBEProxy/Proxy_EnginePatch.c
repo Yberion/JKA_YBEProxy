@@ -1,5 +1,11 @@
 #include "Proxy_EnginePatch.h"
 
+/*
+0x4580E0 = Sys_Milliseconds() : int (*Milliseconds)(void)
+00444220 = SV_CalcPings() : void (*SV_CalcPings)(void)
+0x40FBE0 = Com_Printf() : void (*bla)(const char* msg, ...)
+*/
+
 // ==================================================
 // Proxy_EnginePatch_Attach
 // --------------------------------------------------
@@ -12,8 +18,10 @@
 void Proxy_EnginePatch_Attach(void)
 {
 	pSV_SendMessageToClient =	Attach((unsigned char*)0x444E23, (unsigned char*)Proxy_EnginePatch_PingFix_SV_SendMessageToClient());
-	// 0x43C2FF for the assignement
+	// 0x43C2FF for the assignement when using the one with the if
 	pSV_UserMove =				Attach((unsigned char*)0x43C2F0, (unsigned char*)Proxy_EnginePatch_PingFix_SV_UserMove());
+	// 0x4442AC = 004442AC  |> 8B91 580C0000  ||MOV EDX,DWORD PTR DS:[ECX+C58]
+	pSV_CalcPings =				Attach((unsigned char*)0x4442AC, (unsigned char*)Proxy_EnginePatch_DisplaySnapShots_SV_CalcPings());
 }
 
 // ==================================================
@@ -29,6 +37,7 @@ void Proxy_EnginePatch_Detach(void)
 {
 	Detach((unsigned char*)0x444E23, (unsigned char*)pSV_SendMessageToClient);
 	Detach((unsigned char*)0x43C2F0, (unsigned char*)pSV_UserMove);
+	Detach((unsigned char*)0x4442AC, (unsigned char*)pSV_CalcPings);
 }
 
 // ==================================================
@@ -140,5 +149,26 @@ void* Proxy_EnginePatch_PingFix_SV_UserMove(void)
 		__asm1__(retn)
 	}
 	__sh_Epilogue;
-	
+}
+
+void* Proxy_EnginePatch_DisplaySnapShots_SV_CalcPings(void)
+{
+	char* message = "messageAcked: %d     messageSent: %d\n";
+
+	__sh_Prologue;
+	{
+		__asm1__(push eax)
+		__asm2__(mov edx, DWORD PTR DS : [ecx + 0xC58])
+		__asm1__(push dword ptr ds : [ecx + 0xC54])
+		__asm1__(push dword ptr ds : [ecx + 0xC58])
+		__asm2__(lea eax, message)
+		__asm1__(push eax)
+		__asm2__(mov eax, 0x40FBE0)
+		__asm1__(call eax)
+		__asm2__(add esp, 0xC)
+		__asm1__(pop eax)
+		__asm1__(push 0x4442B2)
+		__asm1__(retn)
+	}
+	__sh_Epilogue;
 }

@@ -134,7 +134,7 @@ void Proxy_SharedAPI_ClientThink(int clientNum)
 	}
 
 	playerState_t* ps = Proxy_GetPlayerStateByClientNum(clientNum);
-	proxy.trap->Print("PING : %d\n", ps->ping);
+	//proxy.trap->Print("PING : %d\n", ps->ping); 
 }
 
 void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
