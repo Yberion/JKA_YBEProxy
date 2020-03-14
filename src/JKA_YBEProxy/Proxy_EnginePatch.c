@@ -1,10 +1,12 @@
 #include "Proxy_EnginePatch.h"
 
 /*
-0x4580E0 = Sys_Milliseconds() : int (*Milliseconds)(void)
-00444220 = SV_CalcPings() : void (*SV_CalcPings)(void)
-0x40FBE0 = Com_Printf() : void (*bla)(const char* msg, ...)
+0x4580E0 = Sys_Milliseconds() : int (*Sys_Milliseconds_ptr)(void)
+0x444220 = SV_CalcPings() : void (*SV_CalcPings_ptr)(void)
+0x40FBE0 = Com_Printf() : void (*Com_Printf_ptr)(const char* msg, ...)
 */
+
+void (*SV_CalcPings_ptr)(void);
 
 // ==================================================
 // Proxy_EnginePatch_Attach
@@ -17,11 +19,12 @@
 
 void Proxy_EnginePatch_Attach(void)
 {
+	// Normal: 0x444E23 ||| 0x444E32
 	pSV_SendMessageToClient =	Attach((unsigned char*)0x444E23, (unsigned char*)Proxy_EnginePatch_PingFix_SV_SendMessageToClient());
-	// 0x43C2FF for the assignement when using the one with the if
-	pSV_UserMove =				Attach((unsigned char*)0x43C2F0, (unsigned char*)Proxy_EnginePatch_PingFix_SV_UserMove());
-	// 0x4442AC = 004442AC  |> 8B91 580C0000  ||MOV EDX,DWORD PTR DS:[ECX+C58]
-	pSV_CalcPings =				Attach((unsigned char*)0x4442AC, (unsigned char*)Proxy_EnginePatch_DisplaySnapShots_SV_CalcPings());
+	// Normal: 0x43C2F0 ||| 0x43C2FF for the assignement when using the one with the if
+	pSV_UserMove =				Attach((unsigned char*)0x43C2FF, (unsigned char*)Proxy_EnginePatch_PingFix_SV_UserMove());
+
+	SV_CalcPings_ptr = (void (*)(void))Attach((unsigned char*)0x444220, (unsigned char*)&SV_CalcPings);
 }
 
 // ==================================================
@@ -36,8 +39,19 @@ void Proxy_EnginePatch_Attach(void)
 void Proxy_EnginePatch_Detach(void)
 {
 	Detach((unsigned char*)0x444E23, (unsigned char*)pSV_SendMessageToClient);
-	Detach((unsigned char*)0x43C2F0, (unsigned char*)pSV_UserMove);
-	Detach((unsigned char*)0x4442AC, (unsigned char*)pSV_CalcPings);
+	Detach((unsigned char*)0x43C2FF, (unsigned char*)pSV_UserMove);
+	Detach((unsigned char*)0x444220, (unsigned char*)SV_CalcPings_ptr);
+}
+
+// Test
+void SV_CalcPings(void)
+{
+	playerState_t* ps = Proxy_GetPlayerStateByClientNum(0);
+	serverStatic_t* svs = (serverStatic_t*)0x606218;
+	svs->clients[0].ping = 222;
+	ps->ping = svs->clients[0].ping;
+
+	//SV_CalcPings_ptr();
 }
 
 // ==================================================
@@ -57,6 +71,25 @@ void* Proxy_EnginePatch_PingFix_SV_SendMessageToClient(void)
 {
 	/*
 	// client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = Sys_Milliseconds();
+	// Modify assignment
+	__sh_Prologue;
+	{
+		__asm1__(push eax)
+		__asm1__(push 0x0)
+		__asm2__(mov eax, 0x4580E0)
+		__asm1__(call eax)
+		__asm2__(add esp, 0x4)
+		__asm2__(mov edx, eax)
+		__asm1__(pop eax)
+		__asm2__(MOV DWORD PTR DS : [ECX + EBX + 21570] , EDX)
+		__asm1__(push 0x444E39)
+		__asm1__(retn)
+	}
+	__sh_Epilogue;
+	*/
+
+	/*
+	// client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = Sys_Milliseconds();
 	__sh_Prologue;
 	{
 		__asm1__(push eax)
@@ -72,15 +105,30 @@ void* Proxy_EnginePatch_PingFix_SV_SendMessageToClient(void)
 	__sh_Epilogue;
 	*/
 
-	// Normal behavior
-	// client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.time;
+	// TESTING
+	// client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = 12;
 	__sh_Prologue;
 	{
-		__asm2__(MOV EDX, DWORD PTR DS : [0x60621C])
+		__asm1__(push eax)
+		__asm2__(MOV EDX, 0xC)
+		__asm1__(pop eax)
 		__asm1__(push 0x444E29)
 		__asm1__(retn)
 	}
 	__sh_Epilogue;
+	
+	/*
+	// Normal behavior
+	// client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.time;
+	__sh_Prologue;
+	{
+		__asm2__(MOV EDX,DWORD PTR DS:[60621C])
+		__asm1__(push 0x444E29)
+		__asm1__(retn)
+	}
+	__sh_Epilogue;
+	*/
+	
 }
 
 // ==================================================
@@ -99,7 +147,7 @@ void* Proxy_EnginePatch_PingFix_SV_SendMessageToClient(void)
 
 void* Proxy_EnginePatch_PingFix_SV_UserMove(void)
 {
-	/*
+	
 	//	if (cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked == -1)
 	//		cl->frames[ cl->messageAcknowledge & PACKET_MASK ].messageAcked = Sys_Milliseconds();
 	__sh_Prologue;
@@ -121,7 +169,7 @@ void* Proxy_EnginePatch_PingFix_SV_UserMove(void)
 		__asm1__(retn)
 	}
 	__sh_Epilogue;
-	*/
+	
 
 	/*
 	// cl->frames[ cl->messageAcknowledge & PACKET_MASK ].messageAcked = Sys_Milliseconds();
@@ -139,7 +187,8 @@ void* Proxy_EnginePatch_PingFix_SV_UserMove(void)
 	}
 	__sh_Epilogue;
 	*/
-	
+
+	/*
 	// Normal behavior
 	// cl->frames[ cl->messageAcknowledge & PACKET_MASK ].messageAcked = svs.time;
 	__sh_Prologue;
@@ -149,26 +198,5 @@ void* Proxy_EnginePatch_PingFix_SV_UserMove(void)
 		__asm1__(retn)
 	}
 	__sh_Epilogue;
-}
-
-void* Proxy_EnginePatch_DisplaySnapShots_SV_CalcPings(void)
-{
-	char* message = "messageAcked: %d     messageSent: %d\n";
-
-	__sh_Prologue;
-	{
-		__asm1__(push eax)
-		__asm2__(mov edx, DWORD PTR DS : [ecx + 0xC58])
-		__asm1__(push dword ptr ds : [ecx + 0xC54])
-		__asm1__(push dword ptr ds : [ecx + 0xC58])
-		__asm2__(lea eax, message)
-		__asm1__(push eax)
-		__asm2__(mov eax, 0x40FBE0)
-		__asm1__(call eax)
-		__asm2__(add esp, 0xC)
-		__asm1__(pop eax)
-		__asm1__(push 0x4442B2)
-		__asm1__(retn)
-	}
-	__sh_Epilogue;
+	*/
 }

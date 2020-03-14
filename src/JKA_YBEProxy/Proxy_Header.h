@@ -10,6 +10,7 @@
 // ==================================================
 
 #include "game/g_local.h"
+#include "server/server.h"
 #include "DetourPatcher/DetourPatcher.h"
 
 // ==================================================
@@ -104,7 +105,6 @@ typedef struct Proxy_s {
 // ==================================================
 
 extern Proxy_t proxy;
-//extern gameImport_t *trap; // in g_local.h
 
 // ==================================================
 // FUNCTIONS
@@ -120,32 +120,9 @@ void Proxy_LoadOriginalGameLibrary(void);
 // Proxy_Imports
 // ------------------------
 
-// -- server engine
+// -- server utilities
 playerState_t* Proxy_GetPlayerStateByClientNum(int num);
 void Proxy_ClientCleanName(const char* in, char* out, int outSize);
-
-// --  q_shared
-//char* QDECL va(const char* format, ...);
-//char* Info_ValueForKey(const char* s, const char* key);
-//void Info_RemoveKey(char* s, const char* key);
-//void Info_SetValueForKey(char* s, const char* key, const char* value);
-//int QDECL Com_sprintf(char* dest, int size, const char* fmt, ...);
-
-// -- q_string
-/*
-#if defined (_MSC_VER)
-	// vsnprintf is ISO/IEC 9899:1999
-	// abstracting this to make it portable
-	int Q_vsnprintf(char* str, size_t size, const char* format, va_list ap);
-#else // not using MSVC
-	#define Q_vsnprintf vsnprintf
-#endif
-*/
-
-//int Q_stricmpn(const char* s1, const char* s2, int n);
-//int Q_stricmp(const char* s1, const char* s2);
-//const char* Q_strchrs(const char* string, const char* search);
-//void Q_strncpyz(char* dest, const char* src, size_t destsize);
 
 // -- other
 char* ConcatArgs(int start);
@@ -162,13 +139,13 @@ void Proxy_NewAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int si
 void Proxy_NewAPI_GetUsercmd(int clientNum, usercmd_t* cmd);
 
 // -- Export table
-void Proxy_NewAPI_ShutdownGame(int restart);
-char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 void Proxy_NewAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 void Proxy_NewAPI_ClientCommand(int clientNum);
-void Proxy_NewAPI_RunFrame(int levelTime);
+char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 void Proxy_NewAPI_ClientThink(int clientNum, usercmd_t* ucmd);
 qboolean Proxy_NewAPI_ClientUserinfoChanged(int clientNum);
+void Proxy_NewAPI_RunFrame(int levelTime);
+void Proxy_NewAPI_ShutdownGame(int restart);
 
 // ------------------------
 // Proxy_OldAPIWrappers
@@ -190,6 +167,7 @@ void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* cmd);
 void Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum);
+void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd);
 void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum);
 
 // ------------------------

@@ -1,20 +1,24 @@
 #include "Proxy_Header.h"
 
-void Proxy_NewAPI_InitLayerExportTable(void)
-{
-	proxy.copyNewAPIGameExportTable->ClientConnect = Proxy_NewAPI_ClientConnect;
-	proxy.copyNewAPIGameExportTable->ClientBegin = Proxy_NewAPI_ClientBegin;
-	proxy.copyNewAPIGameExportTable->ClientCommand = Proxy_NewAPI_ClientCommand;
-	proxy.copyNewAPIGameExportTable->ClientThink = Proxy_NewAPI_ClientThink;
-	proxy.copyNewAPIGameExportTable->ClientUserinfoChanged = Proxy_NewAPI_ClientUserinfoChanged;
-	proxy.copyNewAPIGameExportTable->RunFrame = Proxy_NewAPI_RunFrame;
-	proxy.copyNewAPIGameExportTable->ShutdownGame = Proxy_NewAPI_ShutdownGame;
-}
+// ==================================================
+// INITIALIZE LAYER
+// ==================================================
 
 void Proxy_NewAPI_InitLayerImportTable(void)
 {
 	proxy.copyNewAPIGameImportTable->GetUsercmd = Proxy_NewAPI_GetUsercmd;
 	proxy.copyNewAPIGameImportTable->LocateGameData = Proxy_NewAPI_LocateGameData;
+}
+
+void Proxy_NewAPI_InitLayerExportTable(void)
+{
+	proxy.copyNewAPIGameExportTable->ClientBegin = Proxy_NewAPI_ClientBegin;
+	proxy.copyNewAPIGameExportTable->ClientCommand = Proxy_NewAPI_ClientCommand;
+	proxy.copyNewAPIGameExportTable->ClientConnect = Proxy_NewAPI_ClientConnect;
+	proxy.copyNewAPIGameExportTable->ClientThink = Proxy_NewAPI_ClientThink;
+	proxy.copyNewAPIGameExportTable->ClientUserinfoChanged = Proxy_NewAPI_ClientUserinfoChanged;
+	proxy.copyNewAPIGameExportTable->RunFrame = Proxy_NewAPI_RunFrame;
+	proxy.copyNewAPIGameExportTable->ShutdownGame = Proxy_NewAPI_ShutdownGame;
 }
 
 // ==================================================
@@ -39,13 +43,6 @@ void Proxy_NewAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int si
 // EXPORT TABLE
 // ==================================================
 
-char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
-{
-	Proxy_SharedAPI_ClientConnect(clientNum, firstTime, isBot);
-
-	return proxy.originalNewAPIGameExportTable->ClientConnect(clientNum, firstTime, isBot);
-}
-
 void Proxy_NewAPI_ClientBegin(int clientNum, qboolean allowTeamReset)
 {
 	Proxy_SharedAPI_ClientBegin(clientNum, allowTeamReset);
@@ -63,9 +60,16 @@ void Proxy_NewAPI_ClientCommand(int clientNum)
 	proxy.originalNewAPIGameExportTable->ClientCommand(clientNum);
 }
 
+char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
+{
+	Proxy_SharedAPI_ClientConnect(clientNum, firstTime, isBot);
+
+	return proxy.originalNewAPIGameExportTable->ClientConnect(clientNum, firstTime, isBot);
+}
+
 void Proxy_NewAPI_ClientThink(int clientNum, usercmd_t* ucmd)
 {
-	Proxy_SharedAPI_ClientThink(clientNum);
+	Proxy_SharedAPI_ClientThink(clientNum, ucmd);
 
 	proxy.originalNewAPIGameExportTable->ClientThink(clientNum, ucmd);
 }

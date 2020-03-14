@@ -53,6 +53,18 @@ set(JKA_YBEProxyDetourFiles
 source_group("DetourPatcher" FILES ${JKA_YBEProxyDetourFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDetourFiles})
 
+set(JKA_YBEProxyServerFiles
+	"${JKA_YBEProxyDir}/server/server.h"
+	)
+source_group("server" FILES ${JKA_YBEProxyServerFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyServerFiles})
+
+set(JKA_YBEProxySysFiles
+	"${JKA_YBEProxyDir}/sys/sys_public.h"
+	)
+source_group("sys" FILES ${JKA_YBEProxySysFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxySysFiles})
+
 set(JKA_YBEProxyDSKCommonFiles
 	"${JKA_YBEProxyDir}/qcommon/disablewarnings.h"
 	"${JKA_YBEProxyDir}/qcommon/q_color.h"
@@ -60,6 +72,7 @@ set(JKA_YBEProxyDSKCommonFiles
 	"${JKA_YBEProxyDir}/qcommon/q_platform.h"
 	"${JKA_YBEProxyDir}/qcommon/q_shared.h"
 	"${JKA_YBEProxyDir}/qcommon/q_string.h"
+	"${JKA_YBEProxyDir}/qcommon/qcommon.h"
 	"${JKA_YBEProxyDir}/qcommon/tags.h"
 	)
 source_group("qcommon" FILES ${JKA_YBEProxyDSKCommonFiles})

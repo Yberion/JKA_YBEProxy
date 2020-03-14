@@ -32,4 +32,5 @@ unsigned char* pSV_CalcPings;
 
 void* Proxy_EnginePatch_PingFix_SV_SendMessageToClient(void);
 void* Proxy_EnginePatch_PingFix_SV_UserMove(void);
-void* Proxy_EnginePatch_DisplaySnapShots_SV_CalcPings(void);
+
+void SV_CalcPings(void);
