@@ -184,9 +184,9 @@ typedef struct
 
 // this structure will be cleared only when the game dll changes
 typedef struct serverStatic_s {
-	//0x606218
+	//0x606218 / 0x83121e0
 	qboolean	initialized;				// sv_init has completed
-	//0x60621C	
+	//0x60621C / 0x83121e4
 	int			time;						// will be strictly increasing across level changes
 	//0x606220
 	int			snapFlagServerBit;			// ^= SNAPFLAG_SERVERCOUNT every SV_SpawnServer()

@@ -1,5 +1,6 @@
 // ==================================================
 // Assembly Shell System by Deathspike & BobaFett
+// Modified by Yberion by adding Sil's fix
 // --------------------------------------------------
 // A definition-based method to easily create "naked"
 // functions with assembly code for both Windows
@@ -21,7 +22,7 @@
 // Look below the definitions for a simple example!
 // ==================================================
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(MINGW32)
 
 	#define __asm1__( a )			__asm a
 	#define __asm2__( a, b )		__asm a, b
@@ -29,28 +30,38 @@
 	#define __sh_Get( a, b )		void *( *b )( void ) = a();
 	#define __sh_GetPointer( a )	a();
 	#define __sh_GetRun( a, b )		void *( *b )( void ) = a(); b();
-	#define __sh_Prologue			__asm lea eax, [__hookStart] \
+	
+	#define __StartHook( a )		__asm lea eax, [__hookStart] \
 									__asm jmp __hookEnd \
 									__asm __hookStart:
-	#define __sh_Epilogue			__asm __hookEnd:
+	
+	#define __EndHook( a )			__asm __hookEnd:
 
 #else 
 
-	#define __asm1__( a )			__asm__( #a "\n" );
-	#define __asm2__( a, b )		__asm__( #a ", " #b "\n" );
+	#define __asm1__define( a )		__asm__( #a "\n" );
+	#define __asm2__define( a, b )	__asm__( #a ", " #b "\n" );
+	
+	#define __asm1__( a )           __asm1__define( a )
+	#define __asm2__( a, b )        __asm2__define( a, b )
+	
 	#define __asmL__( a )			__asm__( ".att_syntax\n" ); \
 									__asm__( #a ":\n" ); \
 									__asm__( ".intel_syntax noprefix\n" );
+	
 	#define __sh_Get( a, b )		void *( *b )( void ) = a();
 	#define __sh_GetPointer( a )	a();
 	#define __sh_GetRun( a, b )		void *( *b )( void ) = a(); b();
-	#define __sh_Prologue			__asm__("lea eax, [1f]\n"); \
-									__asm__("jmp 2f\n"); \
+	
+	#define __StartHook( a )		__asm__( ".intel_syntax noprefix\n" ); \
+									__asm__("lea eax, [__hookstart" #a "]\n"); \
+									__asm__("jmp __hookend" #a "\n"); \
 									__asm__(".att_syntax\n"); \
-									__asm__("1:\n"); \
+									__asm__("__hookstart" #a ":\n"); \
 									__asm__(".intel_syntax noprefix\n");
-	#define __sh_Epilogue			__asm__(".att_syntax\n"); \
-									__asm__("2:\n"); \
+
+	#define __EndHook( a )			__asm__(".att_syntax\n"); \
+									__asm__("__hookend" #a ":\n"); \
 									__asm__(".intel_syntax noprefix\n");
 
 #endif
