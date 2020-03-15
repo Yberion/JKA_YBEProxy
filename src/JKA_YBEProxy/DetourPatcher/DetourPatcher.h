@@ -15,7 +15,7 @@ unsigned int	 GetLen( unsigned char *pAddress );
 unsigned char	*GetTramp( unsigned char *pAddress, unsigned int iLen );
 unsigned int	 InlineFetch( unsigned char *pAddress );
 unsigned int	 InlinePatch( unsigned char *pAddress, unsigned char *pNewAddress );
-void			 Patch( unsigned char *pAddress, unsigned char *bByte );
+void			 Patch( unsigned char *pAddress, unsigned char bByte );
 void			 ReProtect( void *pAddress, int iLen );
 void			 UnProtect( void *pAddress, int iLen );
 extern int		 bWindows;

@@ -44,13 +44,13 @@
 	#define __sh_Get( a, b )		void *( *b )( void ) = a();
 	#define __sh_GetPointer( a )	a();
 	#define __sh_GetRun( a, b )		void *( *b )( void ) = a(); b();
-	#define __sh_Prologue			__asm__("lea eax, [__hookStart]\n"); \
-									__asm__("jmp __hookEnd\n"); \
+	#define __sh_Prologue			__asm__("lea eax, [1f]\n"); \
+									__asm__("jmp 2f\n"); \
 									__asm__(".att_syntax\n"); \
-									__asm__("__hookStart:\n"); \
+									__asm__("1:\n"); \
 									__asm__(".intel_syntax noprefix\n");
 	#define __sh_Epilogue			__asm__(".att_syntax\n"); \
-									__asm__("__hookEnd:\n"); \
+									__asm__("2:\n"); \
 									__asm__(".intel_syntax noprefix\n");
 
 #endif

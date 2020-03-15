@@ -11,16 +11,16 @@
 #ifndef WIN32
 	#include <sys/mman.h>
 	#include <unistd.h>
-	bWindows = 0;
+	int bWindows = 0;
 #else
 	#include <windows.h>
 	unsigned long OldProtect;
-	bWindows = 1;
+	int bWindows = 1;
 #endif
 
 #include		<stdlib.h>
 #include		<stdio.h>
-#include		<tchar.h>
+#include		<string.h>
 #include		"DetourPatcher.h"
 
 // ==================================================
@@ -149,10 +149,10 @@ unsigned int InlinePatch( unsigned char *pAddress, unsigned char *pNewAddress )
 // given address.
 // ==================================================
 
-void Patch( unsigned char *pAddress, unsigned char *bByte )
+void Patch( unsigned char *pAddress, unsigned char bByte )
 {
 	UnProtect( pAddress, 1 );
-	*(( unsigned char * ) pAddress ) = ( unsigned char ) bByte;
+	*pAddress = bByte;
 	ReProtect( pAddress, 1 );
 }
 
@@ -195,7 +195,7 @@ void UnProtect( void *pAddress, int iLen )
 	}
 	else
 	{
-		mprotect(( char * ) iPage1, getpagesize(), PROT_READ | PROT_WRITE | PROT_EXEC ))
+		mprotect(( char * ) iPage1, getpagesize(), PROT_READ | PROT_WRITE | PROT_EXEC );
 		mprotect(( char * ) iPage2, getpagesize(), PROT_READ | PROT_WRITE | PROT_EXEC );
 	}
 

@@ -97,13 +97,14 @@ void* Proxy_EnginePatch_PingFix_SV_SendMessageToClient(void)
 
 	// TESTING
 	// client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = 12;
+	
 	__sh_Prologue;
 	{
 		__asm1__(push eax)
 		__asm2__(MOV EDX, 0xC)
 		__asm1__(pop eax)
 		__asm1__(push 0x444E29)
-		__asm1__(retn)
+		__asm1__(ret)
 	}
 	__sh_Epilogue;
 	
@@ -156,7 +157,7 @@ void* Proxy_EnginePatch_PingFix_SV_UserMove(void)
 
 		__asm1__(exitUserMoveHook:)
 		__asm1__(push 0x43C306)
-		__asm1__(retn)
+		__asm1__(ret)
 	}
 	__sh_Epilogue;
 	

@@ -171,6 +171,9 @@ elseif (("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU") OR ("${CMAKE_C_COMPILER_ID}" S
 		if (("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU") OR ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang"))
 			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msse2")
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2")
+			
+			set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -masm=intel") 
+            set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -masm=intel")
 		endif()
 	endif()
 
