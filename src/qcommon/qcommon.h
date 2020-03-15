@@ -360,5 +360,3 @@ inline int Round(float value)
 {
 	return((int)floorf(value + 0.5f));
 }
-
-#include "sys/sys_public.h"

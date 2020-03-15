@@ -32,7 +32,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 		//==================================================
 		{
 			Proxy_OldAPI_Init();
-			Proxy_EnginePatch_Attach();
+			Proxy_Patch_Attach();
 
 			break;
 		}
@@ -40,7 +40,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 		case GAME_SHUTDOWN: // (int restart)
 		//==================================================
 		{
-			Proxy_EnginePatch_Detach();
+			Proxy_Patch_Detach();
 
 			if (proxy.jampgameHandle)
 			{

@@ -1,12 +1,13 @@
-#include "Proxy_EnginePatch.h"
+#include "EnginePatch/Proxy_Server.h"
+#include "DetourPatcher/DetourPatcher.h"
+#include "Proxy_Shell.h"
+#include "Proxy_Patch.h"
 
 /*
 0x4580E0 = Sys_Milliseconds() : int (*Sys_Milliseconds_ptr)(void)
 0x444220 = SV_CalcPings() : void (*SV_CalcPings_ptr)(void)
 0x40FBE0 = Com_Printf() : void (*Com_Printf_ptr)(const char* msg, ...)
 */
-
-void (*SV_CalcPings_ptr)(void);
 
 // ==================================================
 // Proxy_EnginePatch_Attach
@@ -17,14 +18,14 @@ void (*SV_CalcPings_ptr)(void);
 // options, features or fixes.
 // ==================================================
 
-void Proxy_EnginePatch_Attach(void)
+void Proxy_Patch_Attach(void)
 {
 	// Normal: 0x444E23 ||| 0x444E32
-	pSV_SendMessageToClient =	Attach((unsigned char*)0x444E23, (unsigned char*)Proxy_EnginePatch_PingFix_SV_SendMessageToClient());
+	//pSV_SendMessageToClient =	Attach((unsigned char*)0x444E23, (unsigned char*)Proxy_EnginePatch_PingFix_SV_SendMessageToClient());
 	// Normal: 0x43C2F0 ||| 0x43C2FF for the assignement when using the one with the if
-	pSV_UserMove =				Attach((unsigned char*)0x43C2FF, (unsigned char*)Proxy_EnginePatch_PingFix_SV_UserMove());
+	//pSV_UserMove =				Attach((unsigned char*)0x43C2FF, (unsigned char*)Proxy_EnginePatch_PingFix_SV_UserMove());
 
-	SV_CalcPings_ptr = (void (*)(void))Attach((unsigned char*)0x444220, (unsigned char*)&SV_CalcPings);
+	Original_SV_CalcPings = (void (*)(void))	Attach((unsigned char*)0x444220, (unsigned char*)&Proxy_SV_CalcPings);
 }
 
 // ==================================================
@@ -36,22 +37,11 @@ void Proxy_EnginePatch_Attach(void)
 // anymore.
 // ==================================================
 
-void Proxy_EnginePatch_Detach(void)
+void Proxy_Patch_Detach(void)
 {
-	Detach((unsigned char*)0x444E23, (unsigned char*)pSV_SendMessageToClient);
-	Detach((unsigned char*)0x43C2FF, (unsigned char*)pSV_UserMove);
-	Detach((unsigned char*)0x444220, (unsigned char*)SV_CalcPings_ptr);
-}
-
-// Test
-void SV_CalcPings(void)
-{
-	playerState_t* ps = Proxy_GetPlayerStateByClientNum(0);
-	serverStatic_t* svs = (serverStatic_t*)0x606218;
-	svs->clients[0].ping = 222;
-	ps->ping = svs->clients[0].ping;
-
-	//SV_CalcPings_ptr();
+	//Detach((unsigned char*)0x444E23, (unsigned char*)pSV_SendMessageToClient);
+	//Detach((unsigned char*)0x43C2FF, (unsigned char*)pSV_UserMove);
+	Detach((unsigned char*)0x444220, (unsigned char*)Original_SV_CalcPings);
 }
 
 // ==================================================
