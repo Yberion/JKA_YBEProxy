@@ -734,6 +734,7 @@ Many variables can be used for cheating purposes, so when cheats is zero,
 #define CVAR_NONEXISTENT	(0x80000000u)	// Cvar doesn't exist.
 
 // nothing outside the Cvar_*() functions should modify these fields!
+/*
 typedef struct cvar_s {
 	char			*name;
 	char			*description;
@@ -752,6 +753,22 @@ typedef struct cvar_s {
 	struct cvar_s	*next, *prev;
 	struct cvar_s	*hashNext, *hashPrev;
 	int				hashIndex;
+} cvar_t;
+*/
+
+typedef struct cvar_s
+{
+	char*			name;
+	char*			string;
+	char*			resetString;		// cvar_restart will reset to this value
+	char*			latchedString;		// for CVAR_LATCH vars
+	int				flags;
+	qboolean		modified;			// set each time the cvar is changed
+	int				modificationCount;	// incremented each time the cvar is changed
+	float			value;				// atof( string )
+	int				integer;			// atoi( string )
+	struct cvar_s* next;
+	struct cvar_s* hashNext;
 } cvar_t;
 
 #define	MAX_CVAR_VALUE_STRING	256
@@ -1429,7 +1446,7 @@ typedef struct usercmd_s {
 	int				serverTime;
 	int				angles[3];
 	int 			buttons;
-	byte			weapon;           // weapon
+	byte			weapon;           // weapon 
 	byte			forcesel;
 	byte			invensel;
 	byte			generic_cmd;

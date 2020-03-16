@@ -51,7 +51,7 @@ typedef enum {
 } serverState_t;
 
 typedef struct server_s {
-	//0x567F30
+	// 0x567F30 / 0x8273ec0
 	serverState_t	state;
 	qboolean		restarting;			// if true, send configstring changes during SS_LOADING
 	int				serverId;			// changes each server start
@@ -113,7 +113,8 @@ typedef enum {
 	CS_ACTIVE		// client is fully in game
 } clientState_t;
 
-typedef struct client_s {
+typedef struct client_s
+{
 	clientState_t	state;
 	char			userinfo[MAX_INFO_STRING];		// name, etc
 
@@ -132,21 +133,23 @@ typedef struct client_s {
 	int				lastMessageNum;		// for delta compression
 	int				lastClientCommand;	// reliable client message sequence
 	char			lastClientCommandString[MAX_STRING_CHARS];
-	sharedEntity_t	*gentity;			// SV_GentityNum(clientnum)
+	sharedEntity_t* gentity;			// SV_GentityNum(clientnum)
 	char			name[MAX_NAME_LENGTH];			// extracted from userinfo, high bits masked
 
 	// downloading
+
 	char			downloadName[MAX_QPATH]; // if not empty string, we are downloading
 	fileHandle_t	download;			// file being downloaded
- 	int				downloadSize;		// total bytes (can't use EOF because of paks)
- 	int				downloadCount;		// bytes sent
+	int				downloadSize;		// total bytes (can't use EOF because of paks)
+	int				downloadCount;		// bytes sent
 	int				downloadClientBlock;	// last block we sent to the client, awaiting ack
 	int				downloadCurrentBlock;	// current block number
 	int				downloadXmitBlock;	// last block we xmited
-	unsigned char	*downloadBlocks[MAX_DOWNLOAD_WINDOW];	// the buffers for the download blocks
+	unsigned char* downloadBlocks[MAX_DOWNLOAD_WINDOW];	// the buffers for the download blocks
 	int				downloadBlockSize[MAX_DOWNLOAD_WINDOW];
 	qboolean		downloadEOF;		// We have sent the EOF block
 	int				downloadSendTime;	// time we last got an ack from the client
+
 
 	int				deltaMessage;		// frame last client usercmd message
 	int				nextReliableTime;	// svs.time when another reliable command will be allowed
@@ -159,9 +162,7 @@ typedef struct client_s {
 	int				ping;
 	int				rate;				// bytes / second
 	int				snapshotMsec;		// requests a snapshot every snapshotMsec unless rate choked
-
 	int				pureAuthentic;
-
 	netchan_t		netchan;
 
 	int				lastUserInfoChange; //if > svs.time && count > x, deny change -rww

@@ -20,9 +20,11 @@ unsigned char* pSV_CalcPings;
 
 void Proxy_Patch_Attach(void)
 {
+	Original_SV_UserMove = (void (*)(client_t*, msg_t*, qboolean)) Attach((unsigned char*)func_SV_UserMove_addr, (unsigned char*)&Proxy_SV_UserMove);
+	Original_SV_SendMessageToClient = (void (*)(msg_t*, client_t*)) Attach((unsigned char*)func_SV_SendMessageToClient_addr, (unsigned char*)&Proxy_SV_SendMessageToClient);
+
 	//pSV_SendMessageToClient =	Attach((unsigned char*)chunck_PingFix_SV_SendMessageToClient_addr, (unsigned char*)Proxy_EnginePatch_PingFix_SV_SendMessageToClient());
-	
-	Original_SV_SendMessageToClient = (void (*)(msg_t*, client_t*))	Attach((unsigned char*)func_SV_SendMessageToClient_addr, (unsigned char*)&Proxy_SV_SendMessageToClient);
+
 	// Windows ONLY for now, DON'T test this one on Linux
 	//pSV_UserMove =				Attach((unsigned char*)chunck_PingFix_SV_UserMove_addr, (unsigned char*)Proxy_EnginePatch_PingFix_SV_UserMove());
 
@@ -40,8 +42,10 @@ void Proxy_Patch_Attach(void)
 
 void Proxy_Patch_Detach(void)
 {
-	//Detach((unsigned char*)chunck_PingFix_SV_SendMessageToClient_addr, (unsigned char*)pSV_SendMessageToClient);
+	Detach((unsigned char*)func_SV_UserMove_addr, (unsigned char*)Original_SV_UserMove);
 	Detach((unsigned char*)func_SV_SendMessageToClient_addr, (unsigned char*)Original_SV_SendMessageToClient);
+
+	//Detach((unsigned char*)chunck_PingFix_SV_SendMessageToClient_addr, (unsigned char*)pSV_SendMessageToClient);
 	//Detach((unsigned char*)chunck_PingFix_SV_UserMove_addr, (unsigned char*)pSV_UserMove);
 	//Detach((unsigned char*)func_SV_CalcPings_addr, (unsigned char*)Original_SV_CalcPings);
 }
