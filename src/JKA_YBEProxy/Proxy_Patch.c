@@ -82,6 +82,7 @@ void* Proxy_EnginePatch_PingFix_SV_SendMessageToClient(void)
 	// client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = Sys_Milliseconds();
 	__sh_Prologue;
 	{
+		__asm1__(push ecx)
 		__asm1__(push eax)
 		__asm1__(push 0x0)
 		__asm2__(mov eax, 0x4580E0)
@@ -89,6 +90,7 @@ void* Proxy_EnginePatch_PingFix_SV_SendMessageToClient(void)
 		__asm2__(add esp, 0x4)
 		__asm2__(mov edx, eax)
 		__asm1__(pop eax)
+		__asm1__(pop ecx)
 		__asm1__(push 0x444E29)
 		__asm1__(retn)
 	}
