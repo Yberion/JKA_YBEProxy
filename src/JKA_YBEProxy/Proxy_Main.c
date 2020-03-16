@@ -32,6 +32,8 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 		//==================================================
 		{
 			Proxy_OldAPI_Init();
+
+			// Check version oh jampded here
 			Proxy_Patch_Attach();
 
 			break;
@@ -40,6 +42,7 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 		case GAME_SHUTDOWN: // (int restart)
 		//==================================================
 		{
+			// Check version oh jampded here
 			Proxy_Patch_Detach();
 
 			if (proxy.jampgameHandle)

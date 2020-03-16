@@ -18,4 +18,3 @@ unsigned int	 InlinePatch( unsigned char *pAddress, unsigned char *pNewAddress )
 void			 Patch( unsigned char *pAddress, unsigned char bByte );
 void			 ReProtect( void *pAddress, int iLen );
 void			 UnProtect( void *pAddress, int iLen );
-extern int		 bWindows;

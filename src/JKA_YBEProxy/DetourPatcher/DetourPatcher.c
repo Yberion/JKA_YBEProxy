@@ -11,11 +11,9 @@
 #ifndef WIN32
 	#include <sys/mman.h>
 	#include <unistd.h>
-	int bWindows = 0;
 #else
 	#include <windows.h>
 	unsigned long OldProtect;
-	int bWindows = 1;
 #endif
 
 #include		<stdlib.h>

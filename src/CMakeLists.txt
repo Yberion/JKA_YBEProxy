@@ -54,6 +54,8 @@ source_group("DetourPatcher" FILES ${JKA_YBEProxyDetourFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDetourFiles})
 
 set(JKA_YBEProxyEnginePatchFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Prox_sv_snapshot.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_Server.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_Server.h"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_main.c"
 	)
