@@ -79,7 +79,12 @@ void Proxy_SV_UserMove(client_t* cl, msg_t* msg, qboolean delta)
 	proxy.server.functions.Com_Printf("G\n");
 
 	// save time for ping calculation
-	cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked = proxy.server.svs->time;
+	//cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked = proxy.server.svs->time;
+
+    if (cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked == -1)
+    {
+		cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked = proxy.trap->Milliseconds();
+    }
 
 	// if this is the first usercmd we have received
 	// this gamestate, put the client into the world
