@@ -52,6 +52,7 @@
 	#define func_SV_Netchan_Transmit_addr 0x8057db4
 	#define func_SV_RateMsec_addr 0x8058c04
 	#define func_Com_HashKey_addr 0x8073b14
+	#define func_Com_Printf_addr 0x8072ca4
 	#define func_Netchan_TransmitNextFragment_addr 0x807ab74
 	#define func_MSG_ReadByte_addr 0x8077df4
 	#define func_MSG_ReadDeltaUsercmdKey_addr 0x8078b34
