@@ -5,6 +5,12 @@
 
 #include "Proxy_Header.h"
 
+#if defined(_WIN32) && !defined(MINGW32)
+	int isWindows = 1;
+#else
+	int isWindows = 0;
+#endif
+
 Proxy_t proxy = { 0 };
 
 static void Proxy_OldAPI_Init(void)
@@ -32,6 +38,8 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 		//==================================================
 		{
 			Proxy_OldAPI_Init();
+
+			Proxy_Server_Initialize_MemoryAddress();
 
 			// Check version oh jampded here
 			Proxy_Patch_Attach();

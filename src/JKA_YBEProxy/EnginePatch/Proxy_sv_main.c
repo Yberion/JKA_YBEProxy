@@ -1,4 +1,4 @@
-#include "Proxy_Server.h"
+#include "Proxy_EnginePatch.h"
 
 /*
 ===================
@@ -10,8 +10,8 @@ Updates the cl->ping variables
 void Proxy_SV_CalcPings(void)
 {
 	playerState_t* ps = Proxy_GetPlayerStateByClientNum(0);
-	proxyServer.svs->clients[0].ping = 222;
-	ps->ping = proxyServer.svs->clients[0].ping;
+	proxy.server.svs->clients[0].ping = 222;
+	ps->ping = proxy.server.svs->clients[0].ping;
 
 	//Original_SV_CalcPings();
 }

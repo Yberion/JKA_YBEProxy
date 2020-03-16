@@ -134,23 +134,16 @@ void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd)
 		return;
 	}
 
-	playerState_t* ps = Proxy_GetPlayerStateByClientNum(clientNum);
-	//proxy.trap->Print("PING : %d\n", ps->ping);
-
-	client_t* clients = *(client_t **)0x606224;
-	Com_Printf("NAME : %s\n", clients[clientNum].name);
+	Com_Printf("NAME : %s\n", proxy.server.svs->clients[clientNum].name);
 
 	for (int j = 0; j < PACKET_BACKUP; j++)
 	{
-		if (clients[clientNum].frames[j].messageAcked <= 0)
+		if (proxy.server.svs->clients[clientNum].frames[j].messageAcked <= 0)
 		{
 			continue;
 		}
-		Com_Printf("(%d) messageAcked: %d     messageSent: %d\n", j, clients[clientNum].frames[j].messageAcked, clients[clientNum].frames[j].messageSent);
+		Com_Printf("(%d) messageAcked: %d     messageSent: %d\n", j, proxy.server.svs->clients[clientNum].frames[j].messageAcked, proxy.server.svs->clients[clientNum].frames[j].messageSent);
 	}
-
-	//serverStatic_t *svs = (serverStatic_t*)0x606218;
-	//proxy.trap->Print("svs.time : %s\n", svs->time);
 }
 
 void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)

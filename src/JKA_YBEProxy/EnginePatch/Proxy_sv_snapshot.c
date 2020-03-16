@@ -1,4 +1,4 @@
-#include "Proxy_Server.h"
+#include "Proxy_EnginePatch.h"
 
 /*
 =======================
@@ -25,7 +25,7 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 
 	// record information about the message
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
-	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = proxyServer.svs->time;
+	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = proxy.server.svs->time;
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = -1;
 
 	// send the datagram
@@ -36,7 +36,7 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 	// local clients get snapshots every frame
 	if (client->netchan.remoteAddress.type == NA_LOOPBACK || Sys_IsLANAddress(client->netchan.remoteAddress))
 	{
-		client->nextSnapshotTime = proxyServer.svs->time - 1;
+		client->nextSnapshotTime = proxy.server.svs->time - 1;
 		return;
 	}
 
@@ -54,7 +54,7 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 		client->rateDelayed = qtrue;
 	}
 
-	client->nextSnapshotTime = proxyServer.svs->time + rateMsec;
+	client->nextSnapshotTime = proxy.server.svs->time + rateMsec;
 
 	// don't pile up empty snapshots while connecting
 	if (client->state != CS_ACTIVE)
@@ -62,9 +62,9 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 		// a gigantic connection message may have already put the nextSnapshotTime
 		// more than a second away, so don't shorten it
 		// do shorten if client is downloading
-		if (!*client->downloadName && client->nextSnapshotTime < proxyServer.svs->time + 1000)
+		if (!*client->downloadName && client->nextSnapshotTime < proxy.server.svs->time + 1000)
 		{
-			client->nextSnapshotTime = proxyServer.svs->time + 1000;
+			client->nextSnapshotTime = proxy.server.svs->time + 1000;
 		}
 	}
 	*/

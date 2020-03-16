@@ -10,6 +10,7 @@
 // ==================================================
 
 #include "game/g_local.h"
+#include "server/server.h"
 
 // ==================================================
 // PLATFORM SPECIFIC STUFF
@@ -93,16 +94,19 @@ typedef struct Proxy_s {
 		qboolean			isConnected;
 		char				cleanName[MAX_NETNAME];
 	} clientData[MAX_CLIENTS];
+
+	struct ProxyServer_s
+	{
+		serverStatic_t* svs;
+	} server;
 } Proxy_t;
 
 // ==================================================
-// GLOBALE VARIABLES
-// --------------------------------------------------
-// This is the only place where variables will be
-// defined globally
+// EXTERN VARIABLE
 // ==================================================
 
 extern Proxy_t proxy;
+extern int isWindows;
 
 // ==================================================
 // FUNCTIONS
@@ -180,3 +184,9 @@ void TranslateSystemCalls(void);
 
 void Proxy_Patch_Attach(void);
 void Proxy_Patch_Detach(void);
+
+// ------------------------
+// Proxy_Server
+// ------------------------
+
+void Proxy_Server_Initialize_MemoryAddress(void);

@@ -5,40 +5,36 @@
 // ==================================================
 
 #include "JKA_YBEProxy/Proxy_Header.h"
-#include "server/server.h"
 
 // ==================================================
 // DEFINE
 // ==================================================
 
-#define func_SV_CalcPings_addr (( isWindows ) ? 0x444220 : 0x8057204)
+#if defined(_WIN32) && !defined(MINGW32)
+	// Function address
+	#define func_SV_CalcPings_addr 0x444220
+	#define func_Sys_Milliseconds_addr 0x4580E0
 
-#define var_svs_addr (( isWindows ) ? 0x606218 : 0x83121e0)
+	// Variable address
+	#define var_svs_addr 0x606218
+#else
+	// Function address
+	#define func_SV_CalcPings_addr 0x8057204
+	#define func_Sys_Milliseconds_addr 0x80c6714
+
+	// Variable address
+	#define var_svs_addr 0x83121e0
+#endif
 
 // ==================================================
 // STRUCTS
 // ==================================================
 
-typedef struct ProxyServer_s
-{
-	serverStatic_t* svs;
-} ProxyServer_t;
 
 // ==================================================
 // EXTERN VARIABLE
 // ==================================================
 
-extern ProxyServer_t proxyServer;
-extern int isWindows;
-
 // ==================================================
 // FUNCTION
 // ==================================================
-
-void Proxy_Initialize_Server_MemoryAddress(void);
-
-void (*Original_SV_CalcPings)(void);
-void Proxy_SV_CalcPings(void);
-
-void (*Original_SV_SendMessageToClient)(msg_t*, client_t*);
-void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client);

@@ -39,6 +39,8 @@ set(JKA_YBEProxyMainFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SystemCalls.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Patch.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Patch.h"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.h"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SharedAPI.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Shell.h"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Header.h"
@@ -54,10 +56,9 @@ source_group("DetourPatcher" FILES ${JKA_YBEProxyDetourFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDetourFiles})
 
 set(JKA_YBEProxyEnginePatchFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Prox_sv_snapshot.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_Server.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_Server.h"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_EnginePatch.h"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_main.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_snapshot.c"
 	)
 source_group("EnginePatch" FILES ${JKA_YBEProxyEnginePatchFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyEnginePatchFiles})
