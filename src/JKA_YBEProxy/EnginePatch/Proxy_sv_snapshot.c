@@ -10,7 +10,6 @@ Called by SV_SendClientSnapshot and SV_SendClientGameState
 void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 {
 	//WIP
-	/*
 	int			rateMsec;
 
 	// MW - my attempt to fix illegible server message errors caused by 
@@ -20,28 +19,28 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 		// send additional message fragments if the last message
 		// was too large to send at once
 		Com_Printf("[ISM]SV_SendClientGameState() [1] for %s, writing out old fragments\n", client->name);
-		SV_Netchan_TransmitNextFragment(&client->netchan);
+		proxy.server.functions.Netchan_TransmitNextFragment(&client->netchan);
 	}
 
 	// record information about the message
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
-	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = proxy.server.svs->time;
+	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = proxy.trap->Milliseconds();
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = -1;
 
 	// send the datagram
-	SV_Netchan_Transmit(client, msg);	//msg->cursize, msg->data );
+	proxy.server.functions.SV_Netchan_Transmit(client, msg);	//msg->cursize, msg->data );
 
 	// set nextSnapshotTime based on rate and requested number of updates
 
 	// local clients get snapshots every frame
-	if (client->netchan.remoteAddress.type == NA_LOOPBACK || Sys_IsLANAddress(client->netchan.remoteAddress))
+	if (client->netchan.remoteAddress.type == NA_LOOPBACK || proxy.server.functions.Sys_IsLANAddress(client->netchan.remoteAddress))
 	{
 		client->nextSnapshotTime = proxy.server.svs->time - 1;
 		return;
 	}
 
 	// normal rate / snapshotMsec calculation
-	rateMsec = SV_RateMsec(client, msg->cursize);
+	rateMsec = proxy.server.functions.SV_RateMsec(client, msg->cursize);
 
 	if (rateMsec < client->snapshotMsec)
 	{
@@ -67,5 +66,4 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 			client->nextSnapshotTime = proxy.server.svs->time + 1000;
 		}
 	}
-	*/
 }

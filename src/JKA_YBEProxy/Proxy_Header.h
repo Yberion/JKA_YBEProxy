@@ -11,6 +11,7 @@
 
 #include "game/g_local.h"
 #include "server/server.h"
+#include "Proxy_Server.h"
 
 // ==================================================
 // PLATFORM SPECIFIC STUFF
@@ -98,6 +99,7 @@ typedef struct Proxy_s {
 	struct ProxyServer_s
 	{
 		serverStatic_t* svs;
+		serverFunctions_t functions;
 	} server;
 } Proxy_t;
 
@@ -106,7 +108,6 @@ typedef struct Proxy_s {
 // ==================================================
 
 extern Proxy_t proxy;
-extern int isWindows;
 
 // ==================================================
 // FUNCTIONS
