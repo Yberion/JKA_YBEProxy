@@ -5,6 +5,7 @@
 // ==================================================
 
 #include "JKA_YBEProxy/Proxy_Header.h"
+#include "JKA_YBEProxy/Proxy_Shell.h"
 
 // ==================================================
 // DEFINE
