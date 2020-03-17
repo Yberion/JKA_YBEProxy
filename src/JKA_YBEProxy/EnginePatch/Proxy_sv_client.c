@@ -15,9 +15,14 @@ each of the backup packets.
 
 void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 {
-	__asm2__(mov dword ptr ds : [client] , ebx);
-	__asm2__(mov dword ptr ss : [msg] , ESP);
-	__asm2__(mov dword ptr ds : [delta] , eax);
+#if defined(_WIN32) && !defined(MINGW32)
+	__asm2__(mov [client], EBX); // client_t* client
+	__asm1__(push ECX);
+	__asm2__(mov ECX, DWORD PTR SS : [ESP + 0x3A4]);
+	__asm2__(mov [msg], ECX); // msg_t* msg
+	__asm1__(pop ECX);
+	__asm2__(mov [delta], EAX); // qboolean delta
+#endif
 
 	int			i, key;
 	int			cmdCount;
@@ -25,34 +30,16 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 	usercmd_t	cmds[MAX_PACKET_USERCMDS];
 	usercmd_t* cmd, * oldcmd;
 
-	proxy.server.functions.Com_Printf("AAAAAAAAAAAAAAAAAAAAAA\n");
-
-	proxy.server.functions.Com_Printf("CLIENT NAME: %s\n", client->name);
-
 	if (delta)
 	{
-		proxy.server.functions.Com_Printf("A\n");
 		client->deltaMessage = client->messageAcknowledge;
-		proxy.server.functions.Com_Printf("B\n");
 	}
 	else
 	{
-		proxy.server.functions.Com_Printf("C\n");
 		client->deltaMessage = -1;
-		proxy.server.functions.Com_Printf("D\n");
 	}
 
-	proxy.server.functions.Com_Printf("E\n");
-
-	proxy.server.functions.Com_Printf("MAXSIZE: %d\n", msg->maxsize);
-
-	//__asm2__(mov ECX, [msg]);
-	//__asm1__(push EBP);
-	//__asm1__(push ECX);
 	cmdCount = proxy.server.functions.MSG_ReadByte(msg);
-	__asm2__(ADD ESP, 0x4);
-
-	proxy.server.functions.Com_Printf("F\n");
 
 	if (cmdCount < 1)
 	{
@@ -60,15 +47,11 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 		return;
 	}
 
-	proxy.server.functions.Com_Printf("G\n");
-
 	if (cmdCount > MAX_PACKET_USERCMDS)
 	{
 		proxy.server.functions.Com_Printf("cmdCount > MAX_PACKET_USERCMDS\n");
 		return;
 	}
-
-	proxy.server.functions.Com_Printf("H\n");
 
 	// use the checksum feed in the key
 	key = proxy.server.sv->checksumFeed;
@@ -76,8 +59,6 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 	key ^= client->messageAcknowledge;
 	// also use the last acknowledged server command in the key
 	key ^= proxy.server.functions.Com_HashKey(client->reliableCommands[client->reliableAcknowledge & (MAX_RELIABLE_COMMANDS - 1)], 32);
-
-	proxy.server.functions.Com_Printf("I\n");
 
 	Com_Memset(&nullcmd, 0, sizeof(nullcmd));
 	oldcmd = &nullcmd;
@@ -87,8 +68,6 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 		proxy.server.functions.MSG_ReadDeltaUsercmdKey(msg, key, oldcmd, cmd);
 		oldcmd = cmd;
 	}
-
-	proxy.server.functions.Com_Printf("G\n");
 
 	// save time for ping calculation
 	//cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked = proxy.server.svs->time;
