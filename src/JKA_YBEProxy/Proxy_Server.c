@@ -77,7 +77,12 @@ void Proxy_Server_UpdateTimenudge(client_t* client, usercmd_t* cmd, int _Millise
 		(
 			(proxy.clientData[getClientNumFromAddr(client)].timenudgeData.delaySum / (float)proxy.clientData[getClientNumFromAddr(client)].timenudgeData.delayCount)
 			+ (proxy.clientData[getClientNumFromAddr(client)].timenudgeData.pingSum / (float)proxy.clientData[getClientNumFromAddr(client)].timenudgeData.delayCount)
-			- 22
+			// this magic number might be the instructions time until the calc
+#if defined(_WIN32) && !defined(MINGW32)
+			- 21
+#else
+			- 19
+#endif
 			+ (1000 / (float)proxy.server.cvar.sv_fps->integer)
 		) * -1;
 
