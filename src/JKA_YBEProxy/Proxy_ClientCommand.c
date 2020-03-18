@@ -65,7 +65,7 @@ void Proxy_ClientCommand_NetStatus(int clientNum)
 		}
 
 		// No need for truncation "feature" if we move name to end
-		Q_strcat(status, sizeof(status), va("%5i %s %6i %3i %7i %9i %5i %2i %s^7\n", ps->persistant[PERS_SCORE], state, cl->rate, fps, packets, proxy.clientData[clientNum].timenudge, snaps, i, cl->name));
+		Q_strcat(status, sizeof(status), va("%5i %s %6i %3i %7i %9i %5i %2i %s^7\n", ps->persistant[PERS_SCORE], state, cl->rate, fps, packets, proxy.clientData[getClientNumFromAddr(cl)].timenudge, snaps, i, cl->name));
 	}
 
 	proxy.clientData[clientNum].lastTimeNetStatus = proxy.server.svs->time;
