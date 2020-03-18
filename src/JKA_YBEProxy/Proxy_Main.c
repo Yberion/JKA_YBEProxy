@@ -5,6 +5,12 @@
 
 #include "Proxy_Header.h"
 
+#if defined(_WIN32) && !defined(MINGW32)
+	int isWindows = 1;
+#else
+	int isWindows = 0;
+#endif
+
 Proxy_t proxy = { 0 };
 
 static void Proxy_OldAPI_Init(void)
@@ -33,12 +39,20 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 		{
 			Proxy_OldAPI_Init();
 
+			Proxy_Server_Initialize_MemoryAddress();
+
+			// Check version oh jampded here
+			Proxy_Patch_Attach();
+
 			break;
 		}
 		//==================================================
 		case GAME_SHUTDOWN: // (int restart)
 		//==================================================
 		{
+			// Check version oh jampded here
+			Proxy_Patch_Detach();
+
 			if (proxy.jampgameHandle)
 			{
 				// Send the shutdown signal to the original game module and store the response
@@ -78,6 +92,16 @@ Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_
 			}
 
 			break;
+		}
+		//==================================================
+		case GAME_CLIENT_THINK: // (int clientNum)
+		//==================================================
+		{
+			int response = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+
+			Proxy_SharedAPI_ClientThink((int)arg0, (usercmd_t*)arg1);
+
+			return response;
 		}
 		//==================================================
 		case GAME_CLIENT_USERINFO_CHANGED: // (int clientNum)

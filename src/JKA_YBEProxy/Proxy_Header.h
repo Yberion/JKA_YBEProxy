@@ -6,12 +6,6 @@
 #pragma once
 
 // ==================================================
-// INCLUDES
-// ==================================================
-
-#include "game/g_local.h"
-
-// ==================================================
 // PLATFORM SPECIFIC STUFF
 // ==================================================
 
@@ -34,6 +28,14 @@
 #endif
 
 // ==================================================
+// INCLUDES
+// ==================================================
+
+#include "game/g_local.h"
+#include "server/server.h"
+#include "Proxy_Server.h"
+
+// ==================================================
 // DEFINES
 // ==================================================
 
@@ -48,7 +50,7 @@
 #define PROXY_LIBRARY PROXY_LIBRARY_SLASH PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT
 
 #define YBEPROXY_NAME "YbeProxy"
-#define YBEPROXY_VERSION "0.4.0 Beta"
+#define YBEPROXY_VERSION "0.5.1 Beta"
 #define YBEPROXY_BY_AUTHOR "by Yberion"
 
 // ==================================================
@@ -62,6 +64,22 @@ typedef void		(*dllEntryFuncPtr_t)(void *);
 // ==================================================
 // STRUCTS
 // ==================================================
+
+typedef struct timenudgeData_s
+{
+	int             delayCount;
+	int             delaySum;
+	int             pingSum;
+	int             lastTimeTimeNudgeCalculation;
+} timenudgeData_t;
+
+typedef struct ucmdStat_s
+{
+	int		serverTime;
+	int		packetIndex;
+} ucmdStat_t;
+
+#define CMD_MASK 1024
 
 typedef struct Proxy_s {
 	void					*jampgameHandle;
@@ -92,18 +110,30 @@ typedef struct Proxy_s {
 	struct clientData_s {
 		qboolean			isConnected;
 		char				cleanName[MAX_NETNAME];
+
+		timenudgeData_t		timenudgeData;
+		int					timenudge; // Approximation (+- 7 with stable connection)
+
+		int					lastTimeNetStatus;
+
+		ucmdStat_t			cmdStats[CMD_MASK];
+		int					cmdIndex;
 	} clientData[MAX_CLIENTS];
+
+	struct ProxyServer_s
+	{
+		serverStatic_t* svs;
+		server_t* sv;
+		serverFunctions_t functions;
+		serverCvars_t cvars;
+	} server;
 } Proxy_t;
 
 // ==================================================
-// GLOBALE VARIABLES
-// --------------------------------------------------
-// This is the only place where variables will be
-// defined globally
+// EXTERN VARIABLE
 // ==================================================
 
 extern Proxy_t proxy;
-//extern gameImport_t *trap; // in g_local.h
 
 // ==================================================
 // FUNCTIONS
@@ -119,32 +149,9 @@ void Proxy_LoadOriginalGameLibrary(void);
 // Proxy_Imports
 // ------------------------
 
-// -- server engine
+// -- server utilities
 playerState_t* Proxy_GetPlayerStateByClientNum(int num);
 void Proxy_ClientCleanName(const char* in, char* out, int outSize);
-
-// --  q_shared
-//char* QDECL va(const char* format, ...);
-//char* Info_ValueForKey(const char* s, const char* key);
-//void Info_RemoveKey(char* s, const char* key);
-//void Info_SetValueForKey(char* s, const char* key, const char* value);
-//int QDECL Com_sprintf(char* dest, int size, const char* fmt, ...);
-
-// -- q_string
-/*
-#if defined (_MSC_VER)
-	// vsnprintf is ISO/IEC 9899:1999
-	// abstracting this to make it portable
-	int Q_vsnprintf(char* str, size_t size, const char* format, va_list ap);
-#else // not using MSVC
-	#define Q_vsnprintf vsnprintf
-#endif
-*/
-
-//int Q_stricmpn(const char* s1, const char* s2, int n);
-//int Q_stricmp(const char* s1, const char* s2);
-//const char* Q_strchrs(const char* string, const char* search);
-//void Q_strncpyz(char* dest, const char* src, size_t destsize);
 
 // -- other
 char* ConcatArgs(int start);
@@ -161,13 +168,13 @@ void Proxy_NewAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int si
 void Proxy_NewAPI_GetUsercmd(int clientNum, usercmd_t* cmd);
 
 // -- Export table
-void Proxy_NewAPI_ShutdownGame(int restart);
-char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 void Proxy_NewAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 void Proxy_NewAPI_ClientCommand(int clientNum);
-void Proxy_NewAPI_RunFrame(int levelTime);
+char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 void Proxy_NewAPI_ClientThink(int clientNum, usercmd_t* ucmd);
 qboolean Proxy_NewAPI_ClientUserinfoChanged(int clientNum);
+void Proxy_NewAPI_RunFrame(int levelTime);
+void Proxy_NewAPI_ShutdownGame(int restart);
 
 // ------------------------
 // Proxy_OldAPIWrappers
@@ -189,6 +196,7 @@ void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* cmd);
 void Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum);
+void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd);
 void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum);
 
 // ------------------------
@@ -196,3 +204,25 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum);
 // ------------------------
 
 void TranslateSystemCalls(void);
+
+// ------------------------
+// Proxy_Patch
+// ------------------------
+
+void Proxy_Patch_Attach(void);
+void Proxy_Patch_Detach(void);
+
+// ------------------------
+// Proxy_Server
+// ------------------------
+
+void Proxy_Server_Initialize_MemoryAddress(void);
+void Proxy_Server_CalcPacketsAndFPS(int clientNum, int* packets, int* fps);
+void Proxy_Server_UpdateUcmdStats(int clientNum, usercmd_t* cmd, int packetIndex);
+void Proxy_Server_UpdateTimenudge(client_t* client, usercmd_t* cmd, int _Milliseconds);
+
+// ------------------------
+// Proxy_ClientCommand
+// ------------------------
+
+void Proxy_ClientCommand_NetStatus(int clientNum);

@@ -31,17 +31,51 @@ endif(WIN32)
 
 set(JKA_YBEProxyDefines ${MPSharedDefines} "_GAME" )
 set(JKA_YBEProxyMainFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_ClientCommand.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Files.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Imports.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Main.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_NewAPIWrappers.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_OldAPIWrappers.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SystemCalls.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Patch.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Patch.h"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.h"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SharedAPI.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Shell.h"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Header.h"
 	)
 source_group("JKA_YBEProxy" FILES ${JKA_YBEProxyMainFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyMainFiles})
+
+set(JKA_YBEProxyDetourFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/DetourPatcher.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/DetourPatcher.h"
+	)
+source_group("DetourPatcher" FILES ${JKA_YBEProxyDetourFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDetourFiles})
+
+set(JKA_YBEProxyEnginePatchFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_EnginePatch.h"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_client.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_main.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_snapshot.c"
+	)
+source_group("EnginePatch" FILES ${JKA_YBEProxyEnginePatchFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyEnginePatchFiles})
+
+set(JKA_YBEProxyServerFiles
+	"${JKA_YBEProxyDir}/server/server.h"
+	)
+source_group("server" FILES ${JKA_YBEProxyServerFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyServerFiles})
+
+set(JKA_YBEProxySysFiles
+	"${JKA_YBEProxyDir}/sys/sys_public.h"
+	)
+source_group("sys" FILES ${JKA_YBEProxySysFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxySysFiles})
 
 set(JKA_YBEProxyDSKCommonFiles
 	"${JKA_YBEProxyDir}/qcommon/disablewarnings.h"
@@ -50,6 +84,7 @@ set(JKA_YBEProxyDSKCommonFiles
 	"${JKA_YBEProxyDir}/qcommon/q_platform.h"
 	"${JKA_YBEProxyDir}/qcommon/q_shared.h"
 	"${JKA_YBEProxyDir}/qcommon/q_string.h"
+	"${JKA_YBEProxyDir}/qcommon/qcommon.h"
 	"${JKA_YBEProxyDir}/qcommon/tags.h"
 	)
 source_group("qcommon" FILES ${JKA_YBEProxyDSKCommonFiles})

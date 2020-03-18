@@ -1,4 +1,5 @@
 #include "Proxy_Header.h"
+#include "server/server.h"
 
 // ==================================================
 // IMPORT TABLE
@@ -53,9 +54,9 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 
 	proxy.trap->Argv(0, cmd, sizeof(cmd));
 
-	if (!Q_stricmpn(&cmd[0], "jkaDST_", 7))
+	if (!Q_stricmpn(cmd, "jkaDST_", 7))
 	{
-		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData->cleanName));
+		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData[clientNum].cleanName));
 		proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
 
 		return qfalse;
@@ -64,7 +65,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	// Todo (not sure): Check in the entier command + args?
 	char* argsConcat = ConcatArgs(1);
 
-	if (!Q_stricmpn(&cmd[0], "say", 3) || !Q_stricmpn(&cmd[0], "say_team", 8) || !Q_stricmpn(&cmd[0], "tell", 4))
+	if (!Q_stricmpn(cmd, "say", 3) || !Q_stricmpn(cmd, "say_team", 8) || !Q_stricmpn(cmd, "tell", 4))
 	{
 		sayCmd = qtrue;
 
@@ -84,31 +85,31 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	proxy.trap->Argv(2, cmd_arg2, sizeof(cmd_arg2));
 
 	// Fix: crach gc
-	if (!Q_stricmpn(&cmd[0], "gc", 2) && atoi(cmd_arg1) >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients"))
+	if (!Q_stricmpn(cmd, "gc", 2) && atoi(cmd_arg1) >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients"))
 	{
 		return qfalse;
 	}
 
 	// Fix: crash npc spawn
-	if (!Q_stricmpn(&cmd[0], "npc", 3) && !Q_stricmpn(&cmd_arg1[0], "spawn", 5) && (!Q_stricmpn(&cmd_arg2[0], "ragnos", 6) || !Q_stricmpn(&cmd_arg2[0], "saber_droid", 6)))
+	if (!Q_stricmpn(cmd, "npc", 3) && !Q_stricmpn(cmd_arg1, "spawn", 5) && (!Q_stricmpn(cmd_arg2, "ragnos", 6) || !Q_stricmpn(cmd_arg2, "saber_droid", 6)))
 	{
 		return qfalse;
 	}
 
 	// Fix: team crash
-	if (!Q_stricmpn(&cmd[0], "team", 4) && (!Q_stricmpn(&cmd_arg1[0], "follow1", 7) || !Q_stricmpn(&cmd_arg1[0], "follow2", 7)))
+	if (!Q_stricmpn(cmd, "team", 4) && (!Q_stricmpn(cmd_arg1, "follow1", 7) || !Q_stricmpn(cmd_arg1, "follow2", 7)))
 	{
 		return qfalse;
 	}
 
 	// Disable: callteamvote, useless in basejka and can lead to a bugged UI on custom client
-	if (!Q_stricmpn(&cmd[0], "callteamvote", 12))
+	if (!Q_stricmpn(cmd, "callteamvote", 12))
 	{
 		return qfalse;
 	}
 
 	// Fix: callvote fraglimit/timelimit with negative value
-	if (!Q_stricmpn(&cmd[0], "callvote", 8) && (!Q_stricmpn(&cmd_arg1[0], "fraglimit", 9) || !Q_stricmpn(&cmd_arg1[0], "timelimit", 9)) && atoi(cmd_arg2) < 0)
+	if (!Q_stricmpn(cmd, "callvote", 8) && (!Q_stricmpn(cmd_arg1, "fraglimit", 9) || !Q_stricmpn(cmd_arg1, "timelimit", 9)) && atoi(cmd_arg2) < 0)
 	{
 		return qfalse;
 	}
@@ -123,7 +124,22 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		return qfalse;
 	}
 
+	if (!Q_stricmpn(cmd, "netstatus", 9))
+	{
+		Proxy_ClientCommand_NetStatus(clientNum);
+
+		return qfalse;
+	}
+
 	return qtrue;
+}
+
+void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd)
+{
+	if (clientNum < 0 || clientNum >= MAX_CLIENTS || !proxy.clientData[clientNum].isConnected)
+	{
+		return;
+	}
 }
 
 void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
@@ -143,8 +159,8 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	val = Info_ValueForKey(userinfo, "name");
 
 	// Fix bad names
-	Proxy_ClientCleanName(val, proxy.clientData->cleanName, sizeof(proxy.clientData->cleanName));
-	Info_SetValueForKey(userinfo, "name", proxy.clientData->cleanName);
+	Proxy_ClientCleanName(val, proxy.clientData[clientNum].cleanName, sizeof(proxy.clientData[clientNum].cleanName));
+	Info_SetValueForKey(userinfo, "name", proxy.clientData[clientNum].cleanName);
 
 	val = Info_ValueForKey(userinfo, "model");
 
@@ -155,7 +171,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 
 		if (!Q_stricmpn(val, "darksidetools", len))
 		{
-			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData->cleanName));
+			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData[clientNum].cleanName));
 			proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
 		}
 
