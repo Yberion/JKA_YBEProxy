@@ -70,12 +70,13 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 	}
 
 	// save time for ping calculation
-	//cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked = proxy.server.svs->time;
-
+	// Proxy -------------->
     if (client->frames[client->messageAcknowledge & PACKET_MASK].messageAcked == -1)
     {
+		//cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked = proxy.server.svs->time;
 		client->frames[client->messageAcknowledge & PACKET_MASK].messageAcked = proxy.trap->Milliseconds();
     }
+	// Proxy <--------------
 
 	// if this is the first usercmd we have received
 	// this gamestate, put the client into the world
@@ -97,6 +98,12 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 		return;
 	}
 
+	// Proxy -------------->
+	int		packetIndex;
+
+	packetIndex = proxy.clientData[getClientNumFromAddr(client)].cmdIndex;
+	// Proxy <--------------
+
 	// usually, the first couple commands will be duplicates
 	// of ones we have previously received, but the servertimes
 	// in the commands will cause them to be immediately discarded
@@ -117,6 +124,18 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 		{
 			continue;
 		}
+
 		proxy.server.functions.SV_ClientThink(client, &cmds[i]);
+
+		// Proxy -------------->
+		if (client->ping < 1)
+		{
+			continue;
+		}
+
+		Proxy_Server_UpdateUcmdStats(getClientNumFromAddr(client), &cmds[i], packetIndex);
+		Proxy_Server_UpdateTimenudge(client, &cmds[i], proxy.trap->Milliseconds());
+		
+		// Proxy <--------------
 	}
 }

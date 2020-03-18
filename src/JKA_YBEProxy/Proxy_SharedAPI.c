@@ -56,7 +56,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 
 	if (!Q_stricmpn(&cmd[0], "jkaDST_", 7))
 	{
-		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData->cleanName));
+		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData[clientNum].cleanName));
 		proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
 
 		return qfalse;
@@ -129,11 +129,24 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 
 void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd)
 {
-	if (clientNum < 0 || clientNum >= MAX_CLIENTS || !proxy.clientData->isConnected)
+	if (clientNum < 0 || clientNum >= MAX_CLIENTS || !proxy.clientData[clientNum].isConnected)
 	{
 		return;
 	}
 
+	if (proxy.server.svs->clients[clientNum].ping < 1)
+	{
+		return;
+	}
+
+	int packets = 0;
+	int fps = 0;
+
+	Proxy_Server_CalcPacketsAndFPS(clientNum, &packets, &fps);
+
+	Com_Printf("PACKETS: %d - FPS: %d - TIMENUDGE: %d\n", packets, fps, proxy.clientData[clientNum].timenudge);
+
+	/*
 	Com_Printf("NAME : %s\n", proxy.server.svs->clients[clientNum].name);
 
 	for (int j = 0; j < PACKET_BACKUP; j++)
@@ -144,6 +157,7 @@ void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd)
 		}
 		Com_Printf("(%d) messageAcked: %d     messageSent: %d\n", j, proxy.server.svs->clients[clientNum].frames[j].messageAcked, proxy.server.svs->clients[clientNum].frames[j].messageSent);
 	}
+	*/
 }
 
 void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
@@ -163,8 +177,8 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	val = Info_ValueForKey(userinfo, "name");
 
 	// Fix bad names
-	Proxy_ClientCleanName(val, proxy.clientData->cleanName, sizeof(proxy.clientData->cleanName));
-	Info_SetValueForKey(userinfo, "name", proxy.clientData->cleanName);
+	Proxy_ClientCleanName(val, proxy.clientData[clientNum].cleanName, sizeof(proxy.clientData[clientNum].cleanName));
+	Info_SetValueForKey(userinfo, "name", proxy.clientData[clientNum].cleanName);
 
 	val = Info_ValueForKey(userinfo, "model");
 
@@ -175,7 +189,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 
 		if (!Q_stricmpn(val, "darksidetools", len))
 		{
-			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData->cleanName));
+			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData[clientNum].cleanName));
 			proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
 		}
 

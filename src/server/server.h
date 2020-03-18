@@ -187,11 +187,11 @@ typedef struct
 typedef struct serverStatic_s {
 	//0x606218 / 0x83121e0
 	qboolean	initialized;				// sv_init has completed
-	//0x60621C / 0x83121e4
+	//0x60621c / 0x83121e4
 	int			time;						// will be strictly increasing across level changes
-	//0x606220
+	//0x606220 / 0x83121e8
 	int			snapFlagServerBit;			// ^= SNAPFLAG_SERVERCOUNT every SV_SpawnServer()
-	//0x606224
+	//0x606224 / 0x83121ec
 	client_t	*clients;					// [sv_maxclients->integer];
 	//0x606228
 	int			numSnapshotEntities;		// sv_maxclients->integer*PACKET_BACKUP*MAX_SNAPSHOT_ENTITIES

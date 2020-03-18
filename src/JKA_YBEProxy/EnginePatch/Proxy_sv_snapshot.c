@@ -24,7 +24,10 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 
 	// record information about the message
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
+	// Proxy -------------->
+	// client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.time;
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = proxy.trap->Milliseconds();
+	// Proxy <--------------
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = -1;
 
 	// send the datagram

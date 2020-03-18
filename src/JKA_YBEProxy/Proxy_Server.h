@@ -35,9 +35,12 @@
 
 	// Variable address
 	#define var_svs_addr 0x606218
+	#define var_svsClients_addr 0x606224
 	#define var_sv_addr 0x567F30
 
-	// cvar
+	// cvar (for addr check in function: 0x442f60)
+	#define cvar_sv_fps_addr 0x6102d0
+	#define cvar_sv_maxclients_addr 0x610278
 	#define cvar_sv_pure_addr 0x60620c
 #else
 	// Function address to hook
@@ -63,11 +66,17 @@
 
 	// Variable address
 	#define var_svs_addr 0x83121e0
+	#define var_svsClients_addr 0x83121ec
 	#define var_sv_addr 0x8273ec0
 
-	// cvar
+	// cvar (for addr check in function: 0x8055824)
+	#define cvar_sv_fps_addr 0x8273e84
+	#define cvar_sv_maxclients_addr 0x8273ea4
 	#define cvar_sv_pure_addr 0x83121a8
+	
 #endif
+
+#define getClientNumFromAddr(client_ptr) ((client_ptr) - (*(client_t **)var_svsClients_addr))
 
 // ==================================================
 // STRUCT
@@ -90,5 +99,7 @@ typedef struct serverFunctions_s
 
 typedef struct serverCvar_s
 {
+	cvar_t* sv_fps;
+	cvar_t* sv_sv_maxclients;
 	cvar_t* sv_pure;
 } serverCvar_t;

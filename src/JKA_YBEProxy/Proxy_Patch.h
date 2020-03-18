@@ -22,5 +22,5 @@
 // FUNCTION
 // ==================================================
 
-void* Proxy_EnginePatch_PingFix_SV_SendMessageToClient(void);
-void* Proxy_EnginePatch_PingFix_SV_UserMove(void);
+//void* Proxy_EnginePatch_PingFix_SV_SendMessageToClient(void);
+//void* Proxy_EnginePatch_PingFix_SV_UserMove(void);

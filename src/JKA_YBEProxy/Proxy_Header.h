@@ -6,14 +6,6 @@
 #pragma once
 
 // ==================================================
-// INCLUDES
-// ==================================================
-
-#include "game/g_local.h"
-#include "server/server.h"
-#include "Proxy_Server.h"
-
-// ==================================================
 // PLATFORM SPECIFIC STUFF
 // ==================================================
 
@@ -34,6 +26,14 @@
 	#define YBEProxy_CloseLibrary(a) dlclose(a)
 	#define YBEProxy_GetFunctionAddress(a, b) dlsym(a, b)
 #endif
+
+// ==================================================
+// INCLUDES
+// ==================================================
+
+#include "game/g_local.h"
+#include "server/server.h"
+#include "Proxy_Server.h"
 
 // ==================================================
 // DEFINES
@@ -65,6 +65,22 @@ typedef void		(*dllEntryFuncPtr_t)(void *);
 // STRUCTS
 // ==================================================
 
+typedef struct timenudgeData_s
+{
+	int             delayCount;
+	int             delaySum;
+	int             pingSum;
+	int             lastTimeTimeNudgeCalculation;
+} timenudgeData_t;
+
+typedef struct ucmdStat_s
+{
+	int		serverTime;
+	int		packetIndex;
+} ucmdStat_t;
+
+#define CMD_MASK 1024
+
 typedef struct Proxy_s {
 	void					*jampgameHandle;
 
@@ -94,6 +110,12 @@ typedef struct Proxy_s {
 	struct clientData_s {
 		qboolean			isConnected;
 		char				cleanName[MAX_NETNAME];
+
+		timenudgeData_t		timenudgeData;
+		int					timenudge; // Approximation (+- 7 with stable connection)
+
+		ucmdStat_t			cmdStats[CMD_MASK];
+		int					cmdIndex;
 	} clientData[MAX_CLIENTS];
 
 	struct ProxyServer_s
@@ -193,3 +215,6 @@ void Proxy_Patch_Detach(void);
 // ------------------------
 
 void Proxy_Server_Initialize_MemoryAddress(void);
+void Proxy_Server_CalcPacketsAndFPS(int clientNum, int* packets, int* fps);
+void Proxy_Server_UpdateUcmdStats(int clientNum, usercmd_t* cmd, int packetIndex);
+void Proxy_Server_UpdateTimenudge(client_t* client, usercmd_t* cmd, int _Milliseconds);
