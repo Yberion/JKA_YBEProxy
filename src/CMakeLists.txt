@@ -31,6 +31,7 @@ endif(WIN32)
 
 set(JKA_YBEProxyDefines ${MPSharedDefines} "_GAME" )
 set(JKA_YBEProxyMainFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_ClientCommand.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Files.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Imports.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Main.c"

@@ -114,6 +114,8 @@ typedef struct Proxy_s {
 		timenudgeData_t		timenudgeData;
 		int					timenudge; // Approximation (+- 7 with stable connection)
 
+		int					lastTimeNetStatus;
+
 		ucmdStat_t			cmdStats[CMD_MASK];
 		int					cmdIndex;
 	} clientData[MAX_CLIENTS];
@@ -123,7 +125,7 @@ typedef struct Proxy_s {
 		serverStatic_t* svs;
 		server_t* sv;
 		serverFunctions_t functions;
-		serverCvar_t cvar;
+		serverCvars_t cvars;
 	} server;
 } Proxy_t;
 
@@ -218,3 +220,9 @@ void Proxy_Server_Initialize_MemoryAddress(void);
 void Proxy_Server_CalcPacketsAndFPS(int clientNum, int* packets, int* fps);
 void Proxy_Server_UpdateUcmdStats(int clientNum, usercmd_t* cmd, int packetIndex);
 void Proxy_Server_UpdateTimenudge(client_t* client, usercmd_t* cmd, int _Milliseconds);
+
+// ------------------------
+// Proxy_ClientCommand
+// ------------------------
+
+void Proxy_ClientCommand_NetStatus(int clientNum);

@@ -86,7 +86,7 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 		// the moves can be processed normaly
 	}
 
-	if (proxy.server.cvar.sv_pure->integer != 0 && client->pureAuthentic == 0)
+	if (proxy.server.cvars.sv_pure->integer != 0 && client->pureAuthentic == 0)
 	{
 		proxy.server.functions.SV_DropClient(client, "Cannot validate pure client!");
 		return;

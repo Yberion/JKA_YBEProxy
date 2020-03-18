@@ -54,7 +54,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 
 	proxy.trap->Argv(0, cmd, sizeof(cmd));
 
-	if (!Q_stricmpn(&cmd[0], "jkaDST_", 7))
+	if (!Q_stricmpn(cmd, "jkaDST_", 7))
 	{
 		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData[clientNum].cleanName));
 		proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
@@ -65,7 +65,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	// Todo (not sure): Check in the entier command + args?
 	char* argsConcat = ConcatArgs(1);
 
-	if (!Q_stricmpn(&cmd[0], "say", 3) || !Q_stricmpn(&cmd[0], "say_team", 8) || !Q_stricmpn(&cmd[0], "tell", 4))
+	if (!Q_stricmpn(cmd, "say", 3) || !Q_stricmpn(cmd, "say_team", 8) || !Q_stricmpn(cmd, "tell", 4))
 	{
 		sayCmd = qtrue;
 
@@ -85,31 +85,31 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	proxy.trap->Argv(2, cmd_arg2, sizeof(cmd_arg2));
 
 	// Fix: crach gc
-	if (!Q_stricmpn(&cmd[0], "gc", 2) && atoi(cmd_arg1) >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients"))
+	if (!Q_stricmpn(cmd, "gc", 2) && atoi(cmd_arg1) >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients"))
 	{
 		return qfalse;
 	}
 
 	// Fix: crash npc spawn
-	if (!Q_stricmpn(&cmd[0], "npc", 3) && !Q_stricmpn(&cmd_arg1[0], "spawn", 5) && (!Q_stricmpn(&cmd_arg2[0], "ragnos", 6) || !Q_stricmpn(&cmd_arg2[0], "saber_droid", 6)))
+	if (!Q_stricmpn(cmd, "npc", 3) && !Q_stricmpn(cmd_arg1, "spawn", 5) && (!Q_stricmpn(cmd_arg2, "ragnos", 6) || !Q_stricmpn(cmd_arg2, "saber_droid", 6)))
 	{
 		return qfalse;
 	}
 
 	// Fix: team crash
-	if (!Q_stricmpn(&cmd[0], "team", 4) && (!Q_stricmpn(&cmd_arg1[0], "follow1", 7) || !Q_stricmpn(&cmd_arg1[0], "follow2", 7)))
+	if (!Q_stricmpn(cmd, "team", 4) && (!Q_stricmpn(cmd_arg1, "follow1", 7) || !Q_stricmpn(cmd_arg1, "follow2", 7)))
 	{
 		return qfalse;
 	}
 
 	// Disable: callteamvote, useless in basejka and can lead to a bugged UI on custom client
-	if (!Q_stricmpn(&cmd[0], "callteamvote", 12))
+	if (!Q_stricmpn(cmd, "callteamvote", 12))
 	{
 		return qfalse;
 	}
 
 	// Fix: callvote fraglimit/timelimit with negative value
-	if (!Q_stricmpn(&cmd[0], "callvote", 8) && (!Q_stricmpn(&cmd_arg1[0], "fraglimit", 9) || !Q_stricmpn(&cmd_arg1[0], "timelimit", 9)) && atoi(cmd_arg2) < 0)
+	if (!Q_stricmpn(cmd, "callvote", 8) && (!Q_stricmpn(cmd_arg1, "fraglimit", 9) || !Q_stricmpn(cmd_arg1, "timelimit", 9)) && atoi(cmd_arg2) < 0)
 	{
 		return qfalse;
 	}
@@ -124,6 +124,13 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		return qfalse;
 	}
 
+	if (!Q_stricmpn(cmd, "netstatus", 9))
+	{
+		Proxy_ClientCommand_NetStatus(clientNum);
+
+		return qfalse;
+	}
+
 	return qtrue;
 }
 
@@ -133,31 +140,6 @@ void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd)
 	{
 		return;
 	}
-
-	if (proxy.server.svs->clients[clientNum].ping < 1)
-	{
-		return;
-	}
-
-	int packets = 0;
-	int fps = 0;
-
-	Proxy_Server_CalcPacketsAndFPS(clientNum, &packets, &fps);
-
-	Com_Printf("PACKETS: %d - FPS: %d - TIMENUDGE: %d\n", packets, fps, proxy.clientData[clientNum].timenudge);
-
-	/*
-	Com_Printf("NAME : %s\n", proxy.server.svs->clients[clientNum].name);
-
-	for (int j = 0; j < PACKET_BACKUP; j++)
-	{
-		if (proxy.server.svs->clients[clientNum].frames[j].messageAcked <= 0)
-		{
-			continue;
-		}
-		Com_Printf("(%d) messageAcked: %d     messageSent: %d\n", j, proxy.server.svs->clients[clientNum].frames[j].messageAcked, proxy.server.svs->clients[clientNum].frames[j].messageSent);
-	}
-	*/
 }
 
 void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)

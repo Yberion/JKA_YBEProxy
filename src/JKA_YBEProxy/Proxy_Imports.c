@@ -465,6 +465,25 @@ void Q_strncpyz(char* dest, const char* src, size_t destsize) {
 	dest[destsize - 1] = 0;
 }
 
+// never goes past bounds or leaves without a terminating 0
+void Q_strcat(char* dest, int size, const char* src)
+{
+	int		l1;
+
+	l1 = strlen(dest);
+	if (l1 >= size)
+	{
+		//Com_Error( ERR_FATAL, "Q_strcat: already overflowed" );
+		return;
+	}
+	if (strlen(src) + 1 > (size_t)(size - l1))
+	{	//do the error here instead of in Q_strncpyz to get a meaningful msg
+		//Com_Error(ERR_FATAL,"Q_strcat: cannot append \"%s\" to \"%s\"", src, dest);
+		return;
+	}
+	Q_strncpyz(dest + l1, src, size - l1);
+}
+
 // ==================================================
 // other
 // ==================================================

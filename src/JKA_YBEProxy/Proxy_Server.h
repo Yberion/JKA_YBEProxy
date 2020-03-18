@@ -100,6 +100,6 @@ typedef struct serverFunctions_s
 typedef struct serverCvar_s
 {
 	cvar_t* sv_fps;
-	cvar_t* sv_sv_maxclients;
+	cvar_t* sv_maxclients;
 	cvar_t* sv_pure;
-} serverCvar_t;
+} serverCvars_t;
