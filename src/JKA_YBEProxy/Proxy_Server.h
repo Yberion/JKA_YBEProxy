@@ -16,6 +16,7 @@
 	#define func_SV_CalcPings_addr 0x444220
 	#define func_SV_SendMessageToClient_addr 0x444dc0
 	#define func_SV_UserMove_addr 0x43c210
+	#define func_SV_SvEntityForGentity_addr 0x43cd80
 	
 	// Function address to call
 	#define func_SV_ClientEnterWorld_addr 0x43b230
@@ -47,6 +48,7 @@
 	#define func_SV_CalcPings_addr 0x8057204
 	#define func_SV_SendMessageToClient_addr 0x8058c84
 	#define func_SV_UserMove_addr 0x804e6c4
+	#define func_SV_SvEntityForGentity_addr 0x804ffb4
 
 	// Function address to call
 	#define func_SV_ClientEnterWorld_addr 0x804d444

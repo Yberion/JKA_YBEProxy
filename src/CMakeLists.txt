@@ -59,6 +59,7 @@ set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDetourFiles})
 set(JKA_YBEProxyEnginePatchFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_EnginePatch.h"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_client.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_game.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_main.c"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_snapshot.c"
 	)

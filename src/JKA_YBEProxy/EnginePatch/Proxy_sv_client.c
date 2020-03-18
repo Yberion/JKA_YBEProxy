@@ -15,6 +15,7 @@ each of the backup packets.
 
 void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 {
+	// Proxy -------------->
 #if defined(_WIN32) && !defined(MINGW32)
 	__asm2__(mov [client], EBX); // client_t* client
 	__asm1__(push ECX);
@@ -23,6 +24,7 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 	__asm1__(pop ECX);
 	__asm2__(mov [delta], EAX); // qboolean delta
 #endif
+	// Proxy <--------------
 
 	int			i, key;
 	int			cmdCount;

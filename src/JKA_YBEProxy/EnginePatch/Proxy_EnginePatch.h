@@ -33,3 +33,6 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client);
 
 void (*Original_SV_UserMove)(client_t*, msg_t*, qboolean);
 void Proxy_SV_UserMove(client_t* cl, msg_t* msg, qboolean delta);
+
+svEntity_t* (*Original_SV_SvEntityForGentity)(sharedEntity_t*);
+svEntity_t* Proxy_SV_SvEntityForGentity(sharedEntity_t* gEnt);
