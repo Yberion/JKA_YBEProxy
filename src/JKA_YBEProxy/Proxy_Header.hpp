@@ -59,7 +59,7 @@
 
 typedef intptr_t	(QDECL *systemCallFuncPtr_t)(intptr_t command, ...);
 typedef intptr_t	(*vmMainFuncPtr_t)(intptr_t command, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t);
-typedef void		(*dllEntryFuncPtr_t)(void *);
+typedef void		(*dllEntryFuncPtr_t)(systemCallFuncPtr_t);
 
 // ==================================================
 // STRUCTS
@@ -182,8 +182,7 @@ void Proxy_NewAPI_ShutdownGame(int restart);
 // ------------------------
 
 // VM_DllSyscall can handle up to 1 (command) + 15 args
-intptr_t QDECL Proxy_OldAPI_systemCall(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_t arg2, intptr_t arg3, intptr_t arg4, intptr_t arg5,
-	intptr_t arg6, intptr_t arg7, intptr_t arg8, intptr_t arg9, intptr_t arg10, intptr_t arg11, intptr_t arg12, intptr_t arg13, intptr_t arg14);
+intptr_t QDECL Proxy_OldAPI_systemCall(intptr_t command, ...);
 
 // ------------------------
 // Proxy_SharedAPI
