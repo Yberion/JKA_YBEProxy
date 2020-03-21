@@ -31,79 +31,80 @@ endif(WIN32)
 
 set(JKA_YBEProxyDefines ${MPSharedDefines} "_GAME" )
 set(JKA_YBEProxyMainFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_ClientCommand.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Files.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Imports.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Main.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_NewAPIWrappers.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_OldAPIWrappers.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SystemCalls.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Patch.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Patch.h"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.h"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SharedAPI.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Shell.h"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Header.h"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_ClientCommand.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Files.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Imports.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Main.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_NewAPIWrappers.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_OldAPIWrappers.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SystemCalls.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Patch.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Patch.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SharedAPI.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Shell.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Header.hpp"
 	)
 source_group("JKA_YBEProxy" FILES ${JKA_YBEProxyMainFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyMainFiles})
 
 set(JKA_YBEProxyDetourFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/DetourPatcher.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/DetourPatcher.h"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/DetourPatcher.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/DetourPatcher.hpp"
 	)
 source_group("DetourPatcher" FILES ${JKA_YBEProxyDetourFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDetourFiles})
 
 set(JKA_YBEProxyEnginePatchFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_EnginePatch.h"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_client.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_game.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_main.c"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_snapshot.c"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_common.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_EnginePatch.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_client.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_game.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_main.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_snapshot.cpp"
 	)
 source_group("EnginePatch" FILES ${JKA_YBEProxyEnginePatchFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyEnginePatchFiles})
 
 set(JKA_YBEProxyServerFiles
-	"${JKA_YBEProxyDir}/server/server.h"
+	"${JKA_YBEProxyDir}/server/server.hpp"
 	)
 source_group("server" FILES ${JKA_YBEProxyServerFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyServerFiles})
 
 set(JKA_YBEProxySysFiles
-	"${JKA_YBEProxyDir}/sys/sys_public.h"
+	"${JKA_YBEProxyDir}/sys/sys_public.hpp"
 	)
 source_group("sys" FILES ${JKA_YBEProxySysFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxySysFiles})
 
 set(JKA_YBEProxyDSKCommonFiles
-	"${JKA_YBEProxyDir}/qcommon/disablewarnings.h"
-	"${JKA_YBEProxyDir}/qcommon/q_color.h"
-	"${JKA_YBEProxyDir}/qcommon/q_math.h"
-	"${JKA_YBEProxyDir}/qcommon/q_platform.h"
-	"${JKA_YBEProxyDir}/qcommon/q_shared.h"
-	"${JKA_YBEProxyDir}/qcommon/q_string.h"
-	"${JKA_YBEProxyDir}/qcommon/qcommon.h"
-	"${JKA_YBEProxyDir}/qcommon/tags.h"
+	"${JKA_YBEProxyDir}/qcommon/disablewarnings.hpp"
+	"${JKA_YBEProxyDir}/qcommon/q_color.hpp"
+	"${JKA_YBEProxyDir}/qcommon/q_math.hpp"
+	"${JKA_YBEProxyDir}/qcommon/q_platform.hpp"
+	"${JKA_YBEProxyDir}/qcommon/q_shared.hpp"
+	"${JKA_YBEProxyDir}/qcommon/q_string.hpp"
+	"${JKA_YBEProxyDir}/qcommon/qcommon.hpp"
+	"${JKA_YBEProxyDir}/qcommon/tags.hpp"
 	)
 source_group("qcommon" FILES ${JKA_YBEProxyDSKCommonFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDSKCommonFiles})
 
 set(JKA_YBEProxySDKGameFiles
-	"${JKA_YBEProxyDir}/game/ai.h"
-	"${JKA_YBEProxyDir}/game/anims.h"
-	"${JKA_YBEProxyDir}/game/b_public.h"
-	"${JKA_YBEProxyDir}/game/bg_public.h"
-	"${JKA_YBEProxyDir}/game/bg_vehicles.h"
-	"${JKA_YBEProxyDir}/game/bg_weapons.h"
-	"${JKA_YBEProxyDir}/game/g_local.h"
-	"${JKA_YBEProxyDir}/game/g_public.h"
-	"${JKA_YBEProxyDir}/game/g_team.h"
-	"${JKA_YBEProxyDir}/game/g_xcvar.h"
-	"${JKA_YBEProxyDir}/game/surfaceflags.h"
-	"${JKA_YBEProxyDir}/game/teams.h"
+	"${JKA_YBEProxyDir}/game/ai.hpp"
+	"${JKA_YBEProxyDir}/game/anims.hpp"
+	"${JKA_YBEProxyDir}/game/b_public.hpp"
+	"${JKA_YBEProxyDir}/game/bg_public.hpp"
+	"${JKA_YBEProxyDir}/game/bg_vehicles.hpp"
+	"${JKA_YBEProxyDir}/game/bg_weapons.hpp"
+	"${JKA_YBEProxyDir}/game/g_local.hpp"
+	"${JKA_YBEProxyDir}/game/g_public.hpp"
+	"${JKA_YBEProxyDir}/game/g_team.hpp"
+	"${JKA_YBEProxyDir}/game/g_xcvar.hpp"
+	"${JKA_YBEProxyDir}/game/surfaceflags.hpp"
+	"${JKA_YBEProxyDir}/game/teams.hpp"
 	)
 source_group("game" FILES ${JKA_YBEProxySDKGameFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxySDKGameFiles})

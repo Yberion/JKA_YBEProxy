@@ -136,7 +136,7 @@ if(MSVC)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:SSE2")
 	endif()
 
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /EHsc /sdl /Ot /Gy /TC")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /EHsc /sdl /Ot /Gy /TP /W4")
 	
 	# Configure MSVC Runtime
 	include(MSVCRuntime)
