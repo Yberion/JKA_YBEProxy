@@ -131,6 +131,13 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		return qfalse;
 	}
 
+	if (!Q_stricmpn(cmd, "myratio", 7))
+	{
+		Proxy_ClientCommand_MyRatio(clientNum);
+
+		return qfalse;
+	}
+
 	return qtrue;
 }
 

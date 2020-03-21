@@ -6,8 +6,9 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	proxy.server.svs = (serverStatic_t*)var_svs_addr;
 	proxy.server.sv = (server_t*)var_sv_addr;
 
+	proxy.server.cvars.sv_fps = *(cvar_t**)cvar_sv_fps_addr;
+	proxy.server.cvars.sv_gametype = *(cvar_t**)cvar_sv_gametype_addr;
 	proxy.server.cvars.sv_maxclients = *(cvar_t**)cvar_sv_maxclients_addr;
-	proxy.server.cvars.sv_fps = *(cvar_t**)cvar_sv_fps_addr; 
 	proxy.server.cvars.sv_pure = *(cvar_t**)cvar_sv_pure_addr;
 
 	proxy.server.functions.SV_ClientEnterWorld = (void (*)(client_t*, usercmd_t*))func_SV_ClientEnterWorld_addr;

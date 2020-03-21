@@ -41,6 +41,7 @@
 
 	// cvar (for addr check in function: 0x442f60)
 	#define cvar_sv_fps_addr 0x6102d0
+	#define cvar_sv_gametype_addr 0x610298
 	#define cvar_sv_maxclients_addr 0x610278
 	#define cvar_sv_pure_addr 0x60620c
 #else
@@ -73,6 +74,7 @@
 
 	// cvar (for addr check in function: 0x8055824)
 	#define cvar_sv_fps_addr 0x8273e84
+	#define cvar_sv_gametype_addr 0x83121cc
 	#define cvar_sv_maxclients_addr 0x8273ea4
 	#define cvar_sv_pure_addr 0x83121a8
 	
@@ -102,6 +104,7 @@ typedef struct serverFunctions_s
 typedef struct serverCvar_s
 {
 	cvar_t* sv_fps;
+	cvar_t* sv_gametype;
 	cvar_t* sv_maxclients;
 	cvar_t* sv_pure;
 } serverCvars_t;

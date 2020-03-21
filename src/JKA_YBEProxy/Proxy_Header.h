@@ -115,6 +115,7 @@ typedef struct Proxy_s {
 		int					timenudge; // Approximation (+- 7 with stable connection)
 
 		int					lastTimeNetStatus;
+		int					lastTimeMyratioCheck;
 
 		ucmdStat_t			cmdStats[CMD_MASK];
 		int					cmdIndex;
@@ -226,3 +227,4 @@ void Proxy_Server_UpdateTimenudge(client_t* client, usercmd_t* cmd, int _Millise
 // ------------------------
 
 void Proxy_ClientCommand_NetStatus(int clientNum);
+void Proxy_ClientCommand_MyRatio(int clientNum);

@@ -137,7 +137,6 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 
 		Proxy_Server_UpdateUcmdStats(getClientNumFromAddr(client), &cmds[i], packetIndex);
 		Proxy_Server_UpdateTimenudge(client, &cmds[i], proxy.trap->Milliseconds());
-		
 		// Proxy <--------------
 	}
 }
