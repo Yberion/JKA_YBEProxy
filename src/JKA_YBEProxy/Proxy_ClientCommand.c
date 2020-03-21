@@ -125,7 +125,7 @@ static float calcRatio(int kill, int death)
 	}
 }
 
-void Proxy_ClientCommand_MyRatio(clientNum)
+void Proxy_ClientCommand_MyRatio(int clientNum)
 {
 	if (proxy.clientData[clientNum].lastTimeMyratioCheck + 1000 > proxy.server.svs->time)
 	{
