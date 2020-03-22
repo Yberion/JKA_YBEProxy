@@ -1,9 +1,6 @@
 #include "Proxy_Header.hpp"
 #include "server/server.hpp"
 
-#include <algorithm>
-#include <iostream>
-
 /*
 ==================
 Proxy_ClientCommand_NetStatus

@@ -9,7 +9,7 @@
 // ==================================================
 
 unsigned char	*Attach( unsigned char *pAddress, unsigned char *pNewAddress );
-void			 DisAssemble( unsigned char *iptr0, unsigned int *osizeptr );
+void			 DisAssemble( unsigned char *iptr0, size_t *osizeptr );
 unsigned char	*Detach( unsigned char *pAddress, unsigned char *pTramp );
 size_t			 GetLen( unsigned char *pAddress );
 unsigned char	*GetTramp( unsigned char *pAddress, size_t iLen );

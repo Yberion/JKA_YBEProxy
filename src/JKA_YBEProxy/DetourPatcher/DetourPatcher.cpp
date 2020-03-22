@@ -73,9 +73,9 @@ unsigned char *Detach( unsigned char *pAddress, unsigned char *pTramp )
 
 size_t GetLen( unsigned char *pAddress )
 {
-    /*
-	unsigned int iLen = 0;
-	unsigned int iSize = 0;
+    
+	size_t iLen = 0;
+	size_t iSize = 0;
 
     
 	while( iSize < 5 )
@@ -84,9 +84,10 @@ size_t GetLen( unsigned char *pAddress )
 		pAddress += iLen;
 		iSize += iLen;
 	}
-    */
+    
 
 	return ldisasm(pAddress, false);
+    //return iSize;
 }
 
 // ==================================================
@@ -756,7 +757,7 @@ DWORD table_0F[256] =
 // Disassembles an address in order to find the opcodes.
 // ==============================
 
-void DisAssemble( unsigned char *iptr0, unsigned int *osizeptr )
+void DisAssemble( unsigned char *iptr0, size_t *osizeptr )
 {
 	unsigned char	*iptr = iptr0;
 	unsigned char	 mod, rm, b;
@@ -914,5 +915,5 @@ prefix:
 		iptr += 4;
 	}
 
-	*osizeptr = ( unsigned int )( iptr - iptr0 );
+	*osizeptr = ( size_t )( iptr - iptr0 );
 }
