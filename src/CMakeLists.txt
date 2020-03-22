@@ -52,6 +52,7 @@ set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyMainFiles})
 set(JKA_YBEProxyDetourFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/DetourPatcher.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/DetourPatcher.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/ldisasm.hpp"
 	)
 source_group("DetourPatcher" FILES ${JKA_YBEProxyDetourFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDetourFiles})
