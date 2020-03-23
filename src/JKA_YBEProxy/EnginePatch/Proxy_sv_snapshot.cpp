@@ -11,7 +11,6 @@ Called by SV_SendClientSnapshot and SV_SendClientGameState
 void (*Original_SV_SendMessageToClient)(msg_t*, client_t*);
 void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 {
-	//WIP
 	int			rateMsec;
 
 	// MW - my attempt to fix illegible server message errors caused by 

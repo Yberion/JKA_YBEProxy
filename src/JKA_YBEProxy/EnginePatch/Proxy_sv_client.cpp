@@ -12,6 +12,7 @@ On very fast clients, there may be multiple usercmd packed into
 each of the backup packets.
 ==================
 */
+
 void (*Original_SV_UserMove)(client_t*, msg_t*, qboolean);
 void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 {
