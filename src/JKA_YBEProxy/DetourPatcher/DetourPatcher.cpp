@@ -73,7 +73,7 @@ unsigned char *Detach( unsigned char *pAddress, unsigned char *pTramp )
 
 size_t GetLen( unsigned char *pAddress )
 {
-    
+    /*
 	size_t iLen = 0;
 	size_t iSize = 0;
 
@@ -84,7 +84,7 @@ size_t GetLen( unsigned char *pAddress )
 		pAddress += iLen;
 		iSize += iLen;
 	}
-    
+    */
 
 	return ldisasm(pAddress, false);
     //return iSize;
