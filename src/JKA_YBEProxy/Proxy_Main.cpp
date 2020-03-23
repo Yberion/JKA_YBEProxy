@@ -5,12 +5,6 @@
 
 #include "Proxy_Header.hpp"
 
-#if defined(_WIN32) && !defined(MINGW32)
-	int isWindows = 1;
-#else
-	int isWindows = 0;
-#endif
-
 Proxy_t proxy = { 0 };
 
 static void Proxy_OldAPI_Init(void)

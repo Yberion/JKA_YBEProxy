@@ -4,10 +4,12 @@
 #include "Proxy_Patch.hpp"
 #include "Proxy_Server.hpp"
 
+/*
 // WIP
 unsigned char* pSV_SendMessageToClient;
 unsigned char* pSV_UserMove;
 unsigned char* pSV_CalcPings;
+*/
 
 // ==================================================
 // Proxy_EnginePatch_Attach
