@@ -73,11 +73,11 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 
 	// save time for ping calculation
 	// Proxy -------------->
-    if (client->frames[client->messageAcknowledge & PACKET_MASK].messageAcked == -1)
-    {
-		//cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked = proxy.server.svs->time;
+	if (client->frames[client->messageAcknowledge & PACKET_MASK].messageAcked == -1)
+	{
+	//cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked = proxy.server.svs->time;
 		client->frames[client->messageAcknowledge & PACKET_MASK].messageAcked = proxy.trap->Milliseconds();
-    }
+	}
 	// Proxy <--------------
 
 	// if this is the first usercmd we have received
