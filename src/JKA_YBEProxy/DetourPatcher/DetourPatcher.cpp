@@ -20,7 +20,6 @@
 #include		<cstdio>
 #include		<cstring>
 #include		"DetourPatcher.hpp"
-#include		"ldisasm.hpp"
 
 // ==================================================
 // Attach
@@ -73,10 +72,8 @@ unsigned char *Detach( unsigned char *pAddress, unsigned char *pTramp )
 
 size_t GetLen( unsigned char *pAddress )
 {
-    /*
 	size_t iLen = 0;
 	size_t iSize = 0;
-
     
 	while( iSize < 5 )
 	{
@@ -84,10 +81,8 @@ size_t GetLen( unsigned char *pAddress )
 		pAddress += iLen;
 		iSize += iLen;
 	}
-    */
 
-	return ldisasm(pAddress, false);
-    //return iSize;
+    return iSize;
 }
 
 // ==================================================
