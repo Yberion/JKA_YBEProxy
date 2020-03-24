@@ -123,10 +123,11 @@ typedef struct Proxy_s {
 
 	struct ProxyServer_s
 	{
-		serverStatic_t* svs;
-		server_t* sv;
-		serverFunctions_t functions;
-		serverCvars_t cvars;
+		serverStatic_t*		svs;
+		server_t*			sv;
+		serverFunctions_t	functions;
+		serverCvars_t		cvars;
+		common_t			common;
 	} server;
 } Proxy_t;
 

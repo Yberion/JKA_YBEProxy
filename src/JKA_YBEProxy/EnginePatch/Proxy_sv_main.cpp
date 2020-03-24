@@ -11,7 +11,6 @@ Updates the cl->ping variables
 void (*Original_SV_CalcPings)(void);
 void Proxy_SV_CalcPings(void)
 {
-
 	int			i, j;
 	client_t* cl;
 	int			total, count;

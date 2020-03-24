@@ -42,17 +42,17 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 		client->deltaMessage = -1;
 	}
 
-	cmdCount = proxy.server.functions.MSG_ReadByte(msg);
+	cmdCount = proxy.server.common.MSG_ReadByte(msg);
 
 	if (cmdCount < 1)
 	{
-		proxy.server.functions.Com_Printf("cmdCount < 1\n");
+		Proxy_Common_Com_Printf("cmdCount < 1\n");
 		return;
 	}
 
 	if (cmdCount > MAX_PACKET_USERCMDS)
 	{
-		proxy.server.functions.Com_Printf("cmdCount > MAX_PACKET_USERCMDS\n");
+		Proxy_Common_Com_Printf("cmdCount > MAX_PACKET_USERCMDS\n");
 		return;
 	}
 
@@ -61,14 +61,14 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 	// also use the message acknowledge
 	key ^= client->messageAcknowledge;
 	// also use the last acknowledged server command in the key
-	key ^= proxy.server.functions.Com_HashKey(client->reliableCommands[client->reliableAcknowledge & (MAX_RELIABLE_COMMANDS - 1)], 32);
+	key ^= proxy.server.common.Com_HashKey(client->reliableCommands[client->reliableAcknowledge & (MAX_RELIABLE_COMMANDS - 1)], 32);
 
 	Com_Memset(&nullcmd, 0, sizeof(nullcmd));
 	oldcmd = &nullcmd;
 	for (i = 0; i < cmdCount; i++)
 	{
 		cmd = &cmds[i];
-		proxy.server.functions.MSG_ReadDeltaUsercmdKey(msg, key, oldcmd, cmd);
+		proxy.server.common.MSG_ReadDeltaUsercmdKey(msg, key, oldcmd, cmd);
 		oldcmd = cmd;
 	}
 

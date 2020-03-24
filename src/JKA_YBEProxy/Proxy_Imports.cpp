@@ -291,7 +291,7 @@ void Info_SetValueForKey(char* s, const char* key, const char* value) {
 	{
 		if (strchr(key, *blacklist) || strchr(value, *blacklist))
 		{
-			Com_Printf(S_COLOR_YELLOW "Can't use keys or values with a '%c': %s = %s\n", *blacklist, key, value);
+			proxy.server.common.Com_Printf(S_COLOR_YELLOW "Can't use keys or values with a '%c': %s = %s\n", *blacklist, key, value);
 			return;
 		}
 	}
@@ -306,7 +306,7 @@ void Info_SetValueForKey(char* s, const char* key, const char* value) {
 
 	if (strlen(newi) + strlen(s) >= MAX_INFO_STRING)
 	{
-		Com_Printf("Info string length exceeded: %s\n", s);
+		proxy.server.common.Com_Printf("Info string length exceeded: %s\n", s);
 		return;
 	}
 
@@ -324,7 +324,7 @@ int QDECL Com_sprintf(char* dest, int size, const char* fmt, ...) {
 
 	if (len >= size)
 	{
-		Com_Printf("Com_sprintf: Output length %d too short, require %d bytes.\n", size, len + 1);
+		proxy.server.common.Com_Printf("Com_sprintf: Output length %d too short, require %d bytes.\n", size, len + 1);
 	}
 
 	return len;
@@ -484,6 +484,36 @@ void Q_strcat(char* dest, int size, const char* src)
 	Q_strncpyz(dest + l1, src, size - l1);
 }
 
+char* Q_CleanStr(char* string)
+{
+	char* d;
+	char* s;
+	int		c;
+
+	s = string;
+	d = string;
+	while ((c = *s) != 0)
+	{
+		if (Q_IsColorString(s))
+		{
+			s++;
+		}
+		else if (c >= 0x20 && c <= 0x7E)
+		{
+			*d++ = c;
+		}
+		s++;
+	}
+	*d = '\0';
+
+	return string;
+}
+
+qboolean Q_isintegral(float f)
+{
+	return (qboolean)((int)f == f);
+}
+
 // ==================================================
 // other
 // ==================================================
@@ -521,4 +551,27 @@ char* ConcatArgs(int start) {
 	line[len] = 0;
 
 	return line;
+}
+
+// ==================================================
+// cvar
+// ==================================================
+
+/*
+============
+Cvar_SetValue
+============
+*/
+cvar_t* Cvar_SetValue(const char* var_name, float value)
+{
+	char	val[32];
+
+	if (Q_isintegral(value))
+		Com_sprintf(val, sizeof(val), "%i", (int)value);
+	else
+		Com_sprintf(val, sizeof(val), "%f", value);
+
+	proxy.trap->Cvar_Set(var_name, val);
+
+	return nullptr;
 }

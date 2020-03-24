@@ -1,5 +1,7 @@
 #include "Proxy_EnginePatch.hpp"
 
+#include <mutex>
+
 /*
 =============
 Com_Printf
@@ -10,69 +12,95 @@ to the apropriate place.
 A raw string should NEVER be passed as fmt, because of "%f" type crashers.
 =============
 */
-/*
-void QDECL Com_Printf(const char* fmt, ...)
+
+void (QDECL *Original_Common_Com_Printf)(const char* fmt, ...);
+
+// Proxy -------------->
+std::recursive_mutex printfLock;
+// Proxy <--------------
+void QDECL Proxy_Common_Com_Printf(const char* fmt, ...)
 {
-	va_list		argptr;
-	char		msg[MAXPRINTMSG];
-	qboolean	silent;
+	// Proxy -------------->
+	std::lock_guard<std::recursive_mutex> l(printfLock);
+	// Proxy <--------------
+
+	static qboolean opening_qconsole = qfalse;
+	va_list			argptr;
+	char			msg[MAXPRINTMSG];
 
 	va_start(argptr, fmt);
-	vsprintf(msg, fmt, argptr);
+	// Proxy -------------->
+	Q_vsnprintf(msg, sizeof(msg), fmt, argptr);
+	// Proxy <--------------
 	va_end(argptr);
 
-	if (rd_buffer)
+	if (proxy.server.common.rd_buffer)
 	{
-		if ((strlen(msg) + strlen(rd_buffer)) > (rd_buffersize - 1))
+		if ((strlen(msg) + strlen(proxy.server.common.rd_buffer)) > (size_t)(*proxy.server.common.rd_buffersize - 1))
 		{
-			rd_flush(rd_buffer);
-			*rd_buffer = 0;
+			proxy.server.common.rd_flush(proxy.server.common.rd_buffer);
+			*proxy.server.common.rd_buffer = 0;
 		}
-		Q_strcat(rd_buffer, rd_buffersize, msg);
-		rd_flush(rd_buffer);
-		*rd_buffer = 0;
+		Q_strcat(proxy.server.common.rd_buffer, *proxy.server.common.rd_buffersize, msg);
+
+		// TTimo nooo .. that would defeat the purpose
+		//proxy.server.common.rd_flush(proxy.server.common.rd_buffer);
+		//*proxy.server.common.rd_buffer = 0;
+		
 		return;
 	}
 
-	// * means dont draw this console message on the player screen
-	// but put it on the console
-	silent = qfalse;
-	if (msg[0] == '*')
-	{
-		strcpy(msg, msg + 1);
-
-		if (msg[1] != '*')
-		{
-			silent = qtrue;
-		}
-	}
-
 	// echo to dedicated console and early console
-	Sys_Print(msg);
+	proxy.server.common.Sys_Print(msg);
 
 	// logfile
-	if (com_logfile && com_logfile->integer)
+	if (proxy.server.common.com_logfile && proxy.server.common.com_logfile->integer)
 	{
-		if (!logfile && FS_Initialized())
+		// TTimo: only open the qconsole.log if the filesystem is in an initialized state
+		// also, avoid recursing in the qconsole.log opening (i.e. if fs_debug is on)
+		
+		// Proxy -------------->
+		// ( !logfile && FS_Initialized() )
+		// Proxy <--------------
+
+		if (!*proxy.server.common.logfile && proxy.server.common.FS_Initialized() && !opening_qconsole)
 		{
 			struct tm* newtime;
 			time_t aclock;
 
+			opening_qconsole = qtrue;
+
 			time(&aclock);
 			newtime = localtime(&aclock);
 
-			logfile = FS_FOpenFileWrite("qconsole.log");
-			Com_Printf("logfile opened on %s\n", asctime(newtime));
-			if (com_logfile->integer > 1)
+			*proxy.server.common.logfile = proxy.server.common.FS_FOpenFileWrite("qconsole.log");
+
+			// Proxy -------------->
+			if (*proxy.server.common.logfile)
 			{
-				// force it to not buffer so we get valid
-				// data even if we are crashing
-				FS_ForceFlush(logfile);
+				Proxy_Common_Com_Printf("logfile opened on %s\n", asctime(newtime));
+				
+				if (proxy.server.common.com_logfile->integer > 1)
+				{
+					// force it to not buffer so we get valid
+					// data even if we are crashing
+					proxy.server.common.FS_ForceFlush(*proxy.server.common.logfile);
+				}
+			}
+			else
+			{
+				Proxy_Common_Com_Printf("Opening qconsole.log failed!\n");
+				
+				Cvar_SetValue("logfile", 0);
 			}
 		}
-		if (logfile && FS_Initialized())
+		// Proxy <--------------
+
+		opening_qconsole = qfalse;
+
+		if (*proxy.server.common.logfile && proxy.server.common.FS_Initialized())
 		{
-			FS_Write(msg, strlen(msg), logfile);
+			proxy.server.common.FS_Write(msg, strlen(msg), *proxy.server.common.logfile);
 		}
 	}
 
@@ -84,4 +112,3 @@ void QDECL Com_Printf(const char* fmt, ...)
 	}
 #endif
 }
-*/

@@ -19,8 +19,8 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 	{
 		// send additional message fragments if the last message
 		// was too large to send at once
-		Com_Printf("[ISM]SV_SendClientGameState() [1] for %s, writing out old fragments\n", client->name);
-		proxy.server.functions.Netchan_TransmitNextFragment(&client->netchan);
+		Proxy_Common_Com_Printf("[ISM]SV_SendClientGameState() [1] for %s, writing out old fragments\n", client->name);
+		proxy.server.common.Netchan_TransmitNextFragment(&client->netchan);
 	}
 
 	// record information about the message
@@ -37,7 +37,7 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 	// set nextSnapshotTime based on rate and requested number of updates
 
 	// local clients get snapshots every frame
-	if (client->netchan.remoteAddress.type == NA_LOOPBACK || proxy.server.functions.Sys_IsLANAddress(client->netchan.remoteAddress))
+	if (client->netchan.remoteAddress.type == NA_LOOPBACK || proxy.server.common.Sys_IsLANAddress(client->netchan.remoteAddress))
 	{
 		client->nextSnapshotTime = proxy.server.svs->time - 1;
 		return;

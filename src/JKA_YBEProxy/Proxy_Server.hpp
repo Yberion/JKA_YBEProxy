@@ -13,11 +13,12 @@
 
 #if defined(_WIN32) && !defined(MINGW32)
 	// Function address to hook
+	#define func_Com_Printf_addr 0x40fbe0
 	#define func_SV_CalcPings_addr 0x444220
 	#define func_SV_SendMessageToClient_addr 0x444dc0
 	#define func_SV_UserMove_addr 0x43c210
 	#define func_SV_SvEntityForGentity_addr 0x43cd80
-	
+
 	// Function address to call
 	#define func_SV_ClientEnterWorld_addr 0x43b230
 	#define func_SV_ClientThink_addr 0x43bba0
@@ -25,11 +26,15 @@
 	#define func_SV_Netchan_Transmit_addr 0x444950
 	#define func_SV_RateMsec_addr 0x444d60
 	#define func_Com_HashKey_addr 0x410370
-	#define func_Com_Printf_addr 0x40fbe0
+	#define func_FS_FOpenFileWrite_addr 0x413690
+	#define func_FS_ForceFlush_addr 0x413240
+	#define func_FS_Initialized_addr 0x412e10
+	#define func_FS_Write_addr 0x414350
 	#define func_Netchan_TransmitNextFragment_addr 0x41a3b0
 	#define func_MSG_ReadByte_addr 0x4189f0
 	#define func_MSG_ReadDeltaUsercmdKey_addr 0x418b50
 	#define func_Sys_IsLANAddress_addr 0x457490
+	#define func_Sys_Print_addr 0x44b930 // directly Conbuf_AppendText()
 
 	// Function address called in ASM
 	#define func_Sys_Milliseconds_addr 0x4580E0
@@ -38,14 +43,21 @@
 	#define var_svs_addr 0x606218
 	#define var_svsClients_addr 0x606224
 	#define var_sv_addr 0x567F30
+	#define var_common_rd_buffer_addr 0x4e3790
+	#define var_common_rd_buffersize_addr 0x4dc5ac
+	#define var_common_rd_flush_addr 0x4dc73c
+	#define var_common_logfile_addr 0x4e376c
 
 	// cvar (for addr check in function: 0x442f60)
 	#define cvar_sv_fps_addr 0x6102d0
 	#define cvar_sv_gametype_addr 0x610298
 	#define cvar_sv_maxclients_addr 0x610278
 	#define cvar_sv_pure_addr 0x60620c
+	#define cvar_sv_com_logfile_addr 0x4dc5b8
+
 #else
 	// Function address to hook
+	#define func_Com_Printf_addr 0x8072ca4
 	#define func_SV_CalcPings_addr 0x8057204
 	#define func_SV_SendMessageToClient_addr 0x8058c84
 	#define func_SV_UserMove_addr 0x804e6c4
@@ -58,11 +70,15 @@
 	#define func_SV_Netchan_Transmit_addr 0x8057db4
 	#define func_SV_RateMsec_addr 0x8058c04
 	#define func_Com_HashKey_addr 0x8073b14
-	#define func_Com_Printf_addr 0x8072ca4
+	#define func_FS_FOpenFileWrite_addr 0x812d2a4
+	#define func_FS_ForceFlush_addr 0x812c8a4
+	#define func_FS_Initialized_addr 0x812b754
+	#define func_FS_Write_addr 0x812e074
 	#define func_Netchan_TransmitNextFragment_addr 0x807ab74
 	#define func_MSG_ReadByte_addr 0x8077df4
 	#define func_MSG_ReadDeltaUsercmdKey_addr 0x8078b34
 	#define func_Sys_IsLANAddress_addr 0x80c5f84
+	#define func_Sys_Print_addr 0x80c57a4
 
 	// Function address called in ASM
 	#define func_Sys_Milliseconds_addr 0x80c6714
@@ -71,12 +87,17 @@
 	#define var_svs_addr 0x83121e0
 	#define var_svsClients_addr 0x83121ec
 	#define var_sv_addr 0x8273ec0
+	#define var_common_rd_buffer_addr 0x81e90c0
+	#define var_common_rd_buffersize_addr 0x81e90c4
+	#define var_common_rd_flush_addr 0x81e90c8
+	#define var_common_logfile_addr 0x831f24c
 
 	// cvar (for addr check in function: 0x8055824)
 	#define cvar_sv_fps_addr 0x8273e84
 	#define cvar_sv_gametype_addr 0x83121cc
 	#define cvar_sv_maxclients_addr 0x8273ea4
 	#define cvar_sv_pure_addr 0x83121a8
+	#define cvar_sv_com_logfile_addr 0x831f41c
 	
 #endif
 
@@ -93,18 +114,34 @@ typedef struct serverFunctions_s
 	void		(*SV_DropClient)								(client_t*, const char*);
 	void		(*SV_Netchan_Transmit)							(client_t*, msg_t*);
 	int			(*SV_RateMsec)									(client_t*, int);
-	int			(*Com_HashKey)									(char*, int);
-	void		(*Com_Printf)									(const char*, ...);
-	void		(*Netchan_TransmitNextFragment)					(netchan_t*);
-	int			(*MSG_ReadByte)									(msg_t*);
-	void		(*MSG_ReadDeltaUsercmdKey)						(msg_t*, int, usercmd_t*, usercmd_t*);
-	qboolean	(*Sys_IsLANAddress)								(netadr_t);
 } serverFunctions_t;
 
-typedef struct serverCvar_s
+typedef struct serverCvars_s
 {
 	cvar_t* sv_fps;
 	cvar_t* sv_gametype;
 	cvar_t* sv_maxclients;
 	cvar_t* sv_pure;
 } serverCvars_t;
+
+typedef struct common_s
+{
+	char*			rd_buffer;
+	int*			rd_buffersize;
+	fileHandle_t*	logfile;
+
+	cvar_t*		com_logfile;
+
+	int				(*Com_HashKey)									(char*, int);
+	void			(*Com_Printf)									(const char*, ...);
+	fileHandle_t	(*FS_FOpenFileWrite)							(const char*);
+	void			(*FS_ForceFlush)								(fileHandle_t);
+	qboolean		(*FS_Initialized)								();
+	int				(*FS_Write)										(const void*, int, fileHandle_t);
+	void			(*Netchan_TransmitNextFragment)					(netchan_t*);
+	int				(*MSG_ReadByte)									(msg_t*);
+	void			(*MSG_ReadDeltaUsercmdKey)						(msg_t*, int, usercmd_t*, usercmd_t*);
+	void			(*rd_flush)										(char*);
+	qboolean		(*Sys_IsLANAddress)								(netadr_t);
+	void			(*Sys_Print)									(const char*);
+} common_t;

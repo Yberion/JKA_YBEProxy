@@ -26,6 +26,7 @@ void Proxy_Patch_Attach(void)
 	Original_SV_SendMessageToClient = (void (*)(msg_t*, client_t*)) Attach((unsigned char*)func_SV_SendMessageToClient_addr, (unsigned char*)&Proxy_SV_SendMessageToClient);
 	Original_SV_CalcPings = (void (*)(void)) Attach((unsigned char*)func_SV_CalcPings_addr, (unsigned char*)&Proxy_SV_CalcPings);
 	Original_SV_SvEntityForGentity = (svEntity_t* (*)(sharedEntity_t*)) Attach((unsigned char*)func_SV_SvEntityForGentity_addr, (unsigned char*)&Proxy_SV_SvEntityForGentity);
+	Original_Common_Com_Printf = (void (QDECL *)(const char* fmt, ...)) Attach((unsigned char*)func_Com_Printf_addr, (unsigned char*)&Proxy_Common_Com_Printf);
 
 	//pSV_SendMessageToClient =	Attach((unsigned char*)chunck_PingFix_SV_SendMessageToClient_addr, (unsigned char*)Proxy_EnginePatch_PingFix_SV_SendMessageToClient());
 
@@ -48,6 +49,7 @@ void Proxy_Patch_Detach(void)
 	Detach((unsigned char*)func_SV_SendMessageToClient_addr, (unsigned char*)Original_SV_SendMessageToClient);
 	Detach((unsigned char*)func_SV_CalcPings_addr, (unsigned char*)Original_SV_CalcPings);
 	Detach((unsigned char*)func_SV_SvEntityForGentity_addr, (unsigned char*)Original_SV_SvEntityForGentity);
+	Detach((unsigned char*)func_Com_Printf_addr, (unsigned char*)Original_Common_Com_Printf);
 
 	//Detach((unsigned char*)chunck_PingFix_SV_SendMessageToClient_addr, (unsigned char*)pSV_SendMessageToClient);
 	//Detach((unsigned char*)chunck_PingFix_SV_UserMove_addr, (unsigned char*)pSV_UserMove);

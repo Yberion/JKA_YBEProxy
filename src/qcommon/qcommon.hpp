@@ -360,3 +360,5 @@ inline int Round(float value)
 {
 	return((int)floorf(value + 0.5f));
 }
+
+cvar_t* Cvar_SetValue(const char* var_name, float value);

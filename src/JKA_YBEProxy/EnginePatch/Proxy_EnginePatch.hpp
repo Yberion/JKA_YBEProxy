@@ -36,3 +36,6 @@ void Proxy_SV_UserMove(client_t* cl, msg_t* msg, qboolean delta);
 
 extern svEntity_t* (*Original_SV_SvEntityForGentity)(sharedEntity_t*);
 svEntity_t* Proxy_SV_SvEntityForGentity(sharedEntity_t* gEnt);
+
+extern void (QDECL* Original_Common_Com_Printf)(const char*, ...);
+void QDECL Proxy_Common_Com_Printf(const char* fmt, ...);
