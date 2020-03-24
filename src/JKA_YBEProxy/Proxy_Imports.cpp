@@ -291,7 +291,7 @@ void Info_SetValueForKey(char* s, const char* key, const char* value) {
 	{
 		if (strchr(key, *blacklist) || strchr(value, *blacklist))
 		{
-			proxy.server.common.Com_Printf(S_COLOR_YELLOW "Can't use keys or values with a '%c': %s = %s\n", *blacklist, key, value);
+			Com_Printf(S_COLOR_YELLOW "Can't use keys or values with a '%c': %s = %s\n", *blacklist, key, value);
 			return;
 		}
 	}
@@ -306,7 +306,7 @@ void Info_SetValueForKey(char* s, const char* key, const char* value) {
 
 	if (strlen(newi) + strlen(s) >= MAX_INFO_STRING)
 	{
-		proxy.server.common.Com_Printf("Info string length exceeded: %s\n", s);
+		Com_Printf("Info string length exceeded: %s\n", s);
 		return;
 	}
 
@@ -324,7 +324,7 @@ int QDECL Com_sprintf(char* dest, int size, const char* fmt, ...) {
 
 	if (len >= size)
 	{
-		proxy.server.common.Com_Printf("Com_sprintf: Output length %d too short, require %d bytes.\n", size, len + 1);
+		Com_Printf("Com_sprintf: Output length %d too short, require %d bytes.\n", size, len + 1);
 	}
 
 	return len;
