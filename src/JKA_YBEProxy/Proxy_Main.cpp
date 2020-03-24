@@ -44,13 +44,13 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_SHUTDOWN: // (int restart)
 		//==================================================
 		{
-			// Check version oh jampded here
-			Proxy_Patch_Detach();
-
 			if (proxy.jampgameHandle)
 			{
 				// Send the shutdown signal to the original game module and store the response
 				proxy.originalVmMainResponse = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+
+				// Check version oh jampded here
+				Proxy_Patch_Detach();
 
 				// We can close our proxy library
 				YBEProxy_CloseLibrary(proxy.jampgameHandle);
