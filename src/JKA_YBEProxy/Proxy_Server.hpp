@@ -25,12 +25,15 @@
 	#define func_SV_DropClient_addr 0x43bbf0
 	#define func_SV_Netchan_Transmit_addr 0x444950
 	#define func_SV_RateMsec_addr 0x444d60
+	#define func_SV_Status_f_addr 0x43a4a0
 	#define func_Com_HashKey_addr 0x410370
+	#define func_Cvar_VariableString_addr 0x411ef0
 	#define func_FS_FOpenFileWrite_addr 0x413690
 	#define func_FS_ForceFlush_addr 0x413240
 	#define func_FS_Initialized_addr 0x412e10
 	#define func_FS_Write_addr 0x414350
 	#define func_Netchan_TransmitNextFragment_addr 0x41a3b0
+	#define func_NET_AdrToString_addr 0x419f10
 	#define func_MSG_ReadByte_addr 0x4189f0
 	#define func_MSG_ReadDeltaUsercmdKey_addr 0x418b50
 	#define func_Sys_IsLANAddress_addr 0x457490
@@ -51,9 +54,15 @@
 	// cvar (for addr check in function: 0x442f60)
 	#define cvar_sv_fps_addr 0x6102d0
 	#define cvar_sv_gametype_addr 0x610298
+	#define cvar_sv_hostname_addr 0x61027c
+	#define cvar_sv_mapname_addr 0x61029c
 	#define cvar_sv_maxclients_addr 0x610278
+	#define cvar_sv_privateClients_addr 0x610274
 	#define cvar_sv_pure_addr 0x60620c
-	#define cvar_sv_com_logfile_addr 0x4dc5b8
+	#define cvar_common_com_dedicated_addr 0x4dc5dc
+	#define cvar_common_com_sv_running_addr 0x4dc5e0
+	#define cvar_common_com_logfile_addr 0x4dc5b8
+	#define cvar_common_fs_gamedirvar_addr 0x4ff464
 
 #else
 	// Function address to hook
@@ -69,12 +78,15 @@
 	#define func_SV_DropClient_addr 0x804cb84
 	#define func_SV_Netchan_Transmit_addr 0x8057db4
 	#define func_SV_RateMsec_addr 0x8058c04
+	#define func_SV_Status_f_addr 0x804f7f4
 	#define func_Com_HashKey_addr 0x8073b14
+	#define func_Cvar_VariableString_addr 0x80756f4
 	#define func_FS_FOpenFileWrite_addr 0x812d2a4
 	#define func_FS_ForceFlush_addr 0x812c8a4
 	#define func_FS_Initialized_addr 0x812b754
 	#define func_FS_Write_addr 0x812e074
 	#define func_Netchan_TransmitNextFragment_addr 0x807ab74
+	#define func_NET_AdrToString_addr 0x807b314
 	#define func_MSG_ReadByte_addr 0x8077df4
 	#define func_MSG_ReadDeltaUsercmdKey_addr 0x8078b34
 	#define func_Sys_IsLANAddress_addr 0x80c5f84
@@ -95,9 +107,15 @@
 	// cvar (for addr check in function: 0x8055824)
 	#define cvar_sv_fps_addr 0x8273e84
 	#define cvar_sv_gametype_addr 0x83121cc
+	#define cvar_sv_hostname_addr 0x8273e9c
+	#define cvar_sv_mapname_addr 0x8273e90
 	#define cvar_sv_maxclients_addr 0x8273ea4
+	#define cvar_sv_privateClients_addr 0x8273e80
 	#define cvar_sv_pure_addr 0x83121a8
-	#define cvar_sv_com_logfile_addr 0x831f41c
+	#define cvar_common_com_dedicated_addr 0x831f254
+	#define cvar_common_com_sv_running_addr 0x831f300
+	#define cvar_common_com_logfile_addr 0x831f41c
+	#define cvar_common_fs_gamedirvar_addr 0x838aaec
 	
 #endif
 
@@ -120,25 +138,33 @@ typedef struct serverCvars_s
 {
 	cvar_t* sv_fps;
 	cvar_t* sv_gametype;
+	cvar_t* sv_hostname;
+	cvar_t* sv_mapname;
 	cvar_t* sv_maxclients;
+	cvar_t* sv_privateClients;
 	cvar_t* sv_pure;
 } serverCvars_t;
 
 typedef struct common_s
 {
-	char*			rd_buffer;
+	char**			rd_buffer;
 	int*			rd_buffersize;
 	fileHandle_t*	logfile;
 
-	cvar_t*		com_logfile;
+	cvar_t*			com_dedicated;
+	cvar_t*			com_sv_running;
+	cvar_t*			com_logfile;
+	cvar_t*			fs_gamedirvar;
 
 	int				(*Com_HashKey)									(char*, int);
 	void			(*Com_Printf)									(const char*, ...);
+	char*			(*Cvar_VariableString)							(const char*);
 	fileHandle_t	(*FS_FOpenFileWrite)							(const char*);
 	void			(*FS_ForceFlush)								(fileHandle_t);
 	qboolean		(*FS_Initialized)								();
 	int				(*FS_Write)										(const void*, int, fileHandle_t);
 	void			(*Netchan_TransmitNextFragment)					(netchan_t*);
+	const char*		(*NET_AdrToString)								(netadr_t);
 	int				(*MSG_ReadByte)									(msg_t*);
 	void			(*MSG_ReadDeltaUsercmdKey)						(msg_t*, int, usercmd_t*, usercmd_t*);
 	void			(*rd_flush)										(char*);

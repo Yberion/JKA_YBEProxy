@@ -39,3 +39,10 @@ svEntity_t* Proxy_SV_SvEntityForGentity(sharedEntity_t* gEnt);
 
 extern void (QDECL* Original_Common_Com_Printf)(const char*, ...);
 void QDECL Proxy_Common_Com_Printf(const char* fmt, ...);
+
+extern void (*Original_SV_Status_f)(void);
+void Proxy_SV_Status_f(void);
+
+// ------------- common
+
+const char* FS_GetCurrentGameDir(bool emptybase = false);

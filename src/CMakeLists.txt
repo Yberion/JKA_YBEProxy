@@ -33,18 +33,18 @@ set(JKA_YBEProxyDefines ${MPSharedDefines} "_GAME" )
 set(JKA_YBEProxyMainFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_ClientCommand.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Files.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Header.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Imports.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Main.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_NewAPIWrappers.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_OldAPIWrappers.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SystemCalls.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Patch.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Patch.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SharedAPI.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Shell.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Header.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SystemCalls.cpp"
 	)
 source_group("JKA_YBEProxy" FILES ${JKA_YBEProxyMainFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyMainFiles})
@@ -57,9 +57,11 @@ source_group("DetourPatcher" FILES ${JKA_YBEProxyDetourFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDetourFiles})
 
 set(JKA_YBEProxyEnginePatchFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_common.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/common/Proxy_common.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/common/Proxy_files.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_EnginePatch.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_client.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_ccmds.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_game.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_main.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_snapshot.cpp"
@@ -81,6 +83,7 @@ set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxySysFiles})
 
 set(JKA_YBEProxyDSKCommonFiles
 	"${JKA_YBEProxyDir}/qcommon/disablewarnings.hpp"
+	"${JKA_YBEProxyDir}/qcommon/game_version.hpp"
 	"${JKA_YBEProxyDir}/qcommon/q_color.hpp"
 	"${JKA_YBEProxyDir}/qcommon/q_math.hpp"
 	"${JKA_YBEProxyDir}/qcommon/q_platform.hpp"

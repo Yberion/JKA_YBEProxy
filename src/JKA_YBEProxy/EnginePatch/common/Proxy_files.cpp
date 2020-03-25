@@ -1,4 +1,4 @@
-#include "Proxy_EnginePatch.hpp"
+#include "JKA_YBEProxy/EnginePatch/Proxy_EnginePatch.hpp"
 
 #include <mutex>
 
@@ -34,14 +34,15 @@ void QDECL Proxy_Common_Com_Printf(const char* fmt, ...)
 	// Proxy <--------------
 	va_end(argptr);
 
-	if (proxy.server.common.rd_buffer)
+	if (*proxy.server.common.rd_buffer)
 	{
-		if ((strlen(msg) + strlen(proxy.server.common.rd_buffer)) > (size_t)(*proxy.server.common.rd_buffersize - 1))
+		if ((strlen(msg) + strlen(*proxy.server.common.rd_buffer)) > (size_t)(*proxy.server.common.rd_buffersize - 1))
 		{
-			proxy.server.common.rd_flush(proxy.server.common.rd_buffer);
-			*proxy.server.common.rd_buffer = 0;
+			proxy.server.common.rd_flush(*proxy.server.common.rd_buffer);
+			**proxy.server.common.rd_buffer = 0;
 		}
-		Q_strcat(proxy.server.common.rd_buffer, *proxy.server.common.rd_buffersize, msg);
+
+		Q_strcat(*proxy.server.common.rd_buffer, *proxy.server.common.rd_buffersize, msg);
 
 		// TTimo nooo .. that would defeat the purpose
 		//proxy.server.common.rd_flush(proxy.server.common.rd_buffer);

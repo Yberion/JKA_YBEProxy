@@ -10,7 +10,10 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 
 	proxy.server.cvars.sv_fps = *(cvar_t**)cvar_sv_fps_addr;
 	proxy.server.cvars.sv_gametype = *(cvar_t**)cvar_sv_gametype_addr;
+	proxy.server.cvars.sv_hostname = *(cvar_t**)cvar_sv_hostname_addr;
+	proxy.server.cvars.sv_mapname = *(cvar_t**)cvar_sv_mapname_addr;
 	proxy.server.cvars.sv_maxclients = *(cvar_t**)cvar_sv_maxclients_addr;
+	proxy.server.cvars.sv_privateClients = *(cvar_t**)cvar_sv_privateClients_addr;
 	proxy.server.cvars.sv_pure = *(cvar_t**)cvar_sv_pure_addr;
 
 	proxy.server.functions.SV_ClientEnterWorld = (void (*)(client_t*, usercmd_t*))func_SV_ClientEnterWorld_addr;
@@ -21,22 +24,27 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 
 	// COMMON
 
-	proxy.server.common.com_logfile = *(cvar_t**)cvar_sv_com_logfile_addr;
+	proxy.server.common.com_dedicated = *(cvar_t**)cvar_common_com_dedicated_addr;
+	proxy.server.common.com_sv_running = *(cvar_t**)cvar_common_com_sv_running_addr;
+	proxy.server.common.com_logfile = *(cvar_t**)cvar_common_com_logfile_addr;
+	proxy.server.common.fs_gamedirvar = *(cvar_t**)cvar_common_fs_gamedirvar_addr;
 
 	proxy.server.common.logfile = (fileHandle_t*)var_common_logfile_addr;
-	proxy.server.common.rd_buffer = *(char**)var_common_rd_buffer_addr;
+	proxy.server.common.rd_buffer = (char**)var_common_rd_buffer_addr;
 	proxy.server.common.rd_buffersize = (int*)var_common_rd_buffersize_addr;
 
 	proxy.server.common.Com_HashKey = (int (*)(char*, int))func_Com_HashKey_addr;
 	proxy.server.common.Com_Printf = (void (*)(const char*, ...))func_Com_Printf_addr;
+	proxy.server.common.Cvar_VariableString = (char* (*)(const char*))func_Cvar_VariableString_addr;
 	proxy.server.common.FS_FOpenFileWrite = (fileHandle_t (*)(const char*))func_FS_FOpenFileWrite_addr;
 	proxy.server.common.FS_ForceFlush = (void (*)(fileHandle_t))func_FS_ForceFlush_addr;
 	proxy.server.common.FS_Initialized = (qboolean(*)())func_FS_Initialized_addr;
 	proxy.server.common.FS_Write = (int (*)(const void*, int, fileHandle_t))func_FS_Write_addr;
 	proxy.server.common.Netchan_TransmitNextFragment = (void (*)(netchan_t*))func_Netchan_TransmitNextFragment_addr;
+	proxy.server.common.NET_AdrToString = (const char* (*)(netadr_t))func_NET_AdrToString_addr;
 	proxy.server.common.MSG_ReadByte = (int (*)(msg_t*))func_MSG_ReadByte_addr;
 	proxy.server.common.MSG_ReadDeltaUsercmdKey = (void (*)(msg_t*, int, usercmd_t*, usercmd_t*))func_MSG_ReadDeltaUsercmdKey_addr;
-	proxy.server.common.rd_flush = (void (*)(char*))var_common_rd_flush_addr;
+	proxy.server.common.rd_flush = *(void (**)(char*))var_common_rd_flush_addr;
 	proxy.server.common.Sys_IsLANAddress = (qboolean(*)(netadr_t))func_Sys_IsLANAddress_addr;
 	proxy.server.common.Sys_Print = (void (*)(const char*))func_Sys_Print_addr;
 }
