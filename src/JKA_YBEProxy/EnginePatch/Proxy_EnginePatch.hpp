@@ -43,6 +43,9 @@ void QDECL Proxy_Common_Com_Printf(const char* fmt, ...);
 extern void (*Original_SV_Status_f)(void);
 void Proxy_SV_Status_f(void);
 
+extern void (*Original_SV_SendClientGameState)(client_t*);
+void Proxy_SV_SendClientGameState(client_t* client);
+
 // ------------- common
 
 const char* FS_GetCurrentGameDir(bool emptybase = false);

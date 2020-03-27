@@ -141,3 +141,160 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 		// Proxy <--------------
 	}
 }
+
+/*
+================
+SV_SendClientGameState
+
+Sends the first message from the server to a connected client.
+This will be sent on the initial connection and upon each new map load.
+
+It will be resent if the client acknowledges a later message but has
+the wrong gamestate.
+================
+*/
+
+void (*Original_SV_SendClientGameState)(client_t*);
+void Proxy_SV_SendClientGameState(client_t* client)
+{
+	int				start;
+	entityState_t*	base, nullstate;
+	msg_t			msg;
+	byte			msgBuffer[MAX_MSGLEN];
+
+	// MW - my attempt to fix illegible server message errors caused by 
+	// packet fragmentation of initial snapshot.
+	while (client->state && client->netchan.unsentFragments)
+	{
+		// send additional message fragments if the last message
+		// was too large to send at once
+
+		Com_Printf("[ISM]SV_SendClientGameState() [2] for %s, writing out old fragments\n", client->name);
+		proxy.server.common.Netchan_TransmitNextFragment(&client->netchan);
+	}
+
+	proxy.server.common.Com_DPrintf("SV_SendClientGameState() for %s\n", client->name);
+	proxy.server.common.Com_DPrintf("Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name);
+	
+	// Proxy -------------->
+	if (client->state == CS_CONNECTED)
+	{
+		client->state = CS_PRIMED;
+	}
+	// Proxy <--------------
+
+	client->pureAuthentic = 0;
+
+	// when we receive the first packet from the client, we will
+	// notice that it is from a different serverid and that the
+	// gamestate message was not just sent, forcing a retransmit
+	client->gamestateMessageNum = client->netchan.outgoingSequence;
+
+	proxy.server.common.MSG_Init(&msg, msgBuffer, sizeof(msgBuffer));
+
+	// NOTE, MRE: all server->client messages now acknowledge
+	// let the client know which reliable clientCommands we have received
+	proxy.server.common.MSG_WriteLong(&msg, client->lastClientCommand);
+
+	// send any server commands waiting to be sent first.
+	// we have to do this cause we send the client->reliableSequence
+	// with a gamestate and it sets the clc.serverCommandSequence at
+	// the client side
+	proxy.server.functions.SV_UpdateServerCommandsToClient(client, &msg);
+
+	// send the gamestate
+	proxy.server.common.MSG_WriteByte(&msg, svc_gamestate);
+	proxy.server.common.MSG_WriteLong(&msg, client->reliableSequence);
+
+	// write the configstrings
+	for (start = 0; start < MAX_CONFIGSTRINGS; start++)
+	{
+		if (proxy.server.sv->configstrings[start][0])
+		{
+			proxy.server.common.MSG_WriteByte(&msg, svc_configstring);
+			proxy.server.common.MSG_WriteShort(&msg, start);
+			proxy.server.common.MSG_WriteBigString(&msg, proxy.server.sv->configstrings[start]);
+		}
+	}
+
+	// write the baselines
+	Com_Memset(&nullstate, 0, sizeof(nullstate));
+
+	for (start = 0; start < MAX_GENTITIES; start++)
+	{
+		base = &proxy.server.sv->svEntities[start].baseline;
+
+		if (!base->number)
+		{
+			continue;
+		}
+
+		proxy.server.common.MSG_WriteByte(&msg, svc_baseline);
+		proxy.server.common.MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue);
+	}
+
+	proxy.server.common.MSG_WriteByte(&msg, svc_EOF);
+
+	proxy.server.common.MSG_WriteLong(&msg, client - proxy.server.svs->clients);
+
+	// write the checksum feed
+	proxy.server.common.MSG_WriteLong(&msg, proxy.server.sv->checksumFeed);
+
+	/*
+	//rwwRMG - send info for the terrain
+	if (TheRandomMissionManager)
+	{
+		z_stream zdata;
+
+		// Send the height map
+		memset(&zdata, 0, sizeof(z_stream));
+		deflateInit(&zdata, Z_MAX_COMPRESSION);
+
+		unsigned char heightmap[15000];
+		zdata.next_out = (unsigned char*)heightmap;
+		zdata.avail_out = 15000;
+		zdata.next_in = TheRandomMissionManager->GetLandScape()->GetHeightMap();
+		zdata.avail_in = TheRandomMissionManager->GetLandScape()->GetRealArea();
+		deflate(&zdata, Z_SYNC_FLUSH);
+
+		proxy.server.common.MSG_WriteShort(&msg, (unsigned short)zdata.total_out);
+		MSG_WriteBits(&msg, 1, 1);
+		MSG_WriteData(&msg, heightmap, zdata.total_out);
+
+		deflateEnd(&zdata);
+
+		// Send the flatten map
+		memset(&zdata, 0, sizeof(z_stream));
+		deflateInit(&zdata, Z_MAX_COMPRESSION);
+
+		zdata.next_out = (unsigned char*)heightmap;
+		zdata.avail_out = 15000;
+		zdata.next_in = TheRandomMissionManager->GetLandScape()->GetFlattenMap();
+		zdata.avail_in = TheRandomMissionManager->GetLandScape()->GetRealArea();
+		deflate(&zdata, Z_SYNC_FLUSH);
+
+		proxy.server.common.MSG_WriteShort(&msg, (unsigned short)zdata.total_out);
+		MSG_WriteBits(&msg, 1, 1);
+		MSG_WriteData(&msg, heightmap, zdata.total_out);
+
+		deflateEnd(&zdata);
+
+		// Seed is needed for misc ents and noise
+		proxy.server.common.MSG_WriteLong(&msg, TheRandomMissionManager->GetLandScape()->get_rand_seed());
+
+		SV_WriteRMGAutomapSymbols(&msg);
+	}
+	else
+	{
+		proxy.server.common.MSG_WriteShort(&msg, 0);
+	}
+	*/
+
+	// Proxy -------------->
+	// For old RMG system.
+	proxy.server.common.MSG_WriteShort(&msg, 0);
+	// Proxy <--------------
+
+	// deliver this to the client
+	Proxy_SV_SendMessageToClient(&msg, client);
+}

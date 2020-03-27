@@ -17,6 +17,8 @@
 	#define func_SV_CalcPings_addr 0x444220
 	#define func_SV_SendMessageToClient_addr 0x444dc0
 	#define func_SV_UserMove_addr 0x43c210
+	#define func_SV_SendClientGameState_addr 0x43ae70
+	#define func_SV_Status_f_addr 0x43a4a0
 	#define func_SV_SvEntityForGentity_addr 0x43cd80
 
 	// Function address to call
@@ -25,7 +27,8 @@
 	#define func_SV_DropClient_addr 0x43bbf0
 	#define func_SV_Netchan_Transmit_addr 0x444950
 	#define func_SV_RateMsec_addr 0x444d60
-	#define func_SV_Status_f_addr 0x43a4a0
+	#define func_SV_UpdateServerCommandsToClient_addr 0x444c80
+	#define func_Com_DPrintf_addr 0x40fdb0
 	#define func_Com_HashKey_addr 0x410370
 	#define func_Cvar_VariableString_addr 0x411ef0
 	#define func_FS_FOpenFileWrite_addr 0x413690
@@ -34,8 +37,14 @@
 	#define func_FS_Write_addr 0x414350
 	#define func_Netchan_TransmitNextFragment_addr 0x41a3b0
 	#define func_NET_AdrToString_addr 0x419f10
+	#define func_MSG_Init_addr 0x419d00
 	#define func_MSG_ReadByte_addr 0x4189f0
 	#define func_MSG_ReadDeltaUsercmdKey_addr 0x418b50
+	#define func_MSG_WriteBigString_addr 0x418940
+	#define func_MSG_WriteByte_addr 0x418810
+	#define func_MSG_WriteDeltaEntity_addr 0x418e40
+	#define func_MSG_WriteLong_addr 0x418880
+	#define func_MSG_WriteShort_addr 0x418860
 	#define func_Sys_IsLANAddress_addr 0x457490
 	#define func_Sys_Print_addr 0x44b930 // directly Conbuf_AppendText()
 
@@ -70,6 +79,8 @@
 	#define func_SV_CalcPings_addr 0x8057204
 	#define func_SV_SendMessageToClient_addr 0x8058c84
 	#define func_SV_UserMove_addr 0x804e6c4
+	#define func_SV_SendClientGameState_addr 0x804cee4
+	#define func_SV_Status_f_addr 0x804f7f4
 	#define func_SV_SvEntityForGentity_addr 0x804ffb4
 
 	// Function address to call
@@ -78,7 +89,8 @@
 	#define func_SV_DropClient_addr 0x804cb84
 	#define func_SV_Netchan_Transmit_addr 0x8057db4
 	#define func_SV_RateMsec_addr 0x8058c04
-	#define func_SV_Status_f_addr 0x804f7f4
+	#define func_SV_UpdateServerCommandsToClient_addr 0x80582c4
+	#define func_Com_DPrintf_addr 0x8072ed4
 	#define func_Com_HashKey_addr 0x8073b14
 	#define func_Cvar_VariableString_addr 0x80756f4
 	#define func_FS_FOpenFileWrite_addr 0x812d2a4
@@ -87,8 +99,14 @@
 	#define func_FS_Write_addr 0x812e074
 	#define func_Netchan_TransmitNextFragment_addr 0x807ab74
 	#define func_NET_AdrToString_addr 0x807b314
+	#define func_MSG_Init_addr 0x80774a4
 	#define func_MSG_ReadByte_addr 0x8077df4
 	#define func_MSG_ReadDeltaUsercmdKey_addr 0x8078b34
+	#define func_MSG_WriteBigString_addr 0x8077c04
+	#define func_MSG_WriteByte_addr 0x8077a24
+	#define func_MSG_WriteDeltaEntity_addr 0x8078d74
+	#define func_MSG_WriteLong_addr 0x8077ad4
+	#define func_MSG_WriteShort_addr 0x8077aa4
 	#define func_Sys_IsLANAddress_addr 0x80c5f84
 	#define func_Sys_Print_addr 0x80c57a4
 
@@ -132,6 +150,7 @@ typedef struct serverFunctions_s
 	void		(*SV_DropClient)								(client_t*, const char*);
 	void		(*SV_Netchan_Transmit)							(client_t*, msg_t*);
 	int			(*SV_RateMsec)									(client_t*, int);
+	void		(*SV_UpdateServerCommandsToClient)				(client_t*, msg_t*);
 } serverFunctions_t;
 
 typedef struct serverCvars_s
@@ -156,8 +175,9 @@ typedef struct common_s
 	cvar_t*			com_logfile;
 	cvar_t*			fs_gamedirvar;
 
+	void			(QDECL* Com_DPrintf)							(const char*, ...);
 	int				(*Com_HashKey)									(char*, int);
-	void			(*Com_Printf)									(const char*, ...);
+	void			(QDECL *Com_Printf)								(const char*, ...);
 	char*			(*Cvar_VariableString)							(const char*);
 	fileHandle_t	(*FS_FOpenFileWrite)							(const char*);
 	void			(*FS_ForceFlush)								(fileHandle_t);
@@ -165,8 +185,14 @@ typedef struct common_s
 	int				(*FS_Write)										(const void*, int, fileHandle_t);
 	void			(*Netchan_TransmitNextFragment)					(netchan_t*);
 	const char*		(*NET_AdrToString)								(netadr_t);
+	void			(*MSG_Init)										(msg_t*, byte*, int);
 	int				(*MSG_ReadByte)									(msg_t*);
 	void			(*MSG_ReadDeltaUsercmdKey)						(msg_t*, int, usercmd_t*, usercmd_t*);
+	void			(*MSG_WriteBigString)							(msg_t*, const char*);
+	void			(*MSG_WriteByte)								(msg_t*, int);
+	void			(*MSG_WriteDeltaEntity)							(msg_t*, struct entityState_s*, struct entityState_s*, qboolean);
+	void			(*MSG_WriteLong)								(msg_t*, int);
+	void			(*MSG_WriteShort)								(msg_t*, int);
 	void			(*rd_flush)										(char*);
 	qboolean		(*Sys_IsLANAddress)								(netadr_t);
 	void			(*Sys_Print)									(const char*);
