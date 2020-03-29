@@ -50,7 +50,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 			Com_Printf("----- Proxy: Initializing memory layer\n");
 
 			// (internal)JAmp: v1.0.1.0 win-x86 Oct 30 2003
-			// 
+			// JAmp: v1.0.1.1 linux-i386 Nov 10 2003
 
 			// TODO: Check version of jampded here
 			Proxy_Server_Initialize_MemoryAddress();
