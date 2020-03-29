@@ -164,36 +164,61 @@ typedef struct serverCvars_s
 	cvar_t* sv_pure;
 } serverCvars_t;
 
-typedef struct common_s
+typedef struct Common_s
 {
-	char**			rd_buffer;
-	int*			rd_buffersize;
-	fileHandle_t*	logfile;
+	struct vars_s
+	{
+		char**			rd_buffer;
+		int*			rd_buffersize;
+		fileHandle_t*	logfile;
+	} vars;
 
-	cvar_t*			com_dedicated;
-	cvar_t*			com_sv_running;
-	cvar_t*			com_logfile;
-	cvar_t*			fs_gamedirvar;
+	struct Cvars_s
+	{
+		cvar_t* com_dedicated;
+		cvar_t* com_sv_running;
+		cvar_t* com_logfile;
+		cvar_t* fs_gamedirvar;
+	} cvars;
 
-	void			(QDECL* Com_DPrintf)							(const char*, ...);
-	int				(*Com_HashKey)									(char*, int);
-	void			(QDECL *Com_Printf)								(const char*, ...);
-	char*			(*Cvar_VariableString)							(const char*);
-	fileHandle_t	(*FS_FOpenFileWrite)							(const char*);
-	void			(*FS_ForceFlush)								(fileHandle_t);
-	qboolean		(*FS_Initialized)								();
-	int				(*FS_Write)										(const void*, int, fileHandle_t);
-	void			(*Netchan_TransmitNextFragment)					(netchan_t*);
-	const char*		(*NET_AdrToString)								(netadr_t);
-	void			(*MSG_Init)										(msg_t*, byte*, int);
-	int				(*MSG_ReadByte)									(msg_t*);
-	void			(*MSG_ReadDeltaUsercmdKey)						(msg_t*, int, usercmd_t*, usercmd_t*);
-	void			(*MSG_WriteBigString)							(msg_t*, const char*);
-	void			(*MSG_WriteByte)								(msg_t*, int);
-	void			(*MSG_WriteDeltaEntity)							(msg_t*, struct entityState_s*, struct entityState_s*, qboolean);
-	void			(*MSG_WriteLong)								(msg_t*, int);
-	void			(*MSG_WriteShort)								(msg_t*, int);
-	void			(*rd_flush)										(char*);
-	qboolean		(*Sys_IsLANAddress)								(netadr_t);
-	void			(*Sys_Print)									(const char*);
+	struct Functions_s
+	{
+		void			(QDECL* Com_DPrintf)							(const char*, ...);
+		int				(*Com_HashKey)									(char*, int);
+		void			(QDECL *Com_Printf)								(const char*, ...);
+		char*			(*Cvar_VariableString)							(const char*);
+		fileHandle_t	(*FS_FOpenFileWrite)							(const char*);
+		void			(*FS_ForceFlush)								(fileHandle_t);
+		qboolean		(*FS_Initialized)								();
+		int				(*FS_Write)										(const void*, int, fileHandle_t);
+		void			(*Netchan_TransmitNextFragment)					(netchan_t*);
+		const char*		(*NET_AdrToString)								(netadr_t);
+		void			(*MSG_Init)										(msg_t*, byte*, int);
+		int				(*MSG_ReadByte)									(msg_t*);
+		void			(*MSG_ReadDeltaUsercmdKey)						(msg_t*, int, usercmd_t*, usercmd_t*);
+		void			(*MSG_WriteBigString)							(msg_t*, const char*);
+		void			(*MSG_WriteByte)								(msg_t*, int);
+		void			(*MSG_WriteDeltaEntity)							(msg_t*, struct entityState_s*, struct entityState_s*, qboolean);
+		void			(*MSG_WriteLong)								(msg_t*, int);
+		void			(*MSG_WriteShort)								(msg_t*, int);
+		void			(*rd_flush)										(char*);
+		qboolean		(*Sys_IsLANAddress)								(netadr_t);
+		void			(*Sys_Print)									(const char*);
+	} functions;
 } common_t;
+
+typedef struct ProxyServer_s
+{
+	serverStatic_t*		svs;
+	server_t*			sv;
+	serverFunctions_t	functions;
+	serverCvars_t		cvars;
+	common_t			common;
+} ProxyServer_t;
+
+// ==================================================
+// EXTERN VARIABLE
+// ==================================================
+
+// Should only be used when original jampded is used
+extern ProxyServer_t server;

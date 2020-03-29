@@ -6,7 +6,7 @@ static int Proxy_SV_NumForGentity(sharedEntity_t* ent)
 {
 	int		num;
 
-	num = ((byte*)ent - (byte*)proxy.server.sv->gentities) / proxy.server.sv->gentitySize;
+	num = ((byte*)ent - (byte*)server.sv->gentities) / server.sv->gentitySize;
 
 	return num;
 }
@@ -21,6 +21,6 @@ svEntity_t* Proxy_SV_SvEntityForGentity(sharedEntity_t* gEnt)
 
 	// Proxy -------------->
 	// return &sv.svEntities[ gEnt->s.number ];
-	return &proxy.server.sv->svEntities[Proxy_SV_NumForGentity(gEnt)];
+	return &server.sv->svEntities[Proxy_SV_NumForGentity(gEnt)];
 	// Proxy <--------------
 }

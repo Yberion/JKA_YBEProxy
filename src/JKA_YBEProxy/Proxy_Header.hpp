@@ -28,7 +28,7 @@
 #endif
 
 // ==================================================
-// INCLUDES
+// INCLUDE
 // ==================================================
 
 #include "game/g_local.hpp"
@@ -36,7 +36,7 @@
 #include "Proxy_Server.hpp"
 
 // ==================================================
-// DEFINES
+// DEFINE
 // ==================================================
 
 #define FS_GAME_CVAR "fs_game"
@@ -54,7 +54,7 @@
 #define YBEPROXY_BY_AUTHOR "by Yberion"
 
 // ==================================================
-// TYPEDEFS
+// TYPEDEF
 // ==================================================
 
 typedef intptr_t	(QDECL *systemCallFuncPtr_t)(intptr_t command, ...);
@@ -98,7 +98,7 @@ typedef struct Proxy_s {
 	gameImport_t*			copyNewAPIGameImportTable;
 	gameExport_t*			copyNewAPIGameExportTable;
 
-	struct locatedGameData_s {
+	struct LocatedGameData_s {
 		sharedEntity_t*		g_entities;
 		int					g_entitySize;
 		int					num_entities;
@@ -107,7 +107,7 @@ typedef struct Proxy_s {
 		int					g_clientSize;
 	} locatedGameData;
 
-	struct clientData_s {
+	struct ClientData_s {
 		qboolean			isConnected;
 		char				cleanName[MAX_NETNAME];
 
@@ -120,15 +120,6 @@ typedef struct Proxy_s {
 		ucmdStat_t			cmdStats[CMD_MASK];
 		int					cmdIndex;
 	} clientData[MAX_CLIENTS];
-
-	struct ProxyServer_s
-	{
-		serverStatic_t*		svs;
-		server_t*			sv;
-		serverFunctions_t	functions;
-		serverCvars_t		cvars;
-		common_t			common;
-	} server;
 } Proxy_t;
 
 // ==================================================
@@ -138,7 +129,7 @@ typedef struct Proxy_s {
 extern Proxy_t proxy;
 
 // ==================================================
-// FUNCTIONS
+// FUNCTION
 // ==================================================
 
 // ------------------------

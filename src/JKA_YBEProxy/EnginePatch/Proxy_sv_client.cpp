@@ -42,7 +42,7 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 		client->deltaMessage = -1;
 	}
 
-	cmdCount = proxy.server.common.MSG_ReadByte(msg);
+	cmdCount = server.common.functions.MSG_ReadByte(msg);
 
 	if (cmdCount < 1)
 	{
@@ -57,18 +57,18 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 	}
 
 	// use the checksum feed in the key
-	key = proxy.server.sv->checksumFeed;
+	key = server.sv->checksumFeed;
 	// also use the message acknowledge
 	key ^= client->messageAcknowledge;
 	// also use the last acknowledged server command in the key
-	key ^= proxy.server.common.Com_HashKey(client->reliableCommands[client->reliableAcknowledge & (MAX_RELIABLE_COMMANDS - 1)], 32);
+	key ^= server.common.functions.Com_HashKey(client->reliableCommands[client->reliableAcknowledge & (MAX_RELIABLE_COMMANDS - 1)], 32);
 
 	Com_Memset(&nullcmd, 0, sizeof(nullcmd));
 	oldcmd = &nullcmd;
 	for (i = 0; i < cmdCount; i++)
 	{
 		cmd = &cmds[i];
-		proxy.server.common.MSG_ReadDeltaUsercmdKey(msg, key, oldcmd, cmd);
+		server.common.functions.MSG_ReadDeltaUsercmdKey(msg, key, oldcmd, cmd);
 		oldcmd = cmd;
 	}
 
@@ -76,7 +76,7 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 	// Proxy -------------->
 	if (client->frames[client->messageAcknowledge & PACKET_MASK].messageAcked == -1)
 	{
-	//cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked = proxy.server.svs->time;
+	//cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked = server.svs->time;
 		client->frames[client->messageAcknowledge & PACKET_MASK].messageAcked = proxy.trap->Milliseconds();
 	}
 	// Proxy <--------------
@@ -85,13 +85,13 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 	// this gamestate, put the client into the world
 	if (client->state == CS_PRIMED)
 	{
-		proxy.server.functions.SV_ClientEnterWorld(client, &cmds[0]);
+		server.functions.SV_ClientEnterWorld(client, &cmds[0]);
 		// the moves can be processed normaly
 	}
 
-	if (proxy.server.cvars.sv_pure->integer != 0 && client->pureAuthentic == 0)
+	if (server.cvars.sv_pure->integer != 0 && client->pureAuthentic == 0)
 	{
-		proxy.server.functions.SV_DropClient(client, "Cannot validate pure client!");
+		server.functions.SV_DropClient(client, "Cannot validate pure client!");
 		return;
 	}
 
@@ -128,7 +128,7 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 			continue;
 		}
 
-		proxy.server.functions.SV_ClientThink(client, &cmds[i]);
+		server.functions.SV_ClientThink(client, &cmds[i]);
 
 		// Proxy -------------->
 		if (client->ping < 1)
@@ -170,11 +170,11 @@ void Proxy_SV_SendClientGameState(client_t* client)
 		// was too large to send at once
 
 		Com_Printf("[ISM]SV_SendClientGameState() [2] for %s, writing out old fragments\n", client->name);
-		proxy.server.common.Netchan_TransmitNextFragment(&client->netchan);
+		server.common.functions.Netchan_TransmitNextFragment(&client->netchan);
 	}
 
-	proxy.server.common.Com_DPrintf("SV_SendClientGameState() for %s\n", client->name);
-	proxy.server.common.Com_DPrintf("Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name);
+	server.common.functions.Com_DPrintf("SV_SendClientGameState() for %s\n", client->name);
+	server.common.functions.Com_DPrintf("Going from CS_CONNECTED to CS_PRIMED for %s\n", client->name);
 	
 	// Proxy -------------->
 	if (client->state == CS_CONNECTED)
@@ -190,30 +190,30 @@ void Proxy_SV_SendClientGameState(client_t* client)
 	// gamestate message was not just sent, forcing a retransmit
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 
-	proxy.server.common.MSG_Init(&msg, msgBuffer, sizeof(msgBuffer));
+	server.common.functions.MSG_Init(&msg, msgBuffer, sizeof(msgBuffer));
 
 	// NOTE, MRE: all server->client messages now acknowledge
 	// let the client know which reliable clientCommands we have received
-	proxy.server.common.MSG_WriteLong(&msg, client->lastClientCommand);
+	server.common.functions.MSG_WriteLong(&msg, client->lastClientCommand);
 
 	// send any server commands waiting to be sent first.
 	// we have to do this cause we send the client->reliableSequence
 	// with a gamestate and it sets the clc.serverCommandSequence at
 	// the client side
-	proxy.server.functions.SV_UpdateServerCommandsToClient(client, &msg);
+	server.functions.SV_UpdateServerCommandsToClient(client, &msg);
 
 	// send the gamestate
-	proxy.server.common.MSG_WriteByte(&msg, svc_gamestate);
-	proxy.server.common.MSG_WriteLong(&msg, client->reliableSequence);
+	server.common.functions.MSG_WriteByte(&msg, svc_gamestate);
+	server.common.functions.MSG_WriteLong(&msg, client->reliableSequence);
 
 	// write the configstrings
 	for (start = 0; start < MAX_CONFIGSTRINGS; start++)
 	{
-		if (proxy.server.sv->configstrings[start][0])
+		if (server.sv->configstrings[start][0])
 		{
-			proxy.server.common.MSG_WriteByte(&msg, svc_configstring);
-			proxy.server.common.MSG_WriteShort(&msg, start);
-			proxy.server.common.MSG_WriteBigString(&msg, proxy.server.sv->configstrings[start]);
+			server.common.functions.MSG_WriteByte(&msg, svc_configstring);
+			server.common.functions.MSG_WriteShort(&msg, start);
+			server.common.functions.MSG_WriteBigString(&msg, server.sv->configstrings[start]);
 		}
 	}
 
@@ -222,23 +222,23 @@ void Proxy_SV_SendClientGameState(client_t* client)
 
 	for (start = 0; start < MAX_GENTITIES; start++)
 	{
-		base = &proxy.server.sv->svEntities[start].baseline;
+		base = &server.sv->svEntities[start].baseline;
 
 		if (!base->number)
 		{
 			continue;
 		}
 
-		proxy.server.common.MSG_WriteByte(&msg, svc_baseline);
-		proxy.server.common.MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue);
+		server.common.functions.MSG_WriteByte(&msg, svc_baseline);
+		server.common.functions.MSG_WriteDeltaEntity(&msg, &nullstate, base, qtrue);
 	}
 
-	proxy.server.common.MSG_WriteByte(&msg, svc_EOF);
+	server.common.functions.MSG_WriteByte(&msg, svc_EOF);
 
-	proxy.server.common.MSG_WriteLong(&msg, client - proxy.server.svs->clients);
+	server.common.functions.MSG_WriteLong(&msg, client - server.svs->clients);
 
 	// write the checksum feed
-	proxy.server.common.MSG_WriteLong(&msg, proxy.server.sv->checksumFeed);
+	server.common.functions.MSG_WriteLong(&msg, server.sv->checksumFeed);
 
 	/*
 	//rwwRMG - send info for the terrain
@@ -257,7 +257,7 @@ void Proxy_SV_SendClientGameState(client_t* client)
 		zdata.avail_in = TheRandomMissionManager->GetLandScape()->GetRealArea();
 		deflate(&zdata, Z_SYNC_FLUSH);
 
-		proxy.server.common.MSG_WriteShort(&msg, (unsigned short)zdata.total_out);
+		server.common.MSG_WriteShort(&msg, (unsigned short)zdata.total_out);
 		MSG_WriteBits(&msg, 1, 1);
 		MSG_WriteData(&msg, heightmap, zdata.total_out);
 
@@ -273,26 +273,26 @@ void Proxy_SV_SendClientGameState(client_t* client)
 		zdata.avail_in = TheRandomMissionManager->GetLandScape()->GetRealArea();
 		deflate(&zdata, Z_SYNC_FLUSH);
 
-		proxy.server.common.MSG_WriteShort(&msg, (unsigned short)zdata.total_out);
+		server.common.MSG_WriteShort(&msg, (unsigned short)zdata.total_out);
 		MSG_WriteBits(&msg, 1, 1);
 		MSG_WriteData(&msg, heightmap, zdata.total_out);
 
 		deflateEnd(&zdata);
 
 		// Seed is needed for misc ents and noise
-		proxy.server.common.MSG_WriteLong(&msg, TheRandomMissionManager->GetLandScape()->get_rand_seed());
+		server.common.MSG_WriteLong(&msg, TheRandomMissionManager->GetLandScape()->get_rand_seed());
 
 		SV_WriteRMGAutomapSymbols(&msg);
 	}
 	else
 	{
-		proxy.server.common.MSG_WriteShort(&msg, 0);
+		server.common.MSG_WriteShort(&msg, 0);
 	}
 	*/
 
 	// Proxy -------------->
 	// For old RMG system.
-	proxy.server.common.MSG_WriteShort(&msg, 0);
+	server.common.functions.MSG_WriteShort(&msg, 0);
 	// Proxy <--------------
 
 	// deliver this to the client

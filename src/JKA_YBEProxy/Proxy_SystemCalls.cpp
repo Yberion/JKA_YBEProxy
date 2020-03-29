@@ -961,8 +961,8 @@ qboolean trap_G2API_IKMove(void* ghoul2, int time, sharedIKMoveParams_t* params)
 qboolean trap_G2API_RemoveBone(void* ghoul2, const char* boneName, int modelIndex) {
 	return proxy.originalSystemCall(G_G2_REMOVEBONE, ghoul2, boneName, modelIndex);
 }
-void trap_G2API_AttachInstanceToEntNum(void* ghoul2, int entityNum, qboolean server) {
-	proxy.originalSystemCall(G_G2_ATTACHINSTANCETOENTNUM, ghoul2, entityNum, server);
+void trap_G2API_AttachInstanceToEntNum(void* ghoul2, int entityNum, qboolean serverb) {
+	proxy.originalSystemCall(G_G2_ATTACHINSTANCETOENTNUM, ghoul2, entityNum, serverb);
 }
 void trap_G2API_ClearAttachedInstance(int entityNum) {
 	proxy.originalSystemCall(G_G2_CLEARATTACHEDINSTANCE, entityNum);

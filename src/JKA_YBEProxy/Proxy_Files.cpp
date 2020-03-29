@@ -30,6 +30,10 @@ void Proxy_LoadOriginalGameLibrary(void)
 
 	if (proxy.jampgameHandle == NULL)
 	{
+		Com_Printf("=====================================================\n");
+		Com_Printf("----- Proxy: Failed to open %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
+		Com_Printf("=====================================================\n");
+
 		exit(EXIT_FAILURE);
 	}
 }

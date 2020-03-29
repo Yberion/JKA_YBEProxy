@@ -2,8 +2,8 @@
 
 const char* FS_GetCurrentGameDir(bool emptybase)
 {
-	if (proxy.server.common.fs_gamedirvar->string[0])
-		return proxy.server.common.fs_gamedirvar->string;
+	if (server.common.cvars.fs_gamedirvar->string[0])
+		return server.common.cvars.fs_gamedirvar->string;
 
 	return emptybase ? "" : BASEGAME;
 }

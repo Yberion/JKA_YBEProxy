@@ -34,28 +34,28 @@ void QDECL Proxy_Common_Com_Printf(const char* fmt, ...)
 	// Proxy <--------------
 	va_end(argptr);
 
-	if (*proxy.server.common.rd_buffer)
+	if (*server.common.vars.rd_buffer)
 	{
-		if ((strlen(msg) + strlen(*proxy.server.common.rd_buffer)) > (size_t)(*proxy.server.common.rd_buffersize - 1))
+		if ((strlen(msg) + strlen(*server.common.vars.rd_buffer)) > (size_t)(*server.common.vars.rd_buffersize - 1))
 		{
-			proxy.server.common.rd_flush(*proxy.server.common.rd_buffer);
-			**proxy.server.common.rd_buffer = 0;
+			server.common.functions.rd_flush(*server.common.vars.rd_buffer);
+			**server.common.vars.rd_buffer = 0;
 		}
 
-		Q_strcat(*proxy.server.common.rd_buffer, *proxy.server.common.rd_buffersize, msg);
+		Q_strcat(*server.common.vars.rd_buffer, *server.common.vars.rd_buffersize, msg);
 
 		// TTimo nooo .. that would defeat the purpose
-		//proxy.server.common.rd_flush(proxy.server.common.rd_buffer);
-		//*proxy.server.common.rd_buffer = 0;
+		//server.common.rd_flush(server.common.rd_buffer);
+		//*server.common.rd_buffer = 0;
 		
 		return;
 	}
 
 	// echo to dedicated console and early console
-	proxy.server.common.Sys_Print(msg);
+	server.common.functions.Sys_Print(msg);
 
 	// logfile
-	if (proxy.server.common.com_logfile && proxy.server.common.com_logfile->integer)
+	if (server.common.cvars.com_logfile && server.common.cvars.com_logfile->integer)
 	{
 		// TTimo: only open the qconsole.log if the filesystem is in an initialized state
 		// also, avoid recursing in the qconsole.log opening (i.e. if fs_debug is on)
@@ -64,7 +64,7 @@ void QDECL Proxy_Common_Com_Printf(const char* fmt, ...)
 		// ( !logfile && FS_Initialized() )
 		// Proxy <--------------
 
-		if (!*proxy.server.common.logfile && proxy.server.common.FS_Initialized() && !opening_qconsole)
+		if (!*server.common.vars.logfile && server.common.functions.FS_Initialized() && !opening_qconsole)
 		{
 			struct tm* newtime;
 			time_t aclock;
@@ -74,18 +74,18 @@ void QDECL Proxy_Common_Com_Printf(const char* fmt, ...)
 			time(&aclock);
 			newtime = localtime(&aclock);
 
-			*proxy.server.common.logfile = proxy.server.common.FS_FOpenFileWrite("qconsole.log");
+			*server.common.vars.logfile = server.common.functions.FS_FOpenFileWrite("qconsole.log");
 
 			// Proxy -------------->
-			if (*proxy.server.common.logfile)
+			if (*server.common.vars.logfile)
 			{
 				Proxy_Common_Com_Printf("logfile opened on %s\n", asctime(newtime));
 				
-				if (proxy.server.common.com_logfile->integer > 1)
+				if (server.common.cvars.com_logfile->integer > 1)
 				{
 					// force it to not buffer so we get valid
 					// data even if we are crashing
-					proxy.server.common.FS_ForceFlush(*proxy.server.common.logfile);
+					server.common.functions.FS_ForceFlush(*server.common.vars.logfile);
 				}
 			}
 			else
@@ -99,9 +99,9 @@ void QDECL Proxy_Common_Com_Printf(const char* fmt, ...)
 
 		opening_qconsole = qfalse;
 
-		if (*proxy.server.common.logfile && proxy.server.common.FS_Initialized())
+		if (*server.common.vars.logfile && server.common.functions.FS_Initialized())
 		{
-			proxy.server.common.FS_Write(msg, strlen(msg), *proxy.server.common.logfile);
+			server.common.functions.FS_Write(msg, strlen(msg), *server.common.vars.logfile);
 		}
 	}
 

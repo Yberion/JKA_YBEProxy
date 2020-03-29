@@ -39,7 +39,6 @@ set(JKA_YBEProxyMainFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_NewAPIWrappers.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_OldAPIWrappers.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Patch.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Patch.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SharedAPI.cpp"

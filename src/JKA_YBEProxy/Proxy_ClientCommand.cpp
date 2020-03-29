@@ -10,7 +10,7 @@ Display net settings of all players
 */
 void Proxy_ClientCommand_NetStatus(int clientNum)
 {
-	if (proxy.clientData[clientNum].lastTimeNetStatus + 500 > proxy.server.svs->time)
+	if (proxy.clientData[clientNum].lastTimeNetStatus + 500 > server.svs->time)
 	{
 		return;
 	}
@@ -28,7 +28,7 @@ void Proxy_ClientCommand_NetStatus(int clientNum)
 	Q_strcat(status, sizeof(status), "score ping rate   fps packets timeNudge snaps id name \n");
 	Q_strcat(status, sizeof(status), "----- ---- ------ --- ------- --------- ----- -- ---------------\n");
 
-	for (i = 0, cl = proxy.server.svs->clients; i < proxy.server.cvars.sv_maxclients->integer; i++, cl++)
+	for (i = 0, cl = server.svs->clients; i < server.cvars.sv_maxclients->integer; i++, cl++)
 	{
 		int			fps = 0;
 		int			packets = 0;
@@ -55,9 +55,9 @@ void Proxy_ClientCommand_NetStatus(int clientNum)
 			Proxy_Server_CalcPacketsAndFPS(getClientNumFromAddr(cl), &packets, &fps);
 		}
 
-		if (1000 / cl->snapshotMsec > proxy.server.cvars.sv_fps->integer)
+		if (1000 / cl->snapshotMsec > server.cvars.sv_fps->integer)
 		{
-			snaps = proxy.server.cvars.sv_fps->integer;
+			snaps = server.cvars.sv_fps->integer;
 		}
 		else
 		{
@@ -68,7 +68,7 @@ void Proxy_ClientCommand_NetStatus(int clientNum)
 		Q_strcat(status, sizeof(status), va("%5i %s %6i %3i %7i %9i %5i %2i %s^7\n", ps->persistant[PERS_SCORE], state, cl->rate, fps, packets, proxy.clientData[getClientNumFromAddr(cl)].timenudge, snaps, i, cl->name));
 	}
 
-	proxy.clientData[clientNum].lastTimeNetStatus = proxy.server.svs->time;
+	proxy.clientData[clientNum].lastTimeNetStatus = server.svs->time;
 
 	char buffer[1012] = { 0 };
 	int statusLength = strlen(status);
@@ -127,12 +127,12 @@ static float calcRatio(int kill, int death)
 
 void Proxy_ClientCommand_MyRatio(int clientNum)
 {
-	if (proxy.clientData[clientNum].lastTimeMyratioCheck + 1000 > proxy.server.svs->time)
+	if (proxy.clientData[clientNum].lastTimeMyratioCheck + 1000 > server.svs->time)
 	{
 		return;
 	}
 
-	proxy.clientData[clientNum].lastTimeMyratioCheck = proxy.server.svs->time;
+	proxy.clientData[clientNum].lastTimeMyratioCheck = server.svs->time;
 
 	char ratioStringBuffer[16];
 	playerState_t* ps;
@@ -143,7 +143,7 @@ void Proxy_ClientCommand_MyRatio(int clientNum)
 
 	ratioString(ps->persistant[PERS_SCORE], ps->persistant[PERS_KILLED], ps->fd.suicides, ratioStringBuffer, sizeof(ratioStringBuffer));
 
-	if (proxy.server.cvars.sv_gametype->integer != GT_DUEL && proxy.server.cvars.sv_gametype->integer != GT_TEAM && proxy.server.cvars.sv_gametype->integer != GT_FFA)
+	if (server.cvars.sv_gametype->integer != GT_DUEL && server.cvars.sv_gametype->integer != GT_TEAM && server.cvars.sv_gametype->integer != GT_FFA)
 	{
 		proxy.trap->SendServerCommand(clientNum, "print \"Command not supported for this gametype\n\"");
 

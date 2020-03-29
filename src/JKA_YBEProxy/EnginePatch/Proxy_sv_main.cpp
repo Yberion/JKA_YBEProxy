@@ -17,9 +17,9 @@ void Proxy_SV_CalcPings(void)
 	int			delta;
 	playerState_t* ps;
 
-	for (i = 0; i < proxy.server.cvars.sv_maxclients->integer; i++)
+	for (i = 0; i < server.cvars.sv_maxclients->integer; i++)
 	{
-		cl = &proxy.server.svs->clients[i];
+		cl = &server.svs->clients[i];
 		if (cl->state != CS_ACTIVE)
 		{
 			cl->ping = 999;
