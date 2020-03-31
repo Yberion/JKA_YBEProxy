@@ -17,6 +17,8 @@
 	#define YBEProxy_OpenLibrary(a) (void *)LoadLibrary(a)
 	#define YBEProxy_CloseLibrary(a) FreeLibrary((HMODULE)a)
 	#define YBEProxy_GetFunctionAddress(a, b) GetProcAddress((HMODULE)a, b)
+
+	#define ORIGINAL_ENGINE_VERSION "(internal)JAmp: v1.0.1.0 win-x86 Oct 30 2003"
 #else
 	#include <dlfcn.h>
 
@@ -25,6 +27,8 @@
 	#define YBEProxy_OpenLibrary(a) dlopen(a, RTLD_NOW)
 	#define YBEProxy_CloseLibrary(a) dlclose(a)
 	#define YBEProxy_GetFunctionAddress(a, b) dlsym(a, b)
+
+	#define ORIGINAL_ENGINE_VERSION "JAmp: v1.0.1.1 linux-i386 Nov 10 2003"
 #endif
 
 // ==================================================
@@ -97,6 +101,8 @@ typedef struct Proxy_s {
 
 	gameImport_t*			copyNewAPIGameImportTable;
 	gameExport_t*			copyNewAPIGameExportTable;
+
+	bool					isDefaultEngine;
 
 	struct LocatedGameData_s {
 		sharedEntity_t*		g_entities;
@@ -174,7 +180,7 @@ void Proxy_NewAPI_ShutdownGame(int restart);
 // ------------------------
 
 // VM_DllSyscall can handle up to 1 (command) + 15 args
-intptr_t QDECL Proxy_OldAPI_systemCall(intptr_t command, ...);
+intptr_t QDECL Proxy_OldAPI_SystemCall(intptr_t command, ...);
 
 // ------------------------
 // Proxy_SharedAPI
@@ -195,7 +201,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum);
 // Proxy_SystemCalls
 // ------------------------
 
-void TranslateSystemCalls(void);
+void Proxy_Translate_SystemCalls(void);
 
 // ------------------------
 // Proxy_Patch

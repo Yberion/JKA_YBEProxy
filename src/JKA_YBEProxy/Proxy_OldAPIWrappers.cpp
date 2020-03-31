@@ -1,6 +1,6 @@
 #include "Proxy_Header.hpp"
 
-intptr_t QDECL Proxy_OldAPI_systemCall(intptr_t command, ...)
+intptr_t QDECL Proxy_OldAPI_SystemCall(intptr_t command, ...)
 {
 	intptr_t args[15];
 	

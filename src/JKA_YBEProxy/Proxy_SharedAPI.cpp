@@ -124,14 +124,16 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		return qfalse;
 	}
 
-	if (!Q_stricmpn(cmd, "netstatus", 9))
+	// Only work on default engine since it require some memory hook
+	if (proxy.isDefaultEngine && !Q_stricmpn(cmd, "netstatus", 9))
 	{
 		Proxy_ClientCommand_NetStatus(clientNum);
 
 		return qfalse;
 	}
 
-	if (!Q_stricmpn(cmd, "myratio", 7))
+	// Only work on default engine since it require some memory hook
+	if (proxy.isDefaultEngine && !Q_stricmpn(cmd, "myratio", 7))
 	{
 		Proxy_ClientCommand_MyRatio(clientNum);
 
