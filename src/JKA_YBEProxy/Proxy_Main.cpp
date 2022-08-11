@@ -9,8 +9,6 @@ Proxy_t proxy = { 0 };
 
 static void Proxy_OldAPI_Init(void)
 {
-	Proxy_LoadOriginalGameLibrary();
-
 	// Engine -> Load Proxy dllEntry (store the original systemCall function pointer in originalSystemCall) ->
 	// Get Original dllEntry -> send our own Proxy systemCall function pointer to the Original dllEntry
 	// At the end of our Proxy systemCall function there's a call the Original systemCall function
@@ -56,6 +54,8 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 
 			proxy.trap->Print("----- Proxy: Loading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
 
+			Proxy_LoadOriginalGameLibrary();
+
 			Proxy_OldAPI_Init();
 
 			proxy.trap->Print("----- Proxy: %s properly loaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
@@ -66,10 +66,10 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 
 			if (!Q_stricmpn(version, ORIGINAL_ENGINE_VERSION, sizeof(ORIGINAL_ENGINE_VERSION) - 1))
 			{
-				proxy.isDefaultEngine = true;
+				proxy.isOriginalEngine = true;
 			}
 
-			if (proxy.isDefaultEngine)
+			if (proxy.isOriginalEngine)
 			{
 				proxy.trap->Print("----- Proxy: Initializing memory layer\n");
 
@@ -95,7 +95,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 				// Send the shutdown signal to the original game module and store the response
 				proxy.originalVmMainResponse = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
 
-				if (proxy.isDefaultEngine)
+				if (proxy.isOriginalEngine)
 				{
 					proxy.trap->Print("----- Proxy: Unpatching engine\n");
 
@@ -188,9 +188,24 @@ Q_CABI Q_EXPORT gameExport_t* QDECL GetModuleAPI(int apiVersion, gameImport_t* i
 
 	if (apiVersion != GAME_API_VERSION)
 	{
-		proxy.trap->Print("================================================================\n");
-		proxy.trap->Print("----- Proxy: Mismatched GAME_API_VERSION: expected %i, got %i\n", GAME_API_VERSION, apiVersion);
-		proxy.trap->Print("================================================================\n");
+		proxy.trap->Print("=========================================================================\n");
+		proxy.trap->Print("----- Proxy: Mismatched GAME_API_VERSION: expected %i, got %i, exiting\n", GAME_API_VERSION, apiVersion);
+		proxy.trap->Print("=========================================================================\n");
+
+		return nullptr;
+	}
+
+	Proxy_LoadOriginalGameLibrary();
+
+	GetGameAPI_t jampGameGetModuleAPI = (GetGameAPI_t)YBEProxy_GetFunctionAddress(proxy.jampgameHandle, "GetModuleAPI");
+
+	if (!jampGameGetModuleAPI)
+	{
+		proxy.trap->Print("==================================================================================\n");
+		proxy.trap->Print("----- Proxy: Failed to find GetModuleAPI function, loading vmMain and dllEntry\n");
+		proxy.trap->Print("==================================================================================\n");
+
+		Proxy_OldAPI_Init();
 
 		return nullptr;
 	}
@@ -201,19 +216,6 @@ Q_CABI Q_EXPORT gameExport_t* QDECL GetModuleAPI(int apiVersion, gameImport_t* i
 	proxy.originalNewAPIGameImportTable = import;
 	memcpy(&copyNewAPIGameImportTable_, import, sizeof(gameImport_t));
 	proxy.copyNewAPIGameImportTable = &copyNewAPIGameImportTable_;
-
-	Proxy_LoadOriginalGameLibrary();
-
-	GetGameAPI_t jampGameGetModuleAPI = (GetGameAPI_t)YBEProxy_GetFunctionAddress(proxy.jampgameHandle, "GetModuleAPI");
-
-	if (!jampGameGetModuleAPI)
-	{
-		proxy.trap->Print("================================================================\n");
-		proxy.trap->Print("----- Proxy: Failed to find GetModuleAPI function, exiting\n");
-		proxy.trap->Print("================================================================\n");
-
-		return nullptr;
-	}
 
 	proxy.originalNewAPIGameExportTable = jampGameGetModuleAPI(apiVersion, &copyNewAPIGameImportTable_);
 	memcpy(&copyNewAPIGameExportTable_, proxy.originalNewAPIGameExportTable, sizeof(gameExport_t));

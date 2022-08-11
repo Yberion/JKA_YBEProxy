@@ -1341,10 +1341,10 @@ const char *G_GetStringEdString(char *refSection, char *refName);
 //
 // g_client.c
 //
-char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot );
-qboolean ClientUserinfoChanged( int clientNum );
-void ClientDisconnect( int clientNum );
-void ClientBegin( int clientNum, qboolean allowTeamReset );
+//char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot );
+//qboolean ClientUserinfoChanged( int clientNum );
+//void ClientDisconnect( int clientNum );
+//void ClientBegin( int clientNum, qboolean allowTeamReset );
 void G_BreakArm(gentity_t *ent, int arm);
 void G_UpdateClientAnims(gentity_t *self, float animSpeedScale);
 void ClientCommand( int clientNum );

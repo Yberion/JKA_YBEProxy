@@ -102,7 +102,7 @@ typedef struct Proxy_s {
 	gameImport_t*			copyNewAPIGameImportTable;
 	gameExport_t*			copyNewAPIGameExportTable;
 
-	bool					isDefaultEngine;
+	bool					isOriginalEngine;
 
 	struct LocatedGameData_s {
 		sharedEntity_t*		g_entities;
@@ -114,7 +114,7 @@ typedef struct Proxy_s {
 	} locatedGameData;
 
 	struct ClientData_s {
-		qboolean			isConnected;
+		bool				isConnected;
 		char				cleanName[MAX_NETNAME];
 
 		timenudgeData_t		timenudgeData;
@@ -198,10 +198,16 @@ void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd);
 void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum);
 
 // ------------------------
-// Proxy_SystemCalls
+// Proxy_Translate_SystemCalls
 // ------------------------
 
 void Proxy_Translate_SystemCalls(void);
+
+// ------------------------
+// Proxy_Translate_GameCalls
+// ------------------------
+
+void Proxy_Translate_GameCalls(void);
 
 // ------------------------
 // Proxy_Patch

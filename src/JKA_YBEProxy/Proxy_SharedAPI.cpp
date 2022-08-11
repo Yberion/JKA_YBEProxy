@@ -38,7 +38,7 @@ void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset)
 {
 	if (clientNum >= 0 && clientNum < MAX_CLIENTS)
 	{
-		proxy.clientData[clientNum].isConnected = qtrue;
+		proxy.clientData[clientNum].isConnected = true;
 	}
 }
 
@@ -124,16 +124,16 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		return qfalse;
 	}
 
-	// Only work on default engine since it require some memory hook
-	if (proxy.isDefaultEngine && !Q_stricmpn(cmd, "netstatus", 9))
+	// Only work on default engine since it require memory hook
+	if (proxy.isOriginalEngine && !Q_stricmpn(cmd, "netstatus", 9))
 	{
 		Proxy_ClientCommand_NetStatus(clientNum);
 
 		return qfalse;
 	}
 
-	// Only work on default engine since it require some memory hook
-	if (proxy.isDefaultEngine && !Q_stricmpn(cmd, "myratio", 7))
+	// Only work on default engine since it require memory hook
+	if (proxy.isOriginalEngine && !Q_stricmpn(cmd, "myratio", 7))
 	{
 		Proxy_ClientCommand_MyRatio(clientNum);
 
