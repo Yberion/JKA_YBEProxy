@@ -29,6 +29,10 @@ if(WIN32)
 	set(JKA_YBEProxyLibraries "winmm")
 endif(WIN32)
 
+#============================================================================
+# src/JKA_YBEProxy
+#============================================================================
+
 set(JKA_YBEProxyDefines ${MPSharedDefines} "_GAME" )
 set(JKA_YBEProxyMainFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_ClientCommand.cpp"
@@ -45,15 +49,23 @@ set(JKA_YBEProxyMainFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Shell.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Translate_SystemCalls.cpp"
 	)
-source_group("JKA_YBEProxy" FILES ${JKA_YBEProxyMainFiles})
+source_group("src/JKA_YBEProxy" FILES ${JKA_YBEProxyMainFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyMainFiles})
+
+#============================================================================
+# src/JKA_YBEProxy/DetourPatcher
+#============================================================================
 
 set(JKA_YBEProxyDetourFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/DetourPatcher.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/DetourPatcher.hpp"
 	)
-source_group("DetourPatcher" FILES ${JKA_YBEProxyDetourFiles})
+source_group("src/JKA_YBEProxy/DetourPatcher" FILES ${JKA_YBEProxyDetourFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDetourFiles})
+
+#============================================================================
+# src/JKA_YBEProxy/EnginePatch
+#============================================================================
 
 set(JKA_YBEProxyEnginePatchFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/common/Proxy_common.cpp"
@@ -65,20 +77,32 @@ set(JKA_YBEProxyEnginePatchFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_main.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_snapshot.cpp"
 	)
-source_group("EnginePatch" FILES ${JKA_YBEProxyEnginePatchFiles})
+source_group("src/JKA_YBEProxy/EnginePatch" FILES ${JKA_YBEProxyEnginePatchFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyEnginePatchFiles})
+
+#============================================================================
+# src/server
+#============================================================================
 
 set(JKA_YBEProxyServerFiles
 	"${JKA_YBEProxyDir}/server/server.hpp"
 	)
-source_group("server" FILES ${JKA_YBEProxyServerFiles})
+source_group("src/server" FILES ${JKA_YBEProxyServerFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyServerFiles})
+
+#============================================================================
+# src/sys
+#============================================================================
 
 set(JKA_YBEProxySysFiles
 	"${JKA_YBEProxyDir}/sys/sys_public.hpp"
 	)
-source_group("sys" FILES ${JKA_YBEProxySysFiles})
+source_group("src/sys" FILES ${JKA_YBEProxySysFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxySysFiles})
+
+#============================================================================
+# src/qcommon
+#============================================================================
 
 set(JKA_YBEProxyDSKCommonFiles
 	"${JKA_YBEProxyDir}/qcommon/disablewarnings.hpp"
@@ -91,8 +115,12 @@ set(JKA_YBEProxyDSKCommonFiles
 	"${JKA_YBEProxyDir}/qcommon/qcommon.hpp"
 	"${JKA_YBEProxyDir}/qcommon/tags.hpp"
 	)
-source_group("qcommon" FILES ${JKA_YBEProxyDSKCommonFiles})
+source_group("src/qcommon" FILES ${JKA_YBEProxyDSKCommonFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDSKCommonFiles})
+
+#============================================================================
+# src/game
+#============================================================================
 
 set(JKA_YBEProxySDKGameFiles
 	"${JKA_YBEProxyDir}/game/ai.hpp"
@@ -108,7 +136,7 @@ set(JKA_YBEProxySDKGameFiles
 	"${JKA_YBEProxyDir}/game/surfaceflags.hpp"
 	"${JKA_YBEProxyDir}/game/teams.hpp"
 	)
-source_group("game" FILES ${JKA_YBEProxySDKGameFiles})
+source_group("src/game" FILES ${JKA_YBEProxySDKGameFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxySDKGameFiles})
 
 add_library(${JKA_YBEProxy} SHARED ${JKA_YBEProxyFiles})
