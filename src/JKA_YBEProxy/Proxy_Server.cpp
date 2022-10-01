@@ -19,13 +19,14 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.cvars.sv_maxclients = *(cvar_t**)cvar_sv_maxclients_addr;
 	server.cvars.sv_privateClients = *(cvar_t**)cvar_sv_privateClients_addr;
 	server.cvars.sv_pure = *(cvar_t**)cvar_sv_pure_addr;
+	server.cvars.sv_maxRate = *(cvar_t**)cvar_sv_maxRate_addr;
 
 	// functions
 	server.functions.SV_ClientEnterWorld = (void (*)(client_t*, usercmd_t*))func_SV_ClientEnterWorld_addr;
 	server.functions.SV_ClientThink = (void (*)(client_t*, usercmd_t*))func_SV_ClientThink_addr;
 	server.functions.SV_DropClient = (void (*)(client_t*, const char*))func_SV_DropClient_addr;
 	server.functions.SV_Netchan_Transmit = (void (*)(client_t*, msg_t*))func_SV_Netchan_Transmit_addr;
-	server.functions.SV_RateMsec = (int (*)(client_t*, int))func_SV_RateMsec_addr;
+	//server.functions.SV_RateMsec = (int (*)(client_t*, int))func_SV_RateMsec_addr;
 	server.functions.SV_UpdateServerCommandsToClient = (void (*)(client_t*, msg_t*))func_SV_UpdateServerCommandsToClient_addr;
 
 	// ----------- COMMON

@@ -1,6 +1,36 @@
 #include "Proxy_EnginePatch.hpp"
 
 /*
+====================
+SV_RateMsec
+Return the number of msec a given size message is supposed
+to take to clear, based on the current rate
+====================
+*/
+#define	HEADER_RATE_BYTES	48		// include our header, IP header, and some overhead
+static int Proxy_SV_RateMsec(client_t* client, int messageSize) {
+	int		rate;
+	int		rateMsec;
+
+	// individual messages will never be larger than fragment size
+	if (messageSize > 1500) {
+		messageSize = 1500;
+	}
+	rate = client->rate;
+	if (server.cvars.sv_maxRate->integer) {
+		if (server.cvars.sv_maxRate->integer < 1000) {
+			proxy.trap->Cvar_Set("sv_MaxRate", "1000");
+		}
+		if (server.cvars.sv_maxRate->integer < rate) {
+			rate = server.cvars.sv_maxRate->integer;
+		}
+	}
+	rateMsec = (messageSize + HEADER_RATE_BYTES) * 1000 / rate;
+
+	return rateMsec;
+}
+
+/*
 =======================
 SV_SendMessageToClient
 
@@ -44,7 +74,7 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 	}
 
 	// normal rate / snapshotMsec calculation
-	rateMsec = server.functions.SV_RateMsec(client, msg->cursize);
+	rateMsec = Proxy_SV_RateMsec(client, msg->cursize);
 
 	if (rateMsec < client->snapshotMsec)
 	{

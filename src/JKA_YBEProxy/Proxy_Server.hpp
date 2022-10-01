@@ -26,7 +26,7 @@
 	#define func_SV_ClientThink_addr 0x43bba0
 	#define func_SV_DropClient_addr 0x43bbf0
 	#define func_SV_Netchan_Transmit_addr 0x444950
-	#define func_SV_RateMsec_addr 0x444d60
+	//#define func_SV_RateMsec_addr 0x444d60
 	#define func_SV_UpdateServerCommandsToClient_addr 0x444c80
 	#define func_Com_DPrintf_addr 0x40fdb0
 	#define func_Com_HashKey_addr 0x410370
@@ -68,6 +68,7 @@
 	#define cvar_sv_maxclients_addr 0x610278
 	#define cvar_sv_privateClients_addr 0x610274
 	#define cvar_sv_pure_addr 0x60620c
+	#define cvar_sv_maxRate_addr 0x6102b4
 	#define cvar_common_com_dedicated_addr 0x4dc5dc
 	#define cvar_common_com_sv_running_addr 0x4dc5e0
 	#define cvar_common_com_logfile_addr 0x4dc5b8
@@ -88,7 +89,7 @@
 	#define func_SV_ClientThink_addr 0x804e634
 	#define func_SV_DropClient_addr 0x804cb84
 	#define func_SV_Netchan_Transmit_addr 0x8057db4
-	#define func_SV_RateMsec_addr 0x8058c04
+	//#define func_SV_RateMsec_addr 0x8058c04
 	#define func_SV_UpdateServerCommandsToClient_addr 0x80582c4
 	#define func_Com_DPrintf_addr 0x8072ed4
 	#define func_Com_HashKey_addr 0x8073b14
@@ -130,6 +131,7 @@
 	#define cvar_sv_maxclients_addr 0x8273ea4
 	#define cvar_sv_privateClients_addr 0x8273e80
 	#define cvar_sv_pure_addr 0x83121a8
+	#define cvar_sv_maxRate_addr 0x831219c
 	#define cvar_common_com_dedicated_addr 0x831f254
 	#define cvar_common_com_sv_running_addr 0x831f300
 	#define cvar_common_com_logfile_addr 0x831f41c
@@ -149,7 +151,7 @@ typedef struct serverFunctions_s
 	void		(*SV_ClientThink)								(client_t*, usercmd_t*);
 	void		(*SV_DropClient)								(client_t*, const char*);
 	void		(*SV_Netchan_Transmit)							(client_t*, msg_t*);
-	int			(*SV_RateMsec)									(client_t*, int);
+	//int			(*SV_RateMsec)									(client_t*, int);
 	void		(*SV_UpdateServerCommandsToClient)				(client_t*, msg_t*);
 } serverFunctions_t;
 
@@ -162,6 +164,7 @@ typedef struct serverCvars_s
 	cvar_t* sv_maxclients;
 	cvar_t* sv_privateClients;
 	cvar_t* sv_pure;
+	cvar_t* sv_maxRate;
 } serverCvars_t;
 
 typedef struct Common_s
