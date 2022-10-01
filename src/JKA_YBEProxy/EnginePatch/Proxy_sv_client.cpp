@@ -76,7 +76,7 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 	// Proxy -------------->
 	if (client->frames[client->messageAcknowledge & PACKET_MASK].messageAcked == -1)
 	{
-	//cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked = server.svs->time;
+		//cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked = server.svs->time;
 		client->frames[client->messageAcknowledge & PACKET_MASK].messageAcked = proxy.trap->Milliseconds();
 	}
 	// Proxy <--------------

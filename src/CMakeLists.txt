@@ -43,7 +43,6 @@ set(JKA_YBEProxyMainFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SharedAPI.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Shell.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Translate_GameCalls.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Translate_SystemCalls.cpp"
 	)
 source_group("JKA_YBEProxy" FILES ${JKA_YBEProxyMainFiles})
