@@ -142,7 +142,7 @@ extern Proxy_t proxy;
 // Proxy_Files
 // ------------------------
 
-void Proxy_LoadOriginalGameLibrary(void);
+void Proxy_LoadGameLibrary(void);
 
 // ------------------------
 // Proxy_Imports

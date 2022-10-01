@@ -1,6 +1,6 @@
 #include "Proxy_Header.hpp"
 
-void Proxy_LoadOriginalGameLibrary(void)
+void Proxy_LoadGameLibrary(void)
 {
 	// Todo: Check for fs_basegame
 	char fs_gameBuffer[MAX_OSPATH];

@@ -54,7 +54,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 
 			proxy.trap->Print("----- Proxy: Loading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
 
-			Proxy_LoadOriginalGameLibrary();
+			Proxy_LoadGameLibrary();
 
 			Proxy_OldAPI_Init();
 
@@ -71,6 +71,8 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 
 			if (proxy.isOriginalEngine)
 			{
+				proxy.trap->Print("----- Proxy: Original engine detected\n");
+
 				proxy.trap->Print("----- Proxy: Initializing memory layer\n");
 
 				Proxy_Server_Initialize_MemoryAddress();
@@ -195,7 +197,7 @@ Q_CABI Q_EXPORT gameExport_t* QDECL GetModuleAPI(int apiVersion, gameImport_t* i
 		return nullptr;
 	}
 
-	Proxy_LoadOriginalGameLibrary();
+	Proxy_LoadGameLibrary();
 
 	GetGameAPI_t jampGameGetModuleAPI = (GetGameAPI_t)YBEProxy_GetFunctionAddress(proxy.jampgameHandle, "GetModuleAPI");
 
@@ -210,16 +212,16 @@ Q_CABI Q_EXPORT gameExport_t* QDECL GetModuleAPI(int apiVersion, gameImport_t* i
 		return nullptr;
 	}
 
-	static gameImport_t copyNewAPIGameImportTable_ = { 0 };
-	static gameExport_t copyNewAPIGameExportTable_ = { 0 };
+	static gameImport_t _copyNewAPIGameImportTable = { 0 };
+	static gameExport_t _copyNewAPIGameExportTable = { 0 };
 
 	proxy.originalNewAPIGameImportTable = import;
-	memcpy(&copyNewAPIGameImportTable_, import, sizeof(gameImport_t));
-	proxy.copyNewAPIGameImportTable = &copyNewAPIGameImportTable_;
+	memcpy(&_copyNewAPIGameImportTable, import, sizeof(gameImport_t));
+	proxy.copyNewAPIGameImportTable = &_copyNewAPIGameImportTable;
 
-	proxy.originalNewAPIGameExportTable = jampGameGetModuleAPI(apiVersion, &copyNewAPIGameImportTable_);
-	memcpy(&copyNewAPIGameExportTable_, proxy.originalNewAPIGameExportTable, sizeof(gameExport_t));
-	proxy.copyNewAPIGameExportTable = &copyNewAPIGameExportTable_;
+	proxy.originalNewAPIGameExportTable = jampGameGetModuleAPI(apiVersion, &_copyNewAPIGameImportTable);
+	memcpy(&_copyNewAPIGameExportTable, proxy.originalNewAPIGameExportTable, sizeof(gameExport_t));
+	proxy.copyNewAPIGameExportTable = &_copyNewAPIGameExportTable;
 
 	Proxy_NewAPI_InitLayerExportTable();
 	Proxy_NewAPI_InitLayerImportTable();
