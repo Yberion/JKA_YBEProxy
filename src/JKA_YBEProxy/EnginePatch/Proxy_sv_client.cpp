@@ -74,10 +74,10 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 
 	// save time for ping calculation
 	// Proxy -------------->
-	if (client->frames[client->messageAcknowledge & PACKET_MASK].messageAcked == -1)
+	if (!proxy.cvarsOldAPI.sv_pingFix.integer || client->frames[client->messageAcknowledge & PACKET_MASK].messageAcked == -1)
 	{
 		//cl->frames[cl->messageAcknowledge & PACKET_MASK].messageAcked = server.svs->time;
-		client->frames[client->messageAcknowledge & PACKET_MASK].messageAcked = proxy.trap->Milliseconds();
+		client->frames[client->messageAcknowledge & PACKET_MASK].messageAcked = (proxy.cvarsOldAPI.sv_pingFix.integer ? proxy.trap->Milliseconds() : server.svs->time);
 	}
 	// Proxy <--------------
 

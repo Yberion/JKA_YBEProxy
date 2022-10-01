@@ -126,6 +126,10 @@ typedef struct Proxy_s {
 		ucmdStat_t			cmdStats[CMD_MASK];
 		int					cmdIndex;
 	} clientData[MAX_CLIENTS];
+
+	struct Proxy_CVars_OldAPI_s {
+		vmCvar_t sv_pingFix;
+	} cvarsOldAPI;
 } Proxy_t;
 
 // ==================================================
@@ -137,6 +141,13 @@ extern Proxy_t proxy;
 // ==================================================
 // FUNCTION
 // ==================================================
+
+// ------------------------
+// Proxy_CVar
+// ------------------------
+
+void Proxy_OldAPI_CVars_Registration(void);
+void Proxy_OldAPI_UpdateCvars(void);
 
 // ------------------------
 // Proxy_Files

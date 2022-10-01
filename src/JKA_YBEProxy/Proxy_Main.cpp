@@ -79,6 +79,12 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 
 				proxy.trap->Print("----- Proxy: Memory layer properly initialized\n");
 
+				proxy.trap->Print("----- Proxy: Initializing original API CVars\n");
+
+				Proxy_OldAPI_CVars_Registration();
+
+				proxy.trap->Print("----- Proxy: Original API CVars properly initialized\n");
+
 				proxy.trap->Print("----- Proxy: Patching engine\n");
 
 				Proxy_Patch_Attach();
@@ -116,6 +122,18 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 				// Return the response of the original game module after the shutdown
 				return proxy.originalVmMainResponse;
 			}
+			break;
+		}
+		// ==================================================
+		case GAME_RUN_FRAME:
+		// ==================================================
+		// The server is going to active its new frame, which
+		// often is around 20 times per second. Active some
+		// of our own active functions.
+		// ==================================================
+		{
+			Proxy_OldAPI_UpdateCvars();
+
 			break;
 		}
 		//==================================================

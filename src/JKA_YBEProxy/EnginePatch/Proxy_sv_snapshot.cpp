@@ -57,7 +57,7 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSize = msg->cursize;
 	// Proxy -------------->
 	// client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = svs.time;
-	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = proxy.trap->Milliseconds();
+	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = (proxy.cvarsOldAPI.sv_pingFix.integer ? proxy.trap->Milliseconds() : server.svs->time);
 	// Proxy <--------------
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = -1;
 

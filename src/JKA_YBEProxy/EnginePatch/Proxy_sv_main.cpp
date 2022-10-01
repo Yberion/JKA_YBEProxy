@@ -66,7 +66,7 @@ void Proxy_SV_CalcPings(void)
 			}
 
 			// Proxy -------------->
-			if (cl->ping < 1)
+			if (proxy.cvarsOldAPI.sv_pingFix.integer && cl->ping < 1)
 			{
 				cl->ping = 1;
 			}
