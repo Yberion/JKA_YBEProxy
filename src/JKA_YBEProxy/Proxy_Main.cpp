@@ -132,7 +132,10 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		// of our own active functions.
 		// ==================================================
 		{
-			Proxy_OldAPI_UpdateCvars();
+			if (proxy.isOriginalEngine)
+			{
+				Proxy_OldAPI_UpdateCvars();
+			}
 
 			break;
 		}
