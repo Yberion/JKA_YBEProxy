@@ -75,11 +75,13 @@ void Proxy_Server_CalcPacketsAndFPS(int clientNum, int* packets, int* fps)
 	int		lastPacketIndex = 0;
 	int		i;
 
-	lastCmdTime = proxy.clientData[clientNum].cmdStats[proxy.clientData[clientNum].cmdIndex & (CMD_MASK - 1)].serverTime;
+	Proxy_s::ClientData_s *currentClientData = &proxy.clientData[clientNum];
+
+	lastCmdTime = currentClientData->cmdStats[currentClientData->cmdIndex & (CMD_MASK - 1)].serverTime;
 
 	for (i = 0; i < CMD_MASK; i++)
 	{
-		ucmdStat_t* stat = &proxy.clientData[clientNum].cmdStats[i];
+		ucmdStat_t* stat = &currentClientData->cmdStats[i];
 
 		if (stat->serverTime + 1000 >= lastCmdTime)
 		{
@@ -96,40 +98,44 @@ void Proxy_Server_CalcPacketsAndFPS(int clientNum, int* packets, int* fps)
 
 void Proxy_Server_UpdateUcmdStats(int clientNum, usercmd_t* cmd, int packetIndex)
 {
-	proxy.clientData[clientNum].cmdIndex++;
-	proxy.clientData[clientNum].cmdStats[proxy.clientData[clientNum].cmdIndex & (CMD_MASK - 1)].serverTime = cmd->serverTime;
-	proxy.clientData[clientNum].cmdStats[proxy.clientData[clientNum].cmdIndex & (CMD_MASK - 1)].packetIndex = packetIndex;
+	Proxy_s::ClientData_s *currentClientData = &proxy.clientData[clientNum];
+
+	currentClientData->cmdIndex++;
+	currentClientData->cmdStats[currentClientData->cmdIndex & (CMD_MASK - 1)].serverTime = cmd->serverTime;
+	currentClientData->cmdStats[currentClientData->cmdIndex & (CMD_MASK - 1)].packetIndex = packetIndex;
 }
 
 void Proxy_Server_UpdateTimenudge(client_t* client, usercmd_t* cmd, int _Milliseconds)
 {
-	proxy.clientData[getClientNumFromAddr(client)].timenudgeData.delayCount++;
-	proxy.clientData[getClientNumFromAddr(client)].timenudgeData.delaySum += cmd->serverTime - server.svs->time;
-	proxy.clientData[getClientNumFromAddr(client)].timenudgeData.pingSum += client->ping;
+	Proxy_s::ClientData_s *currentClientData = &proxy.clientData[getClientNumFromAddr(client)];
+
+	currentClientData->timenudgeData.delayCount++;
+	currentClientData->timenudgeData.delaySum += cmd->serverTime - server.svs->time;
+	currentClientData->timenudgeData.pingSum += client->ping;
 
 	// Wait 1000 ms so we have enough data when we'll calcul an approximation of the timenudge
-	if (_Milliseconds < proxy.clientData[getClientNumFromAddr(client)].timenudgeData.lastTimeTimeNudgeCalculation + 1000)
+	if (_Milliseconds < currentClientData->timenudgeData.lastTimeTimeNudgeCalculation + 1000)
 	{
 		return;
 	}
 
 	// ((serverTime - sv.time) + ping -18 + (1000/sv_fps)) * -1
-	proxy.clientData[getClientNumFromAddr(client)].timenudge =
+	currentClientData->timenudge =
 		(
-			(proxy.clientData[getClientNumFromAddr(client)].timenudgeData.delaySum / (float)proxy.clientData[getClientNumFromAddr(client)].timenudgeData.delayCount)
-			+ (proxy.clientData[getClientNumFromAddr(client)].timenudgeData.pingSum / (float)proxy.clientData[getClientNumFromAddr(client)].timenudgeData.delayCount)
+			(currentClientData->timenudgeData.delaySum / (float)currentClientData->timenudgeData.delayCount)
+			+ (currentClientData->timenudgeData.pingSum / (float)currentClientData->timenudgeData.delayCount)
 			// this magic number might be the instructions time until the calc
 #if defined(_WIN32) && !defined(MINGW32)
 			- 21
 #else
 			- 19
 #endif
-			+ (1000 / (float)server.cvars.sv_fps->integer)
+			+ (1000 / server.cvars.sv_fps->value)
 		) * -1;
 
-	proxy.clientData[getClientNumFromAddr(client)].timenudgeData.delayCount = 0;
-	proxy.clientData[getClientNumFromAddr(client)].timenudgeData.delaySum = 0;
-	proxy.clientData[getClientNumFromAddr(client)].timenudgeData.pingSum = 0;
+	currentClientData->timenudgeData.delayCount = 0;
+	currentClientData->timenudgeData.delaySum = 0;
+	currentClientData->timenudgeData.pingSum = 0;
 
-	proxy.clientData[getClientNumFromAddr(client)].timenudgeData.lastTimeTimeNudgeCalculation = _Milliseconds;
+	currentClientData->timenudgeData.lastTimeTimeNudgeCalculation = _Milliseconds;
 }

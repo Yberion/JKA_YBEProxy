@@ -44,7 +44,9 @@ void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset)
 
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 {
-	if (!proxy.clientData[clientNum].isConnected)
+	Proxy_s::ClientData_s *currentClientData = &proxy.clientData[clientNum];
+
+	if (!currentClientData->isConnected)
 	{
 		return qfalse;
 	}
@@ -56,7 +58,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 
 	if (!Q_stricmpn(cmd, "jkaDST_", 7))
 	{
-		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData[clientNum].cleanName));
+		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", currentClientData->cleanName));
 		proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
 
 		return qfalse;
@@ -169,9 +171,11 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 
 	val = Info_ValueForKey(userinfo, "name");
 
+	Proxy_s::ClientData_s *currentClientData = &proxy.clientData[clientNum];
+
 	// Fix bad names
-	Proxy_ClientCleanName(val, proxy.clientData[clientNum].cleanName, sizeof(proxy.clientData[clientNum].cleanName));
-	Info_SetValueForKey(userinfo, "name", proxy.clientData[clientNum].cleanName);
+	Proxy_ClientCleanName(val, currentClientData->cleanName, sizeof(currentClientData->cleanName));
+	Info_SetValueForKey(userinfo, "name", currentClientData->cleanName);
 
 	val = Info_ValueForKey(userinfo, "model");
 
@@ -182,7 +186,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 
 		if (!Q_stricmpn(val, "darksidetools", len))
 		{
-			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData[clientNum].cleanName));
+			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", currentClientData->cleanName));
 			proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
 		}
 

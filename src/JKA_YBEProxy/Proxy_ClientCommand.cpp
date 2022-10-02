@@ -10,7 +10,9 @@ Display net settings of all players
 */
 void Proxy_ClientCommand_NetStatus(int clientNum)
 {
-	if (proxy.clientData[clientNum].lastTimeNetStatus + 500 > server.svs->time)
+	Proxy_s::ClientData_s *currentClientData = &proxy.clientData[clientNum];
+
+	if (currentClientData->lastTimeNetStatus + 500 > server.svs->time)
 	{
 		return;
 	}
@@ -24,7 +26,6 @@ void Proxy_ClientCommand_NetStatus(int clientNum)
 
 	status[0] = 0;
 
-	//Q_strcat(status, sizeof(status), "cl score ping rate  fps packets timeNudge timeNudge2 name \n");
 	Q_strcat(status, sizeof(status), "score ping rate   fps packets timeNudge snaps id name \n");
 	Q_strcat(status, sizeof(status), "----- ---- ------ --- ------- --------- ----- -- ---------------\n");
 
@@ -49,10 +50,12 @@ void Proxy_ClientCommand_NetStatus(int clientNum)
 
 		ps = Proxy_GetPlayerStateByClientNum(i);
 
+		const unsigned int selectedClientNum = getClientNumFromAddr(cl);
+
 		// If not a bot
 		if (cl->ping >= 1)
 		{
-			Proxy_Server_CalcPacketsAndFPS(getClientNumFromAddr(cl), &packets, &fps);
+			Proxy_Server_CalcPacketsAndFPS(selectedClientNum, &packets, &fps);
 		}
 
 		if (1000 / cl->snapshotMsec > server.cvars.sv_fps->integer)
@@ -65,10 +68,10 @@ void Proxy_ClientCommand_NetStatus(int clientNum)
 		}
 
 		// No need for truncation "feature" if we move name to end
-		Q_strcat(status, sizeof(status), va("%5i %s %6i %3i %7i %9i %5i %2i %s^7\n", ps->persistant[PERS_SCORE], state, cl->rate, fps, packets, proxy.clientData[getClientNumFromAddr(cl)].timenudge, snaps, i, cl->name));
+		Q_strcat(status, sizeof(status), va("%5i %s %6i %3i %7i %9i %5i %2i %s^7\n", ps->persistant[PERS_SCORE], state, cl->rate, fps, packets, proxy.clientData[selectedClientNum].timenudge, snaps, i, cl->name));
 	}
 
-	proxy.clientData[clientNum].lastTimeNetStatus = server.svs->time;
+	currentClientData->lastTimeNetStatus = server.svs->time;
 
 	char buffer[1012] = { 0 };
 	int statusLength = strlen(status);
@@ -127,12 +130,14 @@ static float calcRatio(int kill, int death)
 
 void Proxy_ClientCommand_MyRatio(int clientNum)
 {
-	if (proxy.clientData[clientNum].lastTimeMyratioCheck + 1000 > server.svs->time)
+	Proxy_s::ClientData_s *currentClientData = &proxy.clientData[clientNum];
+
+	if (currentClientData->lastTimeMyratioCheck + 1000 > server.svs->time)
 	{
 		return;
 	}
 
-	proxy.clientData[clientNum].lastTimeMyratioCheck = server.svs->time;
+	currentClientData->lastTimeMyratioCheck = server.svs->time;
 
 	char ratioStringBuffer[16];
 	playerState_t* ps;
