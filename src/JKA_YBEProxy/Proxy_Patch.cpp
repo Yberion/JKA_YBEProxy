@@ -21,6 +21,8 @@ void Proxy_Patch_Attach(void)
 	Original_Common_Com_Printf = (void (QDECL *)(const char* fmt, ...)) Attach((unsigned char*)func_Com_Printf_addr, (unsigned char*)&Proxy_Common_Com_Printf);
 	Original_SV_Status_f = (void (*)(void)) Attach((unsigned char*)func_SV_Status_f_addr, (unsigned char*)&Proxy_SV_Status_f);
 	Original_SV_SendClientGameState = (void (*)(client_t*)) Attach((unsigned char*)func_SV_SendClientGameState_addr, (unsigned char*)&Proxy_SV_SendClientGameState);
+	Original_SVC_Status = (void (*)(netadr_t)) Attach((unsigned char*)func_SVC_Status_addr, (unsigned char*)&Proxy_SVC_Status);
+	Original_SVC_Info = (void (*)(netadr_t)) Attach((unsigned char*)func_SVC_Info_addr, (unsigned char*)&Proxy_SVC_Info);
 }
 
 // ==================================================
@@ -41,4 +43,6 @@ void Proxy_Patch_Detach(void)
 	Detach((unsigned char*)func_Com_Printf_addr, (unsigned char*)Original_Common_Com_Printf);
 	Detach((unsigned char*)func_SV_Status_f_addr, (unsigned char*)Original_SV_Status_f);
 	Detach((unsigned char*)func_SV_SendClientGameState_addr, (unsigned char*)Original_SV_SendClientGameState);
+	Detach((unsigned char*)func_SVC_Status_addr, (unsigned char*)Original_SVC_Status);
+	Detach((unsigned char*)func_SVC_Info_addr, (unsigned char*)Original_SVC_Info);
 }

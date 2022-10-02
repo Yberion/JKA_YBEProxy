@@ -44,6 +44,12 @@ void Proxy_SV_Status_f(void);
 extern void (*Original_SV_SendClientGameState)(client_t*);
 void Proxy_SV_SendClientGameState(client_t* client);
 
+extern void (*Original_SVC_Status)(netadr_t);
+void Proxy_SVC_Status(netadr_t from);
+
+extern void (*Original_SVC_Info)(netadr_t);
+void Proxy_SVC_Info(netadr_t from);
+
 // ------------- common
 
 const char* FS_GetCurrentGameDir(bool emptybase = false);

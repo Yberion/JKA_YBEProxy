@@ -81,3 +81,31 @@ void Proxy_SV_CalcPings(void)
 		ps->ping = cl->ping;
 	}
 }
+
+void (*Original_SVC_Status)(netadr_t);
+void Proxy_SVC_Status(netadr_t from) {
+	// Proxy -------------->
+	// Fix q3infoboom
+	// In Info_SetValueForKey if the infostring is too big then it will drop the server
+	if (strlen(server.functions.Cmd_Argv(1)) > 128)
+	{
+		return;
+	}
+	// Proxy <--------------
+
+	Original_SVC_Status(from);
+}
+
+void (*Original_SVC_Info)(netadr_t);
+void Proxy_SVC_Info(netadr_t from) {
+	// Proxy -------------->
+	// Fix q3infoboom
+	// In Info_SetValueForKey if the infostring is too big then it will drop the server
+	if (strlen(server.functions.Cmd_Argv(1)) > 128)
+	{
+		return;
+	}
+	// Proxy <--------------
+
+	Original_SVC_Info(from);
+}

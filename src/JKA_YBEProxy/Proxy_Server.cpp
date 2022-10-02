@@ -28,6 +28,7 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.functions.SV_Netchan_Transmit = (void (*)(client_t*, msg_t*))func_SV_Netchan_Transmit_addr;
 	//server.functions.SV_RateMsec = (int (*)(client_t*, int))func_SV_RateMsec_addr;
 	server.functions.SV_UpdateServerCommandsToClient = (void (*)(client_t*, msg_t*))func_SV_UpdateServerCommandsToClient_addr;
+	server.functions.Cmd_Argv = (char* (*)(int))func_Cmd_Argv_addr;
 
 	// ----------- COMMON
 

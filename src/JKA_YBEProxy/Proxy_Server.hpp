@@ -20,6 +20,8 @@
 	#define func_SV_SendClientGameState_addr 0x43ae70
 	#define func_SV_Status_f_addr 0x43a4a0
 	#define func_SV_SvEntityForGentity_addr 0x43cd80
+    #define func_SVC_Status_addr 0x443870
+	#define func_SVC_Info_addr 0x443a10
 
 	// Function address to call
 	#define func_SV_ClientEnterWorld_addr 0x43b230
@@ -47,6 +49,7 @@
 	#define func_MSG_WriteShort_addr 0x418860
 	#define func_Sys_IsLANAddress_addr 0x457490
 	#define func_Sys_Print_addr 0x44b930 // directly Conbuf_AppendText()
+	#define func_Cmd_Argv_addr 0x40f490
 
 	// Function address called in ASM
 	#define func_Sys_Milliseconds_addr 0x4580E0
@@ -83,6 +86,8 @@
 	#define func_SV_SendClientGameState_addr 0x804cee4
 	#define func_SV_Status_f_addr 0x804f7f4
 	#define func_SV_SvEntityForGentity_addr 0x804ffb4
+	#define func_SVC_Status_addr 0x8056574
+	#define func_SVC_Info_addr 0x8056784
 
 	// Function address to call
 	#define func_SV_ClientEnterWorld_addr 0x804d444
@@ -110,6 +115,7 @@
 	#define func_MSG_WriteShort_addr 0x8077aa4
 	#define func_Sys_IsLANAddress_addr 0x80c5f84
 	#define func_Sys_Print_addr 0x80c57a4
+	#define func_Cmd_Argv_addr 0x812c264
 
 	// Function address called in ASM
 	#define func_Sys_Milliseconds_addr 0x80c6714
@@ -151,8 +157,9 @@ typedef struct serverFunctions_s
 	void		(*SV_ClientThink)								(client_t*, usercmd_t*);
 	void		(*SV_DropClient)								(client_t*, const char*);
 	void		(*SV_Netchan_Transmit)							(client_t*, msg_t*);
-	//int			(*SV_RateMsec)									(client_t*, int);
+	//int		(*SV_RateMsec)									(client_t*, int);
 	void		(*SV_UpdateServerCommandsToClient)				(client_t*, msg_t*);
+	char*		(*Cmd_Argv)                                     (int arg);
 } serverFunctions_t;
 
 typedef struct serverCvars_s
