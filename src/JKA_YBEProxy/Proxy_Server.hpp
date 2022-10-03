@@ -24,6 +24,7 @@
 	#define func_SVC_Info_addr 0x443a10
 	#define func_SVC_RemoteCommand_addr 0x443ce0
 	#define func_Cmd_TokenizeString_addr 0x40f580
+	#define func_SV_UserinfoChanged_addr 0x43b8c0
 
 	// Function address to call
 	#define func_SV_ClientEnterWorld_addr 0x43b230
@@ -101,6 +102,7 @@
 	#define func_SVC_Info_addr 0x8056784
 	#define func_SVC_RemoteCommand_addr 0x8056b14
 	#define func_Cmd_TokenizeString_addr 0x812c454
+	#define func_SV_UserinfoChanged_addr 0x804e144
 
 	// Function address to call
 	#define func_SV_ClientEnterWorld_addr 0x804d444
@@ -203,7 +205,7 @@ typedef struct Common_s
 	{
 		char**			rd_buffer;
 		int*			rd_buffersize;
-		void			(* *rd_flush)	(char*);
+		void			(* *rd_flush) (char*);
 		fileHandle_t*	logfile;
 		int*			cmd_argc;
 		char*			(*cmd_argv)[MAX_STRING_TOKENS]; // char* cmd_argv[MAX_STRING_TOKENS];
@@ -261,5 +263,5 @@ typedef struct ProxyServer_s
 // EXTERN VARIABLE
 // ==================================================
 
-// Should only be used when original jampded is used
+// /!\ Should only be used when original jampded is used
 extern ProxyServer_t server;

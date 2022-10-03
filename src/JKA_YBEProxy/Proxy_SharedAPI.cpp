@@ -180,6 +180,8 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	val = Info_ValueForKey(userinfo, "model");
 
 	// Fix bugged models
+	// Fix model length crash on some custom clients
+	// There's also a check done in SV_UserinfoChanged
 	if (val)
 	{
 		len = (int)strlen(val);
@@ -190,9 +192,11 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 			proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
 		}
 
-		if ((!Q_stricmpn(val, "jedi_", 5) && (!Q_stricmpn(val, "jedi_/red", len) || !Q_stricmpn(val, "jedi_/blue", len)))
-			|| !Q_stricmpn(val, "rancor", len)
-			|| !Q_stricmpn(val, "wampa", len))
+		if ((!Q_stricmpn(val, "jedi_", 5) && (!Q_stricmpn(val, "jedi_/red", len) ||
+			!Q_stricmpn(val, "jedi_/blue", len))) ||
+			!Q_stricmpn(val, "rancor", len) ||
+			!Q_stricmpn(val, "wampa", len) ||
+			len > MAX_QPATH)
 		{
 			Info_SetValueForKey(userinfo, "model", "kyle");
 		}

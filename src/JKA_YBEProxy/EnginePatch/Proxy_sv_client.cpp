@@ -298,3 +298,32 @@ void Proxy_SV_SendClientGameState(client_t* client)
 	// deliver this to the client
 	Proxy_SV_SendMessageToClient(&msg, client);
 }
+
+/*
+=================
+SV_UserinfoChanged
+Pull specific info from a newly changed userinfo string
+into a more C friendly form.
+=================
+*/
+void (*Original_SV_UserinfoChanged)(client_t* cl);
+void Proxy_SV_UserinfoChanged(client_t* cl) {
+	char* val = nullptr;
+
+	val = Info_ValueForKey(cl->userinfo, "model");
+
+	// Fix model length crash on some custom clients
+	// This check is needed here first on the connection, before it goes to SV_UpdateUserinfo_f -> ClientUserinfoChanged
+	// There's also a check done in ClientUserinfoChanged
+	if (val)
+	{
+		const size_t modelLen = (int)strlen(val);
+
+		if (modelLen > MAX_QPATH)
+		{
+			Info_SetValueForKey(cl->userinfo, "model", "kyle");
+		}
+	}
+
+	Original_SV_UserinfoChanged(cl);
+}
