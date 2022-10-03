@@ -50,6 +50,15 @@ void Proxy_SVC_Status(netadr_t from);
 extern void (*Original_SVC_Info)(netadr_t);
 void Proxy_SVC_Info(netadr_t from);
 
+extern void (*Original_Cmd_TokenizeString)(const char* text_in);
+void Proxy_Cmd_TokenizeString(const char* text_in);
+
+extern void (*Original_SVC_RemoteCommand)(netadr_t from, msg_t* msg);
+void Proxy_SVC_RemoteCommand(netadr_t from, msg_t* msg);
+
 // ------------- common
 
 const char* FS_GetCurrentGameDir(bool emptybase = false);
+char* Cmd_ArgsFrom(int arg);
+char* Cmd_Cmd(void);
+void Windows_Com_EndRedirect(void);

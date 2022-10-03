@@ -169,7 +169,7 @@ void Proxy_SV_SendClientGameState(client_t* client)
 		// send additional message fragments if the last message
 		// was too large to send at once
 
-		Com_Printf("[ISM]SV_SendClientGameState() [2] for %s, writing out old fragments\n", client->name);
+		Proxy_Common_Com_Printf("[ISM]SV_SendClientGameState() [2] for %s, writing out old fragments\n", client->name);
 		server.common.functions.Netchan_TransmitNextFragment(&client->netchan);
 	}
 

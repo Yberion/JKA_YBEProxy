@@ -38,15 +38,15 @@ void QDECL Proxy_Common_Com_Printf(const char* fmt, ...)
 	{
 		if ((strlen(msg) + strlen(*server.common.vars.rd_buffer)) > (size_t)(*server.common.vars.rd_buffersize - 1))
 		{
-			server.common.functions.rd_flush(*server.common.vars.rd_buffer);
+			(*server.common.vars.rd_flush)(*server.common.vars.rd_buffer);
 			**server.common.vars.rd_buffer = 0;
 		}
 
 		Q_strcat(*server.common.vars.rd_buffer, *server.common.vars.rd_buffersize, msg);
 
 		// TTimo nooo .. that would defeat the purpose
-		//server.common.rd_flush(server.common.rd_buffer);
-		//*server.common.rd_buffer = 0;
+		//(*server.common.vars.rd_flush)(*server.common.vars.rd_buffer);
+		//*server.common.vars.rd_buffer = 0;
 		
 		return;
 	}

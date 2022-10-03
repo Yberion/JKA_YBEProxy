@@ -1,5 +1,6 @@
 #include "Proxy_Server.hpp"
 #include "Proxy_Header.hpp"
+#include "EnginePatch/Proxy_EnginePatch.hpp"
 
 ProxyServer_t server;
 
@@ -20,6 +21,7 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.cvars.sv_privateClients = *(cvar_t**)cvar_sv_privateClients_addr;
 	server.cvars.sv_pure = *(cvar_t**)cvar_sv_pure_addr;
 	server.cvars.sv_maxRate = *(cvar_t**)cvar_sv_maxRate_addr;
+	server.cvars.sv_rconPassword = *(cvar_t**)cvar_sv_rconPassword_addr;
 
 	// functions
 	server.functions.SV_ClientEnterWorld = (void (*)(client_t*, usercmd_t*))func_SV_ClientEnterWorld_addr;
@@ -28,7 +30,7 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.functions.SV_Netchan_Transmit = (void (*)(client_t*, msg_t*))func_SV_Netchan_Transmit_addr;
 	//server.functions.SV_RateMsec = (int (*)(client_t*, int))func_SV_RateMsec_addr;
 	server.functions.SV_UpdateServerCommandsToClient = (void (*)(client_t*, msg_t*))func_SV_UpdateServerCommandsToClient_addr;
-	server.functions.Cmd_Argv = (char* (*)(int))func_Cmd_Argv_addr;
+	server.functions.SV_FlushRedirect = (void (*)(char* outputbuf))func_SV_FlushRedirect_addr;
 
 	// ----------- COMMON
 
@@ -36,6 +38,10 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.common.vars.logfile = (fileHandle_t*)var_common_logfile_addr;
 	server.common.vars.rd_buffer = (char**)var_common_rd_buffer_addr;
 	server.common.vars.rd_buffersize = (int*)var_common_rd_buffersize_addr;
+	server.common.vars.rd_flush = (void (**)(char*))var_common_rd_flush_addr;
+	server.common.vars.cmd_argc = (int*)var_cmd_argc_addr;
+	server.common.vars.cmd_argv = (char* (*)[MAX_STRING_TOKENS])var_cmd_argv_addr;
+	server.common.vars.cmd_tokenized = (char (*)[BIG_INFO_STRING + MAX_STRING_TOKENS])var_cmd_tokenized_addr;
 
 	// cvars
 	server.common.cvars.com_dedicated = *(cvar_t**)cvar_common_com_dedicated_addr;
@@ -46,7 +52,9 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	// functions
 	server.common.functions.Com_DPrintf = (void (QDECL*)(const char*, ...))func_Com_DPrintf_addr;
 	server.common.functions.Com_HashKey = (int (*)(char*, int))func_Com_HashKey_addr;
-	server.common.functions.Com_Printf = (void (QDECL *)(const char*, ...))func_Com_Printf_addr;
+	server.common.functions.Com_Printf = (void (QDECL *)(const char*, ...))func_Com_Printf_addr; // It will call the fixed one in Proxy_files
+	server.common.functions.Com_BeginRedirect = (void (*)(char*, int, void (*)(char*)))func_Com_BeginRedirect_addr;
+	server.common.functions.Com_EndRedirect = (void (*)(void))func_Com_EndRedirect_addr;
 	server.common.functions.Cvar_VariableString = (char* (*)(const char*))func_Cvar_VariableString_addr;
 	server.common.functions.FS_FOpenFileWrite = (fileHandle_t (*)(const char*))func_FS_FOpenFileWrite_addr;
 	server.common.functions.FS_ForceFlush = (void (*)(fileHandle_t))func_FS_ForceFlush_addr;
@@ -54,6 +62,7 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.common.functions.FS_Write = (int (*)(const void*, int, fileHandle_t))func_FS_Write_addr;
 	server.common.functions.Netchan_TransmitNextFragment = (void (*)(netchan_t*))func_Netchan_TransmitNextFragment_addr;
 	server.common.functions.NET_AdrToString = (const char* (*)(netadr_t))func_NET_AdrToString_addr;
+	server.common.functions.NET_OutOfBandPrint = (void (QDECL*)(netsrc_t, netadr_t, const char*, ...))func_NET_OutOfBandPrint_addr;
 	server.common.functions.MSG_Init = (void (*)(msg_t*, byte*, int))func_MSG_Init_addr;
 	server.common.functions.MSG_ReadByte = (int (*)(msg_t*))func_MSG_ReadByte_addr;
 	server.common.functions.MSG_ReadDeltaUsercmdKey = (void (*)(msg_t*, int, usercmd_t*, usercmd_t*))func_MSG_ReadDeltaUsercmdKey_addr;
@@ -62,9 +71,10 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.common.functions.MSG_WriteDeltaEntity = (void (*)(msg_t*, struct entityState_s*, struct entityState_s*, qboolean))func_MSG_WriteDeltaEntity_addr;
 	server.common.functions.MSG_WriteLong = (void (*)(msg_t*, int))func_MSG_WriteLong_addr;
 	server.common.functions.MSG_WriteShort = (void (*)(msg_t*, int))func_MSG_WriteShort_addr;
-	server.common.functions.rd_flush = *(void (**)(char*))var_common_rd_flush_addr;
 	server.common.functions.Sys_IsLANAddress = (qboolean(*)(netadr_t))func_Sys_IsLANAddress_addr;
 	server.common.functions.Sys_Print = (void (*)(const char*))func_Sys_Print_addr;
+	server.common.functions.Cmd_Argv = (char* (*)(int))func_Cmd_Argv_addr;
+	server.common.functions.Cmd_ExecuteString = (void (*)(const char*))func_Cmd_ExecuteString_addr;
 }
 
 // Update value of packets and FPS

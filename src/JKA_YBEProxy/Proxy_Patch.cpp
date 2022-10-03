@@ -23,6 +23,8 @@ void Proxy_Patch_Attach(void)
 	Original_SV_SendClientGameState = (void (*)(client_t*)) Attach((unsigned char*)func_SV_SendClientGameState_addr, (unsigned char*)&Proxy_SV_SendClientGameState);
 	Original_SVC_Status = (void (*)(netadr_t)) Attach((unsigned char*)func_SVC_Status_addr, (unsigned char*)&Proxy_SVC_Status);
 	Original_SVC_Info = (void (*)(netadr_t)) Attach((unsigned char*)func_SVC_Info_addr, (unsigned char*)&Proxy_SVC_Info);
+	Original_SVC_RemoteCommand = (void (*)(netadr_t, msg_t*)) Attach((unsigned char*)func_SVC_RemoteCommand_addr, (unsigned char*)&Proxy_SVC_RemoteCommand);
+	Original_Cmd_TokenizeString = (void (*)(const char*)) Attach((unsigned char*)func_Cmd_TokenizeString_addr, (unsigned char*)&Proxy_Cmd_TokenizeString);
 }
 
 // ==================================================
@@ -45,4 +47,6 @@ void Proxy_Patch_Detach(void)
 	Detach((unsigned char*)func_SV_SendClientGameState_addr, (unsigned char*)Original_SV_SendClientGameState);
 	Detach((unsigned char*)func_SVC_Status_addr, (unsigned char*)Original_SVC_Status);
 	Detach((unsigned char*)func_SVC_Info_addr, (unsigned char*)Original_SVC_Info);
+	Detach((unsigned char*)func_SVC_RemoteCommand_addr, (unsigned char*)Original_SVC_RemoteCommand);
+	Detach((unsigned char*)func_Cmd_TokenizeString_addr, (unsigned char*)Original_Cmd_TokenizeString);
 }
