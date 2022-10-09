@@ -13,7 +13,7 @@ A raw string should NEVER be passed as fmt, because of "%f" type crashers.
 =============
 */
 
-void (QDECL *Original_Common_Com_Printf)(const char* fmt, ...);
+void (QDECL *Original_Common_Com_Printf)(const char*, ...);
 
 // Proxy -------------->
 std::recursive_mutex printfLock;

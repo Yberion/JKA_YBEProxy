@@ -28,7 +28,7 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.functions.SV_ClientThink = (void (*)(client_t*, usercmd_t*))func_SV_ClientThink_addr;
 	server.functions.SV_DropClient = (void (*)(client_t*, const char*))func_SV_DropClient_addr;
 	server.functions.SV_Netchan_Transmit = (void (*)(client_t*, msg_t*))func_SV_Netchan_Transmit_addr;
-	//server.functions.SV_RateMsec = (int (*)(client_t*, int))func_SV_RateMsec_addr;
+	//server.functions.SV_RateMsec = (int (*)(client_t*, int))func_SV_RateMsec_addr; // we directly use our own function inside "Proxy_sv_snapshot()"
 	server.functions.SV_UpdateServerCommandsToClient = (void (*)(client_t*, msg_t*))func_SV_UpdateServerCommandsToClient_addr;
 	server.functions.SV_FlushRedirect = (void (*)(char* outputbuf))func_SV_FlushRedirect_addr;
 

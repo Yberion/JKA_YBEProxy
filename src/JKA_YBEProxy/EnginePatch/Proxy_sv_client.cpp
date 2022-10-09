@@ -306,7 +306,7 @@ Pull specific info from a newly changed userinfo string
 into a more C friendly form.
 =================
 */
-void (*Original_SV_UserinfoChanged)(client_t* cl);
+void (*Original_SV_UserinfoChanged)(client_t*);
 void Proxy_SV_UserinfoChanged(client_t* cl) {
 	char* val = nullptr;
 

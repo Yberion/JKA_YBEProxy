@@ -245,8 +245,8 @@ typedef struct Common_s
 		void			(*MSG_WriteShort)								(msg_t*, int);
 		qboolean		(*Sys_IsLANAddress)								(netadr_t);
 		void			(*Sys_Print)									(const char*);
-		char*			(*Cmd_Argv)                                     (int arg);
-		void			(*Cmd_ExecuteString)							(const char* text);
+		char*			(*Cmd_Argv)                                     (int);
+		void			(*Cmd_ExecuteString)							(const char*);
 	} functions;
 } common_t;
 

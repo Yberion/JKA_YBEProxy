@@ -120,7 +120,7 @@ Redirect all printfs
 ===============
 */
 
-void (*Original_SVC_RemoteCommand)(netadr_t from, msg_t* msg);
+void (*Original_SVC_RemoteCommand)(netadr_t, msg_t*);
 void Proxy_SVC_RemoteCommand(netadr_t from, msg_t* msg) {
 	qboolean	valid;
 	char		remaining[1024];
