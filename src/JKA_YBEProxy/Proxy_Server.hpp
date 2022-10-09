@@ -19,9 +19,10 @@
 	#define func_SV_SendClientGameState_addr 0x43ae70
 	#define func_SV_Status_f_addr 0x43a4a0
 	#define func_SV_SvEntityForGentity_addr 0x43cd80
+	#define func_SV_ConnectionlessPacket_addr 0x443f00
     #define func_SVC_Status_addr 0x443870
 	#define func_SVC_Info_addr 0x443a10
-	#define func_SVC_RemoteCommand_addr 0x443ce0
+	//#define func_SVC_RemoteCommand_addr 0x443ce0 // we use our own function in "Proxy_SV_ConnectionlessPacket()"
 	#define func_Cmd_TokenizeString_addr 0x40f580
 	#define func_SV_UserinfoChanged_addr 0x43b8c0
 	#define func_SV_ExecuteClientMessage_addr 0x43c3a0
@@ -35,6 +36,8 @@
 	#define func_SV_FlushRedirect_addr 0x443cb0
 	#define func_SV_UpdateServerCommandsToClient_addr 0x444c80
 	#define func_SV_ExecuteClientCommand_addr 0x43bad0
+	#define func_SV_GetChallenge_addr 0x43aa60
+	#define func_SV_DirectConnect_addr 0x43c4e0
 	#define func_Com_DPrintf_addr 0x40fdb0
 	#define func_Com_HashKey_addr 0x410370
 	#define func_Com_BeginRedirect_addr 0x40fb70
@@ -52,7 +55,9 @@
 	#define func_MSG_ReadDeltaUsercmdKey_addr 0x418b50
 	#define func_MSG_ReadLong_addr 0x418a50
 	#define func_MSG_ReadString_addr 0x418a70
+	#define func_MSG_ReadStringLine_addr 0x418ae0
 	#define func_MSG_Bitstream_addr 0x418500
+	#define func_MSG_BeginReadingOOB_addr 0x418510
 	#define func_MSG_WriteBigString_addr 0x418940
 	#define func_MSG_WriteByte_addr 0x418810
 	#define func_MSG_WriteDeltaEntity_addr 0x418e40
@@ -62,6 +67,7 @@
 	#define func_Sys_Print_addr 0x44b930 // directly Conbuf_AppendText()
 	#define func_Cmd_Argv_addr 0x40f490
 	#define func_Cmd_ExecuteString_addr 0x40fa10
+	#define func_Huff_Decompress_addr 0x417900
 
 	// Function address called in ASM
 	#define func_Sys_Milliseconds_addr 0x4580E0
@@ -95,6 +101,7 @@
 	#define cvar_common_com_sv_running_addr 0x4dc5e0
 	#define cvar_common_com_cl_running_addr 0x4e3778
 	#define cvar_common_com_logfile_addr 0x4dc5b8
+	#define cvar_common_com_developer_addr 0x4dc5a4
 	#define cvar_common_fs_gamedirvar_addr 0x4ff464
 
 #else
@@ -105,9 +112,10 @@
 	#define func_SV_SendClientGameState_addr 0x804cee4
 	#define func_SV_Status_f_addr 0x804f7f4
 	#define func_SV_SvEntityForGentity_addr 0x804ffb4
+	#define func_SV_ConnectionlessPacket_addr 0x8056d64
 	#define func_SVC_Status_addr 0x8056574
 	#define func_SVC_Info_addr 0x8056784
-	#define func_SVC_RemoteCommand_addr 0x8056b14
+	//#define func_SVC_RemoteCommand_addr 0x8056b14 // we use our own function in "Proxy_SV_ConnectionlessPacket()"
 	#define func_Cmd_TokenizeString_addr 0x812c454
 	#define func_SV_UserinfoChanged_addr 0x804e144
 	#define func_SV_ExecuteClientMessage_addr 0x804e8c4
@@ -121,6 +129,8 @@
 	#define func_SV_FlushRedirect_addr 0x8057b44
 	#define func_SV_UpdateServerCommandsToClient_addr 0x80582c4
 	#define func_SV_ExecuteClientCommand_addr 0x804e3d4
+	#define func_SV_GetChallenge_addr 0x804b9a4
+	#define func_SV_DirectConnect_addr 0x804c014
 	#define func_Com_DPrintf_addr 0x8072ed4
 	#define func_Com_HashKey_addr 0x8073b14
 	#define func_Com_BeginRedirect_addr 0x8072c34
@@ -138,7 +148,9 @@
 	#define func_MSG_ReadDeltaUsercmdKey_addr 0x8078b34
 	#define func_MSG_ReadLong_addr 0x8077e74
 	#define func_MSG_ReadString_addr 0x8077ee4
+	#define func_MSG_ReadStringLine_addr 0x8077ff4
 	#define func_MSG_Bitstream_addr 0x80775d4
+	#define func_MSG_BeginReadingOOB_addr 0x8077614
 	#define func_MSG_WriteBigString_addr 0x8077c04
 	#define func_MSG_WriteByte_addr 0x8077a24
 	#define func_MSG_WriteDeltaEntity_addr 0x8078d74
@@ -148,6 +160,7 @@
 	#define func_Sys_Print_addr 0x80c57a4
 	#define func_Cmd_Argv_addr 0x812c264
 	#define func_Cmd_ExecuteString_addr 0x8124144
+	#define func_Huff_Decompress_addr 0x807c224
 
 	// Function address called in ASM
 	#define func_Sys_Milliseconds_addr 0x80c6714
@@ -180,6 +193,7 @@
 	#define cvar_common_com_sv_running_addr 0x831f300
 	#define cvar_common_com_cl_running_addr 0x831f400
 	#define cvar_common_com_logfile_addr 0x831f41c
+	#define cvar_common_com_developer_addr 0x831e204
 	#define cvar_common_fs_gamedirvar_addr 0x838aaec
 	
 #endif
@@ -200,6 +214,8 @@ typedef struct serverFunctions_s
 	void		(*SV_UpdateServerCommandsToClient)				(client_t*, msg_t*);
 	void		(*SV_FlushRedirect)								(char*);
 	void		(*SV_ExecuteClientCommand)						(client_t*, const char*, qboolean);
+	void		(*SV_GetChallenge)								(netadr_t);
+	void		(*SV_DirectConnect)								(netadr_t);
 
 } serverFunctions_t;
 
@@ -236,6 +252,7 @@ typedef struct Common_s
 		cvar_t* com_sv_running;
 		cvar_t* com_cl_running;
 		cvar_t* com_logfile;
+		cvar_t* com_developer;
 		cvar_t* fs_gamedirvar;
 	} cvars;
 
@@ -259,7 +276,9 @@ typedef struct Common_s
 		void			(*MSG_ReadDeltaUsercmdKey)						(msg_t*, int, usercmd_t*, usercmd_t*);
 		int				(*MSG_ReadLong)									(msg_t*);
 		char*			(*MSG_ReadString)								(msg_t*);
+		char*			(*MSG_ReadStringLine)							(msg_t*);
 		void			(*MSG_Bitstream)								(msg_t*);
+		void			(*MSG_BeginReadingOOB)							(msg_t*);
 		void			(*MSG_WriteBigString)							(msg_t*, const char*);
 		void			(*MSG_WriteByte)								(msg_t*, int);
 		void			(*MSG_WriteDeltaEntity)							(msg_t*, struct entityState_s*, struct entityState_s*, qboolean);
@@ -269,6 +288,7 @@ typedef struct Common_s
 		void			(*Sys_Print)									(const char*);
 		char*			(*Cmd_Argv)                                     (int);
 		void			(*Cmd_ExecuteString)							(const char*);
+		void			(*Huff_Decompress)								(msg_t*, int);
 	} functions;
 } common_t;
 

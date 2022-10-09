@@ -132,6 +132,7 @@ static void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 		// the moves can be processed normaly
 	}
 
+	// a bad cp command was sent, drop the client
 	if (server.cvars.sv_pure->integer != 0 && client->pureAuthentic == 0)
 	{
 		server.functions.SV_DropClient(client, "Cannot validate pure client!");

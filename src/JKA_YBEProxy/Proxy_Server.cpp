@@ -33,6 +33,8 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.functions.SV_UpdateServerCommandsToClient = (void (*)(client_t*, msg_t*))func_SV_UpdateServerCommandsToClient_addr;
 	server.functions.SV_FlushRedirect = (void (*)(char*))func_SV_FlushRedirect_addr;
 	server.functions.SV_ExecuteClientCommand = (void (*)(client_t*, const char*, qboolean))func_SV_ExecuteClientCommand_addr;
+	server.functions.SV_GetChallenge = (void (*)(netadr_t))func_SV_GetChallenge_addr;
+	server.functions.SV_DirectConnect = (void (*)(netadr_t))func_SV_DirectConnect_addr;
 
 	// ----------- COMMON
 
@@ -50,6 +52,7 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.common.cvars.com_sv_running = *(cvar_t**)cvar_common_com_sv_running_addr;
 	server.common.cvars.com_cl_running = *(cvar_t**)cvar_common_com_cl_running_addr;
 	server.common.cvars.com_logfile = *(cvar_t**)cvar_common_com_logfile_addr;
+	server.common.cvars.com_developer = *(cvar_t**)cvar_common_com_developer_addr;
 	server.common.cvars.fs_gamedirvar = *(cvar_t**)cvar_common_fs_gamedirvar_addr;
 
 	// functions
@@ -71,7 +74,9 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.common.functions.MSG_ReadDeltaUsercmdKey = (void (*)(msg_t*, int, usercmd_t*, usercmd_t*))func_MSG_ReadDeltaUsercmdKey_addr;
 	server.common.functions.MSG_ReadLong = (int (*)(msg_t*))func_MSG_ReadLong_addr;
 	server.common.functions.MSG_ReadString = (char* (*)(msg_t*))func_MSG_ReadString_addr;
+	server.common.functions.MSG_ReadStringLine = (char* (*)(msg_t*))func_MSG_ReadStringLine_addr;
 	server.common.functions.MSG_Bitstream = (void (*)(msg_t*))func_MSG_Bitstream_addr;
+	server.common.functions.MSG_BeginReadingOOB = (void (*)(msg_t*))func_MSG_BeginReadingOOB_addr;
 	server.common.functions.MSG_WriteBigString = (void (*)(msg_t*, const char*))func_MSG_WriteBigString_addr;
 	server.common.functions.MSG_WriteByte = (void (*)(msg_t*, int))func_MSG_WriteByte_addr;
 	server.common.functions.MSG_WriteDeltaEntity = (void (*)(msg_t*, struct entityState_s*, struct entityState_s*, qboolean))func_MSG_WriteDeltaEntity_addr;
@@ -81,6 +86,7 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.common.functions.Sys_Print = (void (*)(const char*))func_Sys_Print_addr;
 	server.common.functions.Cmd_Argv = (char* (*)(int))func_Cmd_Argv_addr;
 	server.common.functions.Cmd_ExecuteString = (void (*)(const char*))func_Cmd_ExecuteString_addr;
+	server.common.functions.Huff_Decompress = (void (*)(msg_t*, int))func_Huff_Decompress_addr;
 }
 
 // Update value of packets and FPS

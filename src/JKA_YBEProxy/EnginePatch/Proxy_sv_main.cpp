@@ -119,8 +119,6 @@ Shift down the remaining args
 Redirect all printfs
 ===============
 */
-
-void (*Original_SVC_RemoteCommand)(netadr_t, msg_t*);
 void Proxy_SVC_RemoteCommand(netadr_t from, msg_t* msg) {
 	qboolean	valid;
 	char		remaining[1024];
@@ -171,4 +169,66 @@ void Proxy_SVC_RemoteCommand(netadr_t from, msg_t* msg) {
 		server.common.functions.Cmd_ExecuteString(remaining);
 	}
 	server.common.functions.Com_EndRedirect();
+}
+
+/*
+=================
+SV_ConnectionlessPacket
+
+A connectionless packet has four leading 0xff
+characters to distinguish it from a game channel.
+Clients that are in the game can still send
+connectionless packets.
+=================
+*/
+void (*Original_SV_ConnectionlessPacket)(netadr_t, msg_t*);
+void Proxy_SV_ConnectionlessPacket(netadr_t from, msg_t* msg) {
+	char* s;
+	char* c;
+
+	server.common.functions.MSG_BeginReadingOOB(msg);
+	server.common.functions.MSG_ReadLong(msg);		// skip the -1 marker
+
+	if (!Q_strncmp("connect", (const char*)&msg->data[4], 7)) {
+		server.common.functions.Huff_Decompress(msg, 12);
+	}
+
+	s = server.common.functions.MSG_ReadStringLine(msg);
+	Proxy_Cmd_TokenizeString(s);
+
+	c = server.common.functions.Cmd_Argv(0);
+
+	if (server.common.cvars.com_developer->integer) {
+		Proxy_Common_Com_Printf("SV packet %s : %s\n", server.common.functions.NET_AdrToString(from), c);
+	}
+
+	if (!Q_stricmp(c, "getstatus")) {
+		Proxy_SVC_Status(from);
+	}
+	else if (!Q_stricmp(c, "getinfo")) {
+		Proxy_SVC_Info(from);
+	}
+	else if (!Q_stricmp(c, "getchallenge")) {
+		server.functions.SV_GetChallenge(from);
+	}
+	else if (!Q_stricmp(c, "connect")) {
+		server.functions.SV_DirectConnect(from);
+	}
+	else if (!Q_stricmp(c, "ipAuthorize")) {
+		//SV_AuthorizeIpPacket(from);
+	}
+	else if (!Q_stricmp(c, "rcon")) {
+		Proxy_SVC_RemoteCommand(from, msg);
+	}
+	else if (!Q_stricmp(c, "disconnect")) {
+		// if a client starts up a local server, we may see some spurious
+		// server disconnect messages when their new server sees our final
+		// sequenced messages to the old client
+	}
+	else {
+		if (server.common.cvars.com_developer->integer) {
+			Proxy_Common_Com_Printf("bad connectionless packet from %s:\n%s\n",
+				server.common.functions.NET_AdrToString(from), s);
+		}
+	}
 }
