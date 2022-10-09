@@ -3,7 +3,7 @@ Educational project on the creation of a proxy between the server engine and the
 
 ## Compilation
 
-To compile a 32bits version on a 64bits linux distribution add the following define when generating the CMAKE files :
+To compile a 32bits version on a 64bits linux distribution add the following define when generating the CMAKE files:
 
 ``cmake .. -DTARGET_ARCH=x86``
 
@@ -12,3 +12,8 @@ Patchnote : https://hackmd.io/E6LOdJOVQBi4pr1S7z11UA
 Todo : https://hackmd.io/LDI7ekrzREu7WFHZJKooMQ
 
 Features : https://hackmd.io/kvj--DTaTmOofjxL5bud-Q
+
+## Notes
+
+If you deal with `static` functions, you better copy/paste them in the Proxy instead of making a trampoline of them because it won't work properly.  
+Then after that, each function that call this `static` function should be redefined in a trampoline.
