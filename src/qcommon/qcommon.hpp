@@ -267,49 +267,6 @@ MISC
 #define RoundUp(N, M) ((N) + ((unsigned int)(M)) - (((unsigned int)(N)) % ((unsigned int)(M))))
 #define RoundDown(N, M) ((N) - (((unsigned int)(N)) % ((unsigned int)(M))))
 
-
-extern	cvar_t	*com_developer;
-extern	cvar_t	*com_dedicated;
-extern	cvar_t	*com_speeds;
-extern	cvar_t	*com_timescale;
-extern	cvar_t	*com_sv_running;
-extern	cvar_t	*com_cl_running;
-extern	cvar_t	*com_version;
-extern	cvar_t	*com_buildScript;		// for building release pak files
-extern	cvar_t	*com_journal;
-extern	cvar_t	*com_cameraMode;
-extern	cvar_t	*com_homepath;
-#ifndef _WIN32
-extern	cvar_t	*com_ansiColor;
-#endif
-
-#ifdef G2_PERFORMANCE_ANALYSIS
-extern	cvar_t	*com_G2Report;
-#endif
-
-extern	cvar_t	*com_affinity;
-extern	cvar_t	*com_busyWait;
-
-extern	cvar_t	*com_renderfps;
-
-// both client and server must agree to pause
-extern	cvar_t	*cl_paused;
-extern	cvar_t	*sv_paused;
-
-// com_speeds times
-extern	int		time_game;
-extern	int		time_frontend;
-extern	int		time_backend;		// renderer backend time
-
-extern	int		com_frameTime;
-
-extern	qboolean	com_errorEntered;
-
-
-extern	fileHandle_t	logfile;
-extern	fileHandle_t	com_journalFile;
-extern	fileHandle_t	com_journalDataFile;
-
 // AVI files have the start of pixel lines 4 byte-aligned
 #define AVI_LINE_PADDING 4
 

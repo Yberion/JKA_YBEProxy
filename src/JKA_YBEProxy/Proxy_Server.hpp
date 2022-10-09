@@ -16,7 +16,6 @@
 	#define func_Com_Printf_addr 0x40fbe0
 	#define func_SV_CalcPings_addr 0x444220
 	#define func_SV_SendMessageToClient_addr 0x444dc0
-	#define func_SV_UserMove_addr 0x43c210
 	#define func_SV_SendClientGameState_addr 0x43ae70
 	#define func_SV_Status_f_addr 0x43a4a0
 	#define func_SV_SvEntityForGentity_addr 0x43cd80
@@ -25,6 +24,7 @@
 	#define func_SVC_RemoteCommand_addr 0x443ce0
 	#define func_Cmd_TokenizeString_addr 0x40f580
 	#define func_SV_UserinfoChanged_addr 0x43b8c0
+	#define func_SV_ExecuteClientMessage_addr 0x43c3a0
 
 	// Function address to call
 	#define func_SV_ClientEnterWorld_addr 0x43b230
@@ -34,6 +34,7 @@
 	//#define func_SV_RateMsec_addr 0x444d60
 	#define func_SV_FlushRedirect_addr 0x443cb0
 	#define func_SV_UpdateServerCommandsToClient_addr 0x444c80
+	#define func_SV_ExecuteClientCommand_addr 0x43bad0
 	#define func_Com_DPrintf_addr 0x40fdb0
 	#define func_Com_HashKey_addr 0x410370
 	#define func_Com_BeginRedirect_addr 0x40fb70
@@ -49,6 +50,9 @@
 	#define func_MSG_Init_addr 0x419d00
 	#define func_MSG_ReadByte_addr 0x4189f0
 	#define func_MSG_ReadDeltaUsercmdKey_addr 0x418b50
+	#define func_MSG_ReadLong_addr 0x418a50
+	#define func_MSG_ReadString_addr 0x418a70
+	#define func_MSG_Bitstream_addr 0x418500
 	#define func_MSG_WriteBigString_addr 0x418940
 	#define func_MSG_WriteByte_addr 0x418810
 	#define func_MSG_WriteDeltaEntity_addr 0x418e40
@@ -74,7 +78,9 @@
 	#define var_cmd_argv_addr 0x4d8d88
 	#define var_cmd_tokenized_addr 0x4d9d88
 
-	// cvar (for addr check in function: 0x442f60)
+	// cvar
+	// for server addr check in function: 0x442f60
+	// for com addr check in function: 0x410fc0
 	#define cvar_sv_fps_addr 0x6102d0
 	#define cvar_sv_gametype_addr 0x610298
 	#define cvar_sv_hostname_addr 0x61027c
@@ -84,8 +90,10 @@
 	#define cvar_sv_pure_addr 0x60620c
 	#define cvar_sv_maxRate_addr 0x6102b4
 	#define cvar_sv_rconPassword_addr 0x606210
+	#define cvar_sv_floodProtect_addr 0x610288
 	#define cvar_common_com_dedicated_addr 0x4dc5dc
 	#define cvar_common_com_sv_running_addr 0x4dc5e0
+	#define cvar_common_com_cl_running_addr 0x4e3778
 	#define cvar_common_com_logfile_addr 0x4dc5b8
 	#define cvar_common_fs_gamedirvar_addr 0x4ff464
 
@@ -94,7 +102,6 @@
 	#define func_Com_Printf_addr 0x8072ca4
 	#define func_SV_CalcPings_addr 0x8057204
 	#define func_SV_SendMessageToClient_addr 0x8058c84
-	#define func_SV_UserMove_addr 0x804e6c4
 	#define func_SV_SendClientGameState_addr 0x804cee4
 	#define func_SV_Status_f_addr 0x804f7f4
 	#define func_SV_SvEntityForGentity_addr 0x804ffb4
@@ -103,6 +110,7 @@
 	#define func_SVC_RemoteCommand_addr 0x8056b14
 	#define func_Cmd_TokenizeString_addr 0x812c454
 	#define func_SV_UserinfoChanged_addr 0x804e144
+	#define func_SV_ExecuteClientMessage_addr 0x804e8c4
 
 	// Function address to call
 	#define func_SV_ClientEnterWorld_addr 0x804d444
@@ -112,6 +120,7 @@
 	//#define func_SV_RateMsec_addr 0x8058c04
 	#define func_SV_FlushRedirect_addr 0x8057b44
 	#define func_SV_UpdateServerCommandsToClient_addr 0x80582c4
+	#define func_SV_ExecuteClientCommand_addr 0x804e3d4
 	#define func_Com_DPrintf_addr 0x8072ed4
 	#define func_Com_HashKey_addr 0x8073b14
 	#define func_Com_BeginRedirect_addr 0x8072c34
@@ -127,6 +136,9 @@
 	#define func_MSG_Init_addr 0x80774a4
 	#define func_MSG_ReadByte_addr 0x8077df4
 	#define func_MSG_ReadDeltaUsercmdKey_addr 0x8078b34
+	#define func_MSG_ReadLong_addr 0x8077e74
+	#define func_MSG_ReadString_addr 0x8077ee4
+	#define func_MSG_Bitstream_addr 0x80775d4
 	#define func_MSG_WriteBigString_addr 0x8077c04
 	#define func_MSG_WriteByte_addr 0x8077a24
 	#define func_MSG_WriteDeltaEntity_addr 0x8078d74
@@ -152,7 +164,8 @@
 	#define var_cmd_argv_addr 0x8260e40
 	#define var_cmd_tokenized_addr 0x8264440
 
-	// cvar (for addr check in function: 0x8055824)
+	// for server addr check in function: 0x8055824
+	// for com addr check in function: 0x8074614
 	#define cvar_sv_fps_addr 0x8273e84
 	#define cvar_sv_gametype_addr 0x83121cc
 	#define cvar_sv_hostname_addr 0x8273e9c
@@ -162,8 +175,10 @@
 	#define cvar_sv_pure_addr 0x83121a8
 	#define cvar_sv_maxRate_addr 0x831219c
 	#define cvar_sv_rconPassword_addr 0x83121d4
+	#define cvar_sv_floodProtect_addr 0x8273e88
 	#define cvar_common_com_dedicated_addr 0x831f254
 	#define cvar_common_com_sv_running_addr 0x831f300
+	#define cvar_common_com_cl_running_addr 0x831f400
 	#define cvar_common_com_logfile_addr 0x831f41c
 	#define cvar_common_fs_gamedirvar_addr 0x838aaec
 	
@@ -183,7 +198,9 @@ typedef struct serverFunctions_s
 	void		(*SV_Netchan_Transmit)							(client_t*, msg_t*);
 	//int		(*SV_RateMsec)									(client_t*, int);
 	void		(*SV_UpdateServerCommandsToClient)				(client_t*, msg_t*);
-	void		(*SV_FlushRedirect)								(char* outputbuf);
+	void		(*SV_FlushRedirect)								(char*);
+	void		(*SV_ExecuteClientCommand)						(client_t*, const char*, qboolean);
+
 } serverFunctions_t;
 
 typedef struct serverCvars_s
@@ -197,6 +214,7 @@ typedef struct serverCvars_s
 	cvar_t* sv_pure;
 	cvar_t* sv_maxRate;
 	cvar_t* sv_rconPassword;
+	cvar_t* sv_floodProtect;
 } serverCvars_t;
 
 typedef struct Common_s
@@ -216,6 +234,7 @@ typedef struct Common_s
 	{
 		cvar_t* com_dedicated;
 		cvar_t* com_sv_running;
+		cvar_t* com_cl_running;
 		cvar_t* com_logfile;
 		cvar_t* fs_gamedirvar;
 	} cvars;
@@ -238,6 +257,9 @@ typedef struct Common_s
 		void			(*MSG_Init)										(msg_t*, byte*, int);
 		int				(*MSG_ReadByte)									(msg_t*);
 		void			(*MSG_ReadDeltaUsercmdKey)						(msg_t*, int, usercmd_t*, usercmd_t*);
+		int				(*MSG_ReadLong)									(msg_t*);
+		char*			(*MSG_ReadString)								(msg_t*);
+		void			(*MSG_Bitstream)								(msg_t*);
 		void			(*MSG_WriteBigString)							(msg_t*, const char*);
 		void			(*MSG_WriteByte)								(msg_t*, int);
 		void			(*MSG_WriteDeltaEntity)							(msg_t*, struct entityState_s*, struct entityState_s*, qboolean);

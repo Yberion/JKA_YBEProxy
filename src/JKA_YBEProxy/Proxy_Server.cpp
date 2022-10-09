@@ -22,6 +22,7 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.cvars.sv_pure = *(cvar_t**)cvar_sv_pure_addr;
 	server.cvars.sv_maxRate = *(cvar_t**)cvar_sv_maxRate_addr;
 	server.cvars.sv_rconPassword = *(cvar_t**)cvar_sv_rconPassword_addr;
+	server.cvars.sv_floodProtect = *(cvar_t**)cvar_sv_floodProtect_addr;
 
 	// functions
 	server.functions.SV_ClientEnterWorld = (void (*)(client_t*, usercmd_t*))func_SV_ClientEnterWorld_addr;
@@ -30,7 +31,8 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.functions.SV_Netchan_Transmit = (void (*)(client_t*, msg_t*))func_SV_Netchan_Transmit_addr;
 	//server.functions.SV_RateMsec = (int (*)(client_t*, int))func_SV_RateMsec_addr; // we directly use our own function inside "Proxy_sv_snapshot()"
 	server.functions.SV_UpdateServerCommandsToClient = (void (*)(client_t*, msg_t*))func_SV_UpdateServerCommandsToClient_addr;
-	server.functions.SV_FlushRedirect = (void (*)(char* outputbuf))func_SV_FlushRedirect_addr;
+	server.functions.SV_FlushRedirect = (void (*)(char*))func_SV_FlushRedirect_addr;
+	server.functions.SV_ExecuteClientCommand = (void (*)(client_t*, const char*, qboolean))func_SV_ExecuteClientCommand_addr;
 
 	// ----------- COMMON
 
@@ -46,6 +48,7 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	// cvars
 	server.common.cvars.com_dedicated = *(cvar_t**)cvar_common_com_dedicated_addr;
 	server.common.cvars.com_sv_running = *(cvar_t**)cvar_common_com_sv_running_addr;
+	server.common.cvars.com_cl_running = *(cvar_t**)cvar_common_com_cl_running_addr;
 	server.common.cvars.com_logfile = *(cvar_t**)cvar_common_com_logfile_addr;
 	server.common.cvars.fs_gamedirvar = *(cvar_t**)cvar_common_fs_gamedirvar_addr;
 
@@ -66,6 +69,9 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.common.functions.MSG_Init = (void (*)(msg_t*, byte*, int))func_MSG_Init_addr;
 	server.common.functions.MSG_ReadByte = (int (*)(msg_t*))func_MSG_ReadByte_addr;
 	server.common.functions.MSG_ReadDeltaUsercmdKey = (void (*)(msg_t*, int, usercmd_t*, usercmd_t*))func_MSG_ReadDeltaUsercmdKey_addr;
+	server.common.functions.MSG_ReadLong = (int (*)(msg_t*))func_MSG_ReadLong_addr;
+	server.common.functions.MSG_ReadString = (char* (*)(msg_t*))func_MSG_ReadString_addr;
+	server.common.functions.MSG_Bitstream = (void (*)(msg_t*))func_MSG_Bitstream_addr;
 	server.common.functions.MSG_WriteBigString = (void (*)(msg_t*, const char*))func_MSG_WriteBigString_addr;
 	server.common.functions.MSG_WriteByte = (void (*)(msg_t*, int))func_MSG_WriteByte_addr;
 	server.common.functions.MSG_WriteDeltaEntity = (void (*)(msg_t*, struct entityState_s*, struct entityState_s*, qboolean))func_MSG_WriteDeltaEntity_addr;

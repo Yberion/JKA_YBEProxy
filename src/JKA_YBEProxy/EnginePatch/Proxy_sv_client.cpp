@@ -1,6 +1,62 @@
 #include "Proxy_EnginePatch.hpp"
 
 /*
+===============
+SV_ClientCommand
+===============
+*/
+static qboolean Proxy_SV_ClientCommand(client_t* cl, msg_t* msg) {
+	int		seq;
+	const char* s;
+	qboolean clientOk = qtrue;
+
+	seq = server.common.functions.MSG_ReadLong(msg);
+	s = server.common.functions.MSG_ReadString(msg);
+
+	// see if we have already executed it
+	if (cl->lastClientCommand >= seq) {
+		return qtrue;
+	}
+
+	server.common.functions.Com_DPrintf("clientCommand: %s : %i : %s\n", cl->name, seq, s);
+
+	// drop the connection if we have somehow lost commands
+	if (seq > cl->lastClientCommand + 1) {
+		Proxy_Common_Com_Printf("Client %s lost %i clientCommands\n", cl->name,
+			seq - cl->lastClientCommand + 1);
+		server.functions.SV_DropClient(cl, "Lost reliable commands");
+		return qfalse;
+	}
+
+	// malicious users may try using too many string commands
+	// to lag other players.  If we decide that we want to stall
+	// the command, we will stop processing the rest of the packet,
+	// including the usercmd.  This causes flooders to lag themselves
+	// but not other people
+	// We don't do this when the client hasn't been active yet since its
+	// normal to spam a lot of commands when downloading
+	if (!server.common.cvars.com_cl_running->integer &&
+		cl->state >= CS_ACTIVE &&
+		server.cvars.sv_floodProtect->integer &&
+		server.svs->time < cl->nextReliableTime) {
+		// ignore any other text messages from this client but let them keep playing
+		clientOk = qfalse;
+		server.common.functions.Com_DPrintf("client text ignored for %s\n", cl->name);
+		//return qfalse;	// stop processing
+	}
+
+	// don't allow another command for one second
+	cl->nextReliableTime = server.svs->time + 1000;
+
+	server.functions.SV_ExecuteClientCommand(cl, s, clientOk);
+
+	cl->lastClientCommand = seq;
+	Com_sprintf(cl->lastClientCommandString, sizeof(cl->lastClientCommandString), "%s", s);
+
+	return qtrue;		// continue procesing
+}
+
+/*
 ==================
 SV_UserMove
 
@@ -12,21 +68,8 @@ On very fast clients, there may be multiple usercmd packed into
 each of the backup packets.
 ==================
 */
-
-void (*Original_SV_UserMove)(client_t*, msg_t*, qboolean);
-void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
+static void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 {
-	// Proxy -------------->
-#if defined(_WIN32) && !defined(MINGW32)
-	__asm2__(mov [client], EBX); // client_t* client
-	__asm1__(push ECX);
-	__asm2__(mov ECX, DWORD PTR SS : [ESP + 0x3A4]);
-	__asm2__(mov [msg], ECX); // msg_t* msg
-	__asm1__(pop ECX);
-	__asm2__(mov [delta], EAX); // qboolean delta
-#endif
-	// Proxy <--------------
-
 	int			i, key;
 	int			cmdCount;
 	usercmd_t	nullcmd;
@@ -140,6 +183,102 @@ void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 		Proxy_Server_UpdateTimenudge(client, &cmds[i], proxy.trap->Milliseconds());
 		// Proxy <--------------
 	}
+}
+
+/*
+===================
+SV_ExecuteClientMessage
+
+Parse a client packet
+===================
+*/
+void (*Original_SV_ExecuteClientMessage)(client_t*, msg_t*);
+void Proxy_SV_ExecuteClientMessage(client_t* cl, msg_t* msg) {
+	int			c;
+	int			serverId;
+
+	server.common.functions.MSG_Bitstream(msg);
+
+	serverId = server.common.functions.MSG_ReadLong(msg);
+	cl->messageAcknowledge = server.common.functions.MSG_ReadLong(msg);
+
+	if (cl->messageAcknowledge < 0) {
+		// usually only hackers create messages like this
+		// it is more annoying for them to let them hanging
+		//SV_DropClient( cl, "illegible client message" );
+		return;
+	}
+
+	cl->reliableAcknowledge = server.common.functions.MSG_ReadLong(msg);
+
+	// NOTE: when the client message is fux0red the acknowledgement numbers
+	// can be out of range, this could cause the server to send thousands of server
+	// commands which the server thinks are not yet acknowledged in SV_UpdateServerCommandsToClient
+	if (cl->reliableAcknowledge < cl->reliableSequence - MAX_RELIABLE_COMMANDS) {
+		// usually only hackers create messages like this
+		// it is more annoying for them to let them hanging
+		//SV_DropClient( cl, "illegible client message" );
+		cl->reliableAcknowledge = cl->reliableSequence;
+		return;
+	}
+	// if this is a usercmd from a previous gamestate,
+	// ignore it or retransmit the current gamestate
+	//
+	// if the client was downloading, let it stay at whatever serverId and
+	// gamestate it was at.  This allows it to keep downloading even when
+	// the gamestate changes.  After the download is finished, we'll
+	// notice and send it a new game state
+	//
+	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=536
+	// don't drop as long as previous command was a nextdl, after a dl is done, downloadName is set back to ""
+	// but we still need to read the next message to move to next download or send gamestate
+	// I don't like this hack though, it must have been working fine at some point, suspecting the fix is somewhere else
+	if (serverId != server.sv->serverId && !*cl->downloadName && !strstr(cl->lastClientCommandString, "nextdl")) {
+		if (serverId >= server.sv->restartedServerId && serverId < server.sv->serverId) { // TTimo - use a comparison here to catch multiple map_restart
+			// they just haven't caught the map_restart yet
+			server.common.functions.Com_DPrintf("%s : ignoring pre map_restart / outdated client message\n", cl->name);
+			return;
+		}
+		// if we can tell that the client has dropped the last
+		// gamestate we sent them, resend it
+		// Fix for https://bugzilla.icculus.org/show_bug.cgi?id=6324
+		if (cl->state != CS_ACTIVE && cl->messageAcknowledge > cl->gamestateMessageNum) {
+			server.common.functions.Com_DPrintf("%s : dropped gamestate, resending\n", cl->name);
+			Proxy_SV_SendClientGameState(cl);
+		}
+		return;
+	}
+
+	// read optional clientCommand strings
+	do {
+		c = server.common.functions.MSG_ReadByte(msg);
+		if (c == clc_EOF) {
+			break;
+		}
+		if (c != clc_clientCommand) {
+			break;
+		}
+		if (!Proxy_SV_ClientCommand(cl, msg)) {
+			return;	// we couldn't execute it because of the flood protection
+		}
+		if (cl->state == CS_ZOMBIE) {
+			return;	// disconnect command
+		}
+	} while (1);
+
+	// read the usercmd_t
+	if (c == clc_move) {
+		Proxy_SV_UserMove(cl, msg, qtrue);
+	}
+	else if (c == clc_moveNoDelta) {
+		Proxy_SV_UserMove(cl, msg, qfalse);
+	}
+	else if (c != clc_EOF) {
+		Proxy_Common_Com_Printf("WARNING: bad command byte for client %i\n", getClientNumFromAddr(cl));
+	}
+	//	if ( msg->readcount != msg->cursize ) {
+	//		Com_Printf( "WARNING: Junk at end of packet for client %i\n", cl - svs.clients );
+	//	}
 }
 
 /*
