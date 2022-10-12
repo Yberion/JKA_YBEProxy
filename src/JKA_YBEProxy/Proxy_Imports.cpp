@@ -4,14 +4,10 @@
 // server engine
 // ==================================================
 
-// playerState_t* SV_GameClientNum(int num)
-playerState_t* Proxy_GetPlayerStateByClientNum(int num)
+// playerState_t* SV_GameClientNum(int clientNum)
+playerState_t* Proxy_GetPlayerStateByClientNum(int clientNum)
 {
-	playerState_t* ps;
-	
-	ps = (playerState_t*)((byte*)proxy.locatedGameData.g_clients + proxy.locatedGameData.g_clientSize * (num));
-
-	return ps;
+	return (playerState_t*)((byte*)proxy.locatedGameData.g_clients + proxy.locatedGameData.g_clientSize * (clientNum));
 }
 
 /*
