@@ -15,10 +15,14 @@ void Proxy_SharedAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int
 	proxy.locatedGameData.g_clientSize = sizeofGameClient;
 }
 
-void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* cmd)
+void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* ucmd)
 {
-	cmd->forcesel = 0xFFU;
-	cmd->angles[ROLL] = 0;
+	if (ucmd->forcesel == FP_LEVITATION || ucmd->forcesel >= NUM_FORCE_POWERS)
+	{
+		ucmd->forcesel = 0xFFu;
+	}
+
+	ucmd->angles[ROLL] = 0;
 }
 
 // ==================================================
