@@ -29,8 +29,10 @@ intptr_t QDECL Proxy_OldAPI_SystemCall(intptr_t command, ...)
 		case G_GET_USERCMD: // (int clientNum, usercmd_t* cmd)
 		//==================================================
 		{
+			// The server set the usercmd to the last he knows about
 			int response = proxy.originalSystemCall(command, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14]);
 			
+			// We then alter the usercmd if needed before "sending" it back to the original game module
 			Proxy_SharedAPI_GetUsercmd((int)args[0], (usercmd_t*)args[1]);
 			
 			return response;

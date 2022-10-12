@@ -172,7 +172,7 @@ void ReProtect( void *pAddress, size_t iLen )
 }
 
 // ==================================================
-// ReProtect
+// UnProtect
 // --------------------------------------------------
 // Removes protection to the target address, after
 // which it can be written upon. Do not open an entire

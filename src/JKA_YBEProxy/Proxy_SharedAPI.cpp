@@ -151,13 +151,11 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	return qtrue;
 }
 
+/*
+// If we want to do something with the usercmd then call manually GetUsercmd
 void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd)
-{
-	if (clientNum < 0 || clientNum >= MAX_CLIENTS || !proxy.clientData[clientNum].isConnected)
-	{
-		return;
-	}
-}
+{}
+*/
 
 void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 {

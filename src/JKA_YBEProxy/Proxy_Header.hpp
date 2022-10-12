@@ -160,7 +160,7 @@ void Proxy_LoadGameLibrary(void);
 // ------------------------
 
 // -- server utilities
-playerState_t* Proxy_GetPlayerStateByClientNum(int num);
+playerState_t* Proxy_GetPlayerStateByClientNum(int clientNum);
 void Proxy_ClientCleanName(const char* in, char* out, int outSize);
 
 // -- other
@@ -205,7 +205,7 @@ void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* cmd);
 void Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum);
-void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd);
+//void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd);
 void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum);
 
 // ------------------------
