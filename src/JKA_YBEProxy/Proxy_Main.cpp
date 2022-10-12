@@ -7,11 +7,12 @@
 
 Proxy_t proxy = { 0 };
 
-static void Proxy_OldAPI_Init(void)
+static void Proxy_GameLegacyAPI_Init(void)
 {
-	// Engine -> Load Proxy dllEntry (store the original systemCall function pointer in originalSystemCall) ->
-	// Get Original dllEntry -> send our own Proxy systemCall function pointer to the Original dllEntry
-	// At the end of our Proxy systemCall function there's a call the Original systemCall function
+	// 1) Original Engine -> Load the Proxy dllEntry (store the original server's systemCall function pointer in originalSystemCall)
+	// 2) The Proxy get the Original dllEntry
+	// 3) The Proxy send our own Proxy systemCall function pointer to the Original dllEntry
+	// 4) If there is a call to our Proxy's systemCall function it will call the Original systemCall function at the end of it
 	proxy.originalDllEntry = (dllEntryFuncPtr_t)YBEProxy_GetFunctionAddress(proxy.jampgameHandle, "dllEntry");
 
 	if (!proxy.originalDllEntry)
@@ -52,14 +53,6 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 			proxy.trap->Print("----- Proxy: %s %s %s\n", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR);
 			proxy.trap->Print("================================================================\n");
 
-			proxy.trap->Print("----- Proxy: Loading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
-
-			Proxy_LoadGameLibrary();
-
-			Proxy_OldAPI_Init();
-
-			proxy.trap->Print("----- Proxy: %s properly loaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
-			
 			char version[MAX_STRING_CHARS];
 
 			proxy.trap->Cvar_VariableStringBuffer("version", version, sizeof(version));
@@ -92,6 +85,15 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 				proxy.trap->Print("----- Proxy: Engine properly patched\n");
 			}
 
+			proxy.trap->Print("----- Proxy: Loading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
+
+			Proxy_LoadGameLibrary();
+
+			Proxy_GameLegacyAPI_Init();
+
+			proxy.trap->Print("----- Proxy: %s properly loaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
+			
+
 			break;
 		}
 		//==================================================
@@ -102,6 +104,13 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 			{
 				// Send the shutdown signal to the original game module and store the response
 				proxy.originalVmMainResponse = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+
+				proxy.trap->Print("----- Proxy: Unloading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
+
+				// We can close the original game library
+				YBEProxy_CloseLibrary(proxy.jampgameHandle);
+
+				proxy.trap->Print("----- Proxy: %s properly unloaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
 
 				if (proxy.isOriginalEngine)
 				{
@@ -117,13 +126,6 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 
 					proxy.trap->Print("----- Proxy: Engine properly unpatched\n");
 				}
-
-				proxy.trap->Print("----- Proxy: Unloading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
-
-				// We can close our proxy library
-				YBEProxy_CloseLibrary(proxy.jampgameHandle);
-
-				proxy.trap->Print("----- Proxy: %s properly unloaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
 
 				// Return the response of the original game module after the shutdown
 				return proxy.originalVmMainResponse;
@@ -234,7 +236,7 @@ Q_CABI Q_EXPORT gameExport_t* QDECL GetModuleAPI(int apiVersion, gameImport_t* i
 		proxy.trap->Print("----- Proxy: Failed to find GetModuleAPI function, loading vmMain and dllEntry\n");
 		proxy.trap->Print("==================================================================================\n");
 
-		Proxy_OldAPI_Init();
+		Proxy_GameLegacyAPI_Init();
 
 		return nullptr;
 	}
