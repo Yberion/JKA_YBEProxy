@@ -54,7 +54,7 @@
 #define PROXY_LIBRARY PROXY_LIBRARY_SLASH PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT
 
 #define YBEPROXY_NAME "YbeProxy"
-#define YBEPROXY_VERSION "0.9.0 Beta"
+#define YBEPROXY_VERSION "0.9.1 Beta"
 #define YBEPROXY_BY_AUTHOR "by Yberion"
 
 // ==================================================
