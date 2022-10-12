@@ -189,3 +189,22 @@ char* Cmd_Cmd(void)
 	return cmd_cmd;
 }
 
+/*
+============
+Cmd_Update_Argv
+============
+*/
+void Cmd_Update_Argv(int argNumber, char* newArg)
+{
+	if ((unsigned)argNumber >= (unsigned)*server.common.vars.cmd_argc)
+	{
+		return;
+	}
+
+	if (!newArg)
+	{
+		return;
+	}
+
+	(*server.common.vars.cmd_argv)[argNumber] = newArg;
+}
