@@ -69,7 +69,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	}
 
 	// Todo (not sure): Check in the entier command + args?
-	char* argsConcat = ConcatArgs(1);
+	const char* argsConcat = ConcatArgs(1);
 
 	if (!Q_stricmpn(cmd, "say", 3) || !Q_stricmpn(cmd, "say_team", 8) || !Q_stricmpn(cmd, "tell", 4))
 	{
@@ -116,6 +116,12 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 
 	// Fix: callvote fraglimit/timelimit with negative value
 	if (!Q_stricmpn(cmd, "callvote", 8) && (!Q_stricmpn(cmd_arg1, "fraglimit", 9) || !Q_stricmpn(cmd_arg1, "timelimit", 9)) && atoi(cmd_arg2) < 0)
+	{
+		return qfalse;
+	}
+
+	// Fix: callvote map_restart with high value
+	if (!Q_stricmpn(cmd, "callvote", 8) && !Q_stricmpn(cmd_arg1, "map_restart", 11) && atoi(cmd_arg2) > 60)
 	{
 		return qfalse;
 	}
