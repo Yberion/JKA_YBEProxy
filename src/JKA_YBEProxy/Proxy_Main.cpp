@@ -53,6 +53,14 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 			proxy.trap->Print("----- Proxy: %s %s %s\n", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR);
 			proxy.trap->Print("================================================================\n");
 
+			proxy.trap->Print("----- Proxy: Loading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
+
+			Proxy_LoadGameLibrary();
+
+			Proxy_GameLegacyAPI_Init();
+
+			proxy.trap->Print("----- Proxy: %s properly loaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
+			
 			char version[MAX_STRING_CHARS];
 
 			proxy.trap->Cvar_VariableStringBuffer("version", version, sizeof(version));
@@ -85,15 +93,6 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 				proxy.trap->Print("----- Proxy: Engine properly patched\n");
 			}
 
-			proxy.trap->Print("----- Proxy: Loading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
-
-			Proxy_LoadGameLibrary();
-
-			Proxy_GameLegacyAPI_Init();
-
-			proxy.trap->Print("----- Proxy: %s properly loaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
-			
-
 			break;
 		}
 		//==================================================
@@ -102,19 +101,9 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		{
 			if (proxy.jampgameHandle)
 			{
-				// Send the shutdown signal to the original game module and store the response
-				proxy.originalVmMainResponse = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-
-				proxy.trap->Print("----- Proxy: Unloading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
-
-				// We can close the original game library
-				YBEProxy_CloseLibrary(proxy.jampgameHandle);
-
-				proxy.trap->Print("----- Proxy: %s properly unloaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
-
 				if (proxy.isOriginalEngine)
 				{
-					// On "rcon map XXX" it directly goes there from Proxy_SVC_RemoteCommand and unpatch the engine
+					// On "rcon map XXX" or "rcon map_restart 0" it directly goes there from Proxy_SVC_RemoteCommand and unpatch the engine
 					// the problem here is that it seems that Com_EndRedirect() isn't called after the
 					// Cmd_ExecuteString() of the map change
 					// We need to manually call the Com_EndRedirect()
@@ -126,6 +115,16 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 
 					proxy.trap->Print("----- Proxy: Engine properly unpatched\n");
 				}
+
+				// Send the shutdown signal to the original game module and store the response
+				proxy.originalVmMainResponse = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+
+				proxy.trap->Print("----- Proxy: Unloading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
+
+				// We can close the original game library
+				YBEProxy_CloseLibrary(proxy.jampgameHandle);
+
+				proxy.trap->Print("----- Proxy: %s properly unloaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
 
 				// Return the response of the original game module after the shutdown
 				return proxy.originalVmMainResponse;
