@@ -14,6 +14,8 @@
 
 void Proxy_Patch_Attach(void)
 {
+	Original_Common_Com_Printf = (void (QDECL *)(const char* fmt, ...)) Attach((unsigned char*)func_Com_Printf_addr, (unsigned char*)&Proxy_Common_Com_Printf);
+	Original_Cmd_TokenizeString = (void (*)(const char*)) Attach((unsigned char*)func_Cmd_TokenizeString_addr, (unsigned char*)&Proxy_Cmd_TokenizeString);
 	Original_SV_SendMessageToClient = (void (*)(msg_t*, client_t*)) Attach((unsigned char*)func_SV_SendMessageToClient_addr, (unsigned char*)&Proxy_SV_SendMessageToClient);
 	Original_SV_CalcPings = (void (*)(void)) Attach((unsigned char*)func_SV_CalcPings_addr, (unsigned char*)&Proxy_SV_CalcPings);
 	Original_SV_SvEntityForGentity = (svEntity_t* (*)(sharedEntity_t*)) Attach((unsigned char*)func_SV_SvEntityForGentity_addr, (unsigned char*)&Proxy_SV_SvEntityForGentity);
@@ -24,8 +26,7 @@ void Proxy_Patch_Attach(void)
 	Original_SVC_Status = (void (*)(netadr_t)) Attach((unsigned char*)func_SVC_Status_addr, (unsigned char*)&Proxy_SVC_Status);
 	Original_SVC_Info = (void (*)(netadr_t)) Attach((unsigned char*)func_SVC_Info_addr, (unsigned char*)&Proxy_SVC_Info);
 	Original_SV_ConnectionlessPacket = (void (*)(netadr_t, msg_t*)) Attach((unsigned char*)func_SV_ConnectionlessPacket_addr, (unsigned char*)&Proxy_SV_ConnectionlessPacket);
-	Original_Common_Com_Printf = (void (QDECL *)(const char* fmt, ...)) Attach((unsigned char*)func_Com_Printf_addr, (unsigned char*)&Proxy_Common_Com_Printf);
-	Original_Cmd_TokenizeString = (void (*)(const char*)) Attach((unsigned char*)func_Cmd_TokenizeString_addr, (unsigned char*)&Proxy_Cmd_TokenizeString);
+	Original_SVC_RemoteCommand = (void (*)(netadr_t, msg_t *)) Attach((unsigned char*)func_SVC_RemoteCommand_addr, (unsigned char*)&Proxy_SVC_RemoteCommand);
 }
 
 // ==================================================
@@ -39,6 +40,8 @@ void Proxy_Patch_Attach(void)
 
 void Proxy_Patch_Detach(void)
 {
+	Detach((unsigned char*)func_Com_Printf_addr, (unsigned char*)Original_Common_Com_Printf);
+	Detach((unsigned char*)func_Cmd_TokenizeString_addr, (unsigned char*)Original_Cmd_TokenizeString);
 	Detach((unsigned char*)func_SV_SendMessageToClient_addr, (unsigned char*)Original_SV_SendMessageToClient);
 	Detach((unsigned char*)func_SV_CalcPings_addr, (unsigned char*)Original_SV_CalcPings);
 	Detach((unsigned char*)func_SV_SvEntityForGentity_addr, (unsigned char*)Original_SV_SvEntityForGentity);
@@ -49,6 +52,5 @@ void Proxy_Patch_Detach(void)
 	Detach((unsigned char*)func_SVC_Status_addr, (unsigned char*)Original_SVC_Status);
 	Detach((unsigned char*)func_SVC_Info_addr, (unsigned char*)Original_SVC_Info);
 	Detach((unsigned char*)func_SV_ConnectionlessPacket_addr, (unsigned char*)Original_SV_ConnectionlessPacket);
-	Detach((unsigned char*)func_Com_Printf_addr, (unsigned char*)Original_Common_Com_Printf);
-	Detach((unsigned char*)func_Cmd_TokenizeString_addr, (unsigned char*)Original_Cmd_TokenizeString);
+	Detach((unsigned char*)func_SVC_RemoteCommand_addr, (unsigned char*)Original_SVC_RemoteCommand);
 }

@@ -119,7 +119,21 @@ Shift down the remaining args
 Redirect all printfs
 ===============
 */
+void (*Original_SVC_RemoteCommand)(netadr_t, msg_t*);
 void Proxy_SVC_RemoteCommand(netadr_t from, msg_t* msg) {
+	// Only allow writeconfig on cfg files
+	if (!Q_stricmpn(server.common.functions.Cmd_Argv(2), "writeconfig", 11)) {
+		const char* arg3 = server.common.functions.Cmd_Argv(3);
+		const size_t arg3Len = strlen(arg3);
+		
+		if (arg3Len >= 5 && arg3[arg3Len - 4] == '.' && Q_stricmpn(&arg3[arg3Len - 4], ".cfg", 4)) {
+			return;
+		}
+	}
+
+	return Original_SVC_RemoteCommand(from, msg);
+	
+	/*
 	qboolean	valid;
 	char		remaining[1024];
 	// TTimo - scaled down to accumulate, but not overflow anything network wise, print wise etc.
@@ -169,6 +183,7 @@ void Proxy_SVC_RemoteCommand(netadr_t from, msg_t* msg) {
 		server.common.functions.Cmd_ExecuteString(remaining);
 	}
 	server.common.functions.Com_EndRedirect();
+	*/
 }
 
 /*

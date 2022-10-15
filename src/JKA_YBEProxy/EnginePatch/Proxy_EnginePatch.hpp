@@ -50,6 +50,9 @@ void Proxy_SVC_Status(netadr_t from);
 extern void (*Original_SVC_Info)(netadr_t);
 void Proxy_SVC_Info(netadr_t from);
 
+extern void (*Original_SVC_RemoteCommand)(netadr_t, msg_t*);
+void Proxy_SVC_RemoteCommand(netadr_t from, msg_t* msg);
+
 extern void (*Original_SV_ConnectionlessPacket)(netadr_t, msg_t*);
 void Proxy_SV_ConnectionlessPacket(netadr_t from, msg_t* msg);
 

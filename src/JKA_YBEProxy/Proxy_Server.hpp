@@ -22,7 +22,7 @@
 	#define func_SV_ConnectionlessPacket_addr 0x443f00
     #define func_SVC_Status_addr 0x443870
 	#define func_SVC_Info_addr 0x443a10
-	//#define func_SVC_RemoteCommand_addr 0x443ce0 // we use our own function in "Proxy_SV_ConnectionlessPacket()"
+	#define func_SVC_RemoteCommand_addr 0x443ce0
 	#define func_Cmd_TokenizeString_addr 0x40f580
 	#define func_SV_UserinfoChanged_addr 0x43b8c0
 	#define func_SV_ExecuteClientMessage_addr 0x43c3a0
@@ -115,7 +115,7 @@
 	#define func_SV_ConnectionlessPacket_addr 0x8056d64
 	#define func_SVC_Status_addr 0x8056574
 	#define func_SVC_Info_addr 0x8056784
-	//#define func_SVC_RemoteCommand_addr 0x8056b14 // we use our own function in "Proxy_SV_ConnectionlessPacket()"
+	#define func_SVC_RemoteCommand_addr 0x8056b14
 	#define func_Cmd_TokenizeString_addr 0x812c454
 	#define func_SV_UserinfoChanged_addr 0x804e144
 	#define func_SV_ExecuteClientMessage_addr 0x804e8c4
@@ -216,6 +216,7 @@ typedef struct serverFunctions_s
 	void		(*SV_ExecuteClientCommand)						(client_t*, const char*, qboolean);
 	void		(*SV_GetChallenge)								(netadr_t);
 	void		(*SV_DirectConnect)								(netadr_t);
+	//void		(*SVC_RemoteCommand)							(netadr_t, msg_t*);
 
 } serverFunctions_t;
 

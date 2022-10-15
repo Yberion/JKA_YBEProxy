@@ -35,6 +35,7 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.functions.SV_ExecuteClientCommand = (void (*)(client_t*, const char*, qboolean))func_SV_ExecuteClientCommand_addr;
 	server.functions.SV_GetChallenge = (void (*)(netadr_t))func_SV_GetChallenge_addr;
 	server.functions.SV_DirectConnect = (void (*)(netadr_t))func_SV_DirectConnect_addr;
+	//server.functions.SVC_RemoteCommand = (void (*)(netadr_t, msg_t*))func_SVC_RemoteCommand_addr;
 
 	// ----------- COMMON
 
