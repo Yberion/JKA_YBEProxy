@@ -99,23 +99,23 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_SHUTDOWN: // (int restart)
 		//==================================================
 		{
+			if (proxy.isOriginalEngine)
+			{
+				// On "rcon map XXX" or "rcon map_restart 0" it directly goes there from Proxy_SVC_RemoteCommand and unpatch the engine
+				// the problem here is that it seems that Com_EndRedirect() isn't called after the
+				// Cmd_ExecuteString() of the map change
+				// We need to manually call the Com_EndRedirect()
+				server.common.functions.Com_EndRedirect();
+
+				proxy.trap->Print("----- Proxy: Unpatching engine\n");
+
+				Proxy_Patch_Detach();
+
+				proxy.trap->Print("----- Proxy: Engine properly unpatched\n");
+			}
+
 			if (proxy.jampgameHandle)
 			{
-				if (proxy.isOriginalEngine)
-				{
-					// On "rcon map XXX" or "rcon map_restart 0" it directly goes there from Proxy_SVC_RemoteCommand and unpatch the engine
-					// the problem here is that it seems that Com_EndRedirect() isn't called after the
-					// Cmd_ExecuteString() of the map change
-					// We need to manually call the Com_EndRedirect()
-					server.common.functions.Com_EndRedirect();
-
-					proxy.trap->Print("----- Proxy: Unpatching engine\n");
-
-					Proxy_Patch_Detach();
-
-					proxy.trap->Print("----- Proxy: Engine properly unpatched\n");
-				}
-
 				// Send the shutdown signal to the original game module and store the response
 				proxy.originalVmMainResponse = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
 
@@ -129,6 +129,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 				// Return the response of the original game module after the shutdown
 				return proxy.originalVmMainResponse;
 			}
+
 			break;
 		}
 		// ==================================================
