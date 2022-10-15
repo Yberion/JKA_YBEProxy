@@ -11,9 +11,10 @@ typedef struct cvarTable_s {
 
 static cvarTable_t proxyOldAPICVarTable[] =
 {
-	{ &proxy.cvarsOldAPI.sv_pingFix, "sv_pingFix", "1", CVAR_ARCHIVE, 0, qfalse }
+	{ &proxy.cvarsOldAPI.proxy_sv_pingFix, "proxy_sv_pingFix", "1", CVAR_ARCHIVE, 0, qfalse },
+	{ &proxy.cvarsOldAPI.proxy_sv_maxCallVoteMapRestartValue, "proxy_sv_maxCallVoteMapRestartValue", "60", CVAR_ARCHIVE, 0, qfalse }
 };
-static const size_t proxyOldAPICVarTableSize = ARRAY_LEN(proxyOldAPICVarTable);
+static const constexpr size_t proxyOldAPICVarTableSize = ARRAY_LEN(proxyOldAPICVarTable);
 
 // ==================================================
 // Proxy_OldAPI_CVars_Registration
@@ -25,11 +26,11 @@ static const size_t proxyOldAPICVarTableSize = ARRAY_LEN(proxyOldAPICVarTable);
 void Proxy_OldAPI_CVars_Registration(void)
 {
 	unsigned int i = 0;
-	const cvarTable_t* currentCVarTable = nullptr;
+	const cvarTable_t* currentCVarTableItem = nullptr;
 
-	for (i = 0, currentCVarTable = proxyOldAPICVarTable; i < proxyOldAPICVarTableSize; ++i, ++currentCVarTable)
+	for (i = 0, currentCVarTableItem = proxyOldAPICVarTable; i < proxyOldAPICVarTableSize; ++i, ++currentCVarTableItem)
 	{
-		proxy.trap->Cvar_Register(currentCVarTable->vmCvar, currentCVarTable->cvarName, currentCVarTable->defaultString, currentCVarTable->cvarFlags);
+		proxy.trap->Cvar_Register(currentCVarTableItem->vmCvar, currentCVarTableItem->cvarName, currentCVarTableItem->defaultString, currentCVarTableItem->cvarFlags);
 	}
 }
 

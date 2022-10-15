@@ -128,7 +128,8 @@ typedef struct Proxy_s {
 	} clientData[MAX_CLIENTS];
 
 	struct Proxy_CVars_OldAPI_s {
-		vmCvar_t sv_pingFix;
+		vmCvar_t proxy_sv_pingFix;
+		vmCvar_t proxy_sv_maxCallVoteMapRestartValue;
 	} cvarsOldAPI;
 } Proxy_t;
 
