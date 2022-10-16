@@ -79,7 +79,7 @@ void QDECL Proxy_Common_Com_Printf(const char* fmt, ...)
 			// Proxy -------------->
 			if (*server.common.vars.logfile)
 			{
-				Proxy_Common_Com_Printf("logfile opened on %s\n", asctime(newtime));
+				server.common.functions.Com_Printf("logfile opened on %s\n", asctime(newtime));
 				
 				if (server.common.cvars.com_logfile->integer > 1)
 				{
@@ -90,7 +90,7 @@ void QDECL Proxy_Common_Com_Printf(const char* fmt, ...)
 			}
 			else
 			{
-				Proxy_Common_Com_Printf("Opening qconsole.log failed!\n");
+				server.common.functions.Com_Printf("Opening qconsole.log failed!\n");
 				
 				Cvar_SetValue("logfile", 0);
 			}

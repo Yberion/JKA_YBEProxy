@@ -22,7 +22,7 @@ void Proxy_SV_Status_f(void)
 	// make sure server is running
 	if (!server.common.cvars.com_sv_running->integer)
 	{
-		Proxy_Common_Com_Printf("Server is not running.\n");
+		server.common.functions.Com_Printf("Server is not running.\n");
 
 		return;
 	}
@@ -61,14 +61,14 @@ void Proxy_SV_Status_f(void)
 	Q_strncpyz(hostname, server.cvars.sv_hostname->string, sizeof(hostname));
 	Q_StripColor(hostname);
 
-	Proxy_Common_Com_Printf("hostname: %s^7\n", hostname);
-	Proxy_Common_Com_Printf("server  : %s:%i, %s, %s\n", server.common.functions.Cvar_VariableString("net_ip"), proxy.trap->Cvar_VariableIntegerValue("net_port"), STATUS_OS, ded_table[server.common.cvars.com_dedicated->integer]);
-	Proxy_Common_Com_Printf("game    : %s %i, %s\n", VERSION_STRING_DOTTED, PROTOCOL_VERSION, FS_GetCurrentGameDir());
-	Proxy_Common_Com_Printf("map     : ^7%s^7, %s(%i)\n", server.cvars.sv_mapname->string, gametypeNames[server.cvars.sv_gametype->integer], server.cvars.sv_gametype->integer);//Do we need to validate sv_gametype is 0-9? don't think so
-	Proxy_Common_Com_Printf("players : %i %s, %i %s(%i max)\n", humans, (humans == 1 ? "human" : "humans"), bots, (bots == 1 ? "bot" : "bots"), server.cvars.sv_maxclients->integer - server.cvars.sv_privateClients->integer);
+	server.common.functions.Com_Printf("hostname: %s^7\n", hostname);
+	server.common.functions.Com_Printf("server  : %s:%i, %s, %s\n", server.common.functions.Cvar_VariableString("net_ip"), proxy.trap->Cvar_VariableIntegerValue("net_port"), STATUS_OS, ded_table[server.common.cvars.com_dedicated->integer]);
+	server.common.functions.Com_Printf("game    : %s %i, %s\n", VERSION_STRING_DOTTED, PROTOCOL_VERSION, FS_GetCurrentGameDir());
+	server.common.functions.Com_Printf("map     : ^7%s^7, %s(%i)\n", server.cvars.sv_mapname->string, gametypeNames[server.cvars.sv_gametype->integer], server.cvars.sv_gametype->integer);//Do we need to validate sv_gametype is 0-9? don't think so
+	server.common.functions.Com_Printf("players : %i %s, %i %s(%i max)\n", humans, (humans == 1 ? "human" : "humans"), bots, (bots == 1 ? "bot" : "bots"), server.cvars.sv_maxclients->integer - server.cvars.sv_privateClients->integer);
 
-	Proxy_Common_Com_Printf("score ping rate   address                id name \n");
-	Proxy_Common_Com_Printf("----- ---- ------ ---------------------- -- ---------------\n");
+	server.common.functions.Com_Printf("score ping rate   address                id name \n");
+	server.common.functions.Com_Printf("----- ---- ------ ---------------------- -- ---------------\n");
 
 	for (i = 0, cl = server.svs->clients; i < server.cvars.sv_maxclients->integer; i++, cl++)
 	{
@@ -89,8 +89,8 @@ void Proxy_SV_Status_f(void)
 		s = server.common.functions.NET_AdrToString(cl->netchan.remoteAddress);
 
 		//No need for truncation "feature" if we move name to end
-		Proxy_Common_Com_Printf("%5i %4s %6i %22s %2i %s^7\n", ps->persistant[PERS_SCORE], state, cl->rate, s, i, cl->name);
+		server.common.functions.Com_Printf("%5i %4s %6i %22s %2i %s^7\n", ps->persistant[PERS_SCORE], state, cl->rate, s, i, cl->name);
 	}
 
-	Proxy_Common_Com_Printf("\n");
+	server.common.functions.Com_Printf("\n");
 }

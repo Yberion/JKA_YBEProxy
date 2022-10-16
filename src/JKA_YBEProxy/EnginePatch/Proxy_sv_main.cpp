@@ -131,7 +131,7 @@ void Proxy_SVC_RemoteCommand(netadr_t from, msg_t* msg) {
 		}
 	}
 
-	return Original_SVC_RemoteCommand(from, msg);
+	Original_SVC_RemoteCommand(from, msg);
 	
 	/*
 	qboolean	valid;
@@ -145,11 +145,11 @@ void Proxy_SVC_RemoteCommand(netadr_t from, msg_t* msg) {
 	if (!strlen(server.cvars.sv_rconPassword->string) ||
 		strcmp(server.common.functions.Cmd_Argv(1), server.cvars.sv_rconPassword->string)) {
 		valid = qfalse;
-		Proxy_Common_Com_Printf("Bad rcon from %s: %s\n", server.common.functions.NET_AdrToString(from), Cmd_ArgsFrom(2));
+		server.common.functions.Com_Printf("Bad rcon from %s: %s\n", server.common.functions.NET_AdrToString(from), Cmd_ArgsFrom(2));
 	}
 	else {
 		valid = qtrue;
-		Proxy_Common_Com_Printf("Rcon from %s: %s\n", server.common.functions.NET_AdrToString(from), Cmd_ArgsFrom(2));
+		server.common.functions.Com_Printf("Rcon from %s: %s\n", server.common.functions.NET_AdrToString(from), Cmd_ArgsFrom(2));
 	}
 
 	// start redirecting all print outputs to the packet
@@ -157,10 +157,10 @@ void Proxy_SVC_RemoteCommand(netadr_t from, msg_t* msg) {
 	server.common.functions.Com_BeginRedirect(sv_outputbuf, SV_OUTPUTBUF_LENGTH, server.functions.SV_FlushRedirect);
 
 	if (!strlen(server.cvars.sv_rconPassword->string)) {
-		Proxy_Common_Com_Printf("No rconpassword set.\n");
+		server.common.functions.Com_Printf("No rconpassword set.\n");
 	}
 	else if (!valid) {
-		Proxy_Common_Com_Printf("Bad rconpassword.\n");
+		server.common.functions.Com_Printf("Bad rconpassword.\n");
 	}
 	else {
 		remaining[0] = 0;
@@ -209,19 +209,19 @@ void Proxy_SV_ConnectionlessPacket(netadr_t from, msg_t* msg) {
 	}
 
 	s = server.common.functions.MSG_ReadStringLine(msg);
-	Proxy_Cmd_TokenizeString(s);
+	server.common.functions.Cmd_TokenizeString(s);
 
 	c = server.common.functions.Cmd_Argv(0);
 
 	if (server.common.cvars.com_developer->integer) {
-		Proxy_Common_Com_Printf("SV packet %s : %s\n", server.common.functions.NET_AdrToString(from), c);
+		server.common.functions.Com_Printf("SV packet %s : %s\n", server.common.functions.NET_AdrToString(from), c);
 	}
 
 	if (!Q_stricmp(c, "getstatus")) {
-		Proxy_SVC_Status(from);
+		server.functions.SVC_Status(from);
 	}
 	else if (!Q_stricmp(c, "getinfo")) {
-		Proxy_SVC_Info(from);
+		server.functions.SVC_Info(from);
 	}
 	else if (!Q_stricmp(c, "getchallenge")) {
 		server.functions.SV_GetChallenge(from);
@@ -233,7 +233,7 @@ void Proxy_SV_ConnectionlessPacket(netadr_t from, msg_t* msg) {
 		//SV_AuthorizeIpPacket(from);
 	}
 	else if (!Q_stricmp(c, "rcon")) {
-		Proxy_SVC_RemoteCommand(from, msg);
+		server.functions.SVC_RemoteCommand(from, msg);
 	}
 	else if (!Q_stricmp(c, "disconnect")) {
 		// if a client starts up a local server, we may see some spurious
@@ -242,8 +242,71 @@ void Proxy_SV_ConnectionlessPacket(netadr_t from, msg_t* msg) {
 	}
 	else {
 		if (server.common.cvars.com_developer->integer) {
-			Proxy_Common_Com_Printf("bad connectionless packet from %s:\n%s\n",
+			server.common.functions.Com_Printf("bad connectionless packet from %s:\n%s\n",
 				server.common.functions.NET_AdrToString(from), s);
 		}
 	}
+}
+
+/*
+=================
+SV_ReadPackets
+=================
+*/
+void (*Original_SV_PacketEvent)(netadr_t, msg_t*);
+void Proxy_SV_PacketEvent(netadr_t from, msg_t* msg) {
+	int			i;
+	client_t* cl;
+	int			qport;
+
+	// check for connectionless packet (0xffffffff) first
+	if (msg->cursize >= 4 && *(int*)msg->data == -1) {
+		server.functions.SV_ConnectionlessPacket(from, msg);
+		return;
+	}
+
+	// read the qport out of the message so we can fix up
+	// stupid address translating routers
+	server.common.functions.MSG_BeginReadingOOB(msg);
+	server.common.functions.MSG_ReadLong(msg);				// sequence number
+	qport = server.common.functions.MSG_ReadShort(msg) & 0xffff;
+
+	// find which client the message is from
+	for (i = 0, cl = server.svs->clients; i < server.cvars.sv_maxclients->integer; i++, cl++) {
+		if (cl->state == CS_FREE) {
+			continue;
+		}
+		if (!server.common.functions.NET_CompareBaseAdr(from, cl->netchan.remoteAddress)) {
+			continue;
+		}
+		// it is possible to have multiple clients from a single IP
+		// address, so they are differentiated by the qport variable
+		if (cl->netchan.qport != qport) {
+			continue;
+		}
+
+		// the IP port can't be used to differentiate them, because
+		// some address translating routers periodically change UDP
+		// port assignments
+		if (cl->netchan.remoteAddress.port != from.port) {
+			server.common.functions.Com_Printf("SV_ReadPackets: fixing up a translated port\n");
+			cl->netchan.remoteAddress.port = from.port;
+		}
+
+		// make sure it is a valid, in sequence packet
+		if (server.functions.SV_Netchan_Process(cl, msg)) {
+			// zombie clients still need to do the Netchan_Process
+			// to make sure they don't need to retransmit the final
+			// reliable message, but they don't do any other processing
+			if (cl->state != CS_ZOMBIE) {
+				cl->lastPacketTime = server.svs->time;	// don't timeout
+				server.functions.SV_ExecuteClientMessage(cl, msg);
+			}
+		}
+		return;
+	}
+
+	// if we received a sequenced packet from an address we don't recognize,
+	// send an out of band disconnect packet to it
+	server.common.functions.NET_OutOfBandPrint(NS_SERVER, from, "disconnect");
 }

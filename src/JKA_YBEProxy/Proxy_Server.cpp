@@ -2,7 +2,7 @@
 #include "Proxy_Header.hpp"
 #include "EnginePatch/Proxy_EnginePatch.hpp"
 
-ProxyServer_t server;
+ProxyServer_t server = { 0 };
 
 void Proxy_Server_Initialize_MemoryAddress(void)
 {
@@ -35,7 +35,14 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.functions.SV_ExecuteClientCommand = (void (*)(client_t*, const char*, qboolean))func_SV_ExecuteClientCommand_addr;
 	server.functions.SV_GetChallenge = (void (*)(netadr_t))func_SV_GetChallenge_addr;
 	server.functions.SV_DirectConnect = (void (*)(netadr_t))func_SV_DirectConnect_addr;
-	//server.functions.SVC_RemoteCommand = (void (*)(netadr_t, msg_t*))func_SVC_RemoteCommand_addr;
+	server.functions.SVC_RemoteCommand = (void (*)(netadr_t, msg_t*))func_SVC_RemoteCommand_addr;
+	server.functions.SV_Netchan_Process = (qboolean (*)(client_t*, msg_t*))func_SV_Netchan_Process_addr;
+	server.functions.SV_SendMessageToClient = (void (*)(msg_t*, client_t*))func_SV_SendMessageToClient_addr;
+	server.functions.SVC_Status = (void (*)(netadr_t))func_SVC_Status_addr;
+	server.functions.SVC_Info = (void (*)(netadr_t))func_SVC_Info_addr;
+	server.functions.SV_ConnectionlessPacket = (void (*)(netadr_t, msg_t*))func_SV_ConnectionlessPacket_addr;
+	server.functions.SV_ExecuteClientMessage = (void (*)(client_t*, msg_t*))func_SV_ExecuteClientMessage_addr;
+	server.functions.SV_SendClientGameState = (void (*)(client_t*))func_SV_SendClientGameState_addr;
 
 	// ----------- COMMON
 
@@ -70,9 +77,11 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.common.functions.Netchan_TransmitNextFragment = (void (*)(netchan_t*))func_Netchan_TransmitNextFragment_addr;
 	server.common.functions.NET_AdrToString = (const char* (*)(netadr_t))func_NET_AdrToString_addr;
 	server.common.functions.NET_OutOfBandPrint = (void (QDECL*)(netsrc_t, netadr_t, const char*, ...))func_NET_OutOfBandPrint_addr;
+	server.common.functions.NET_CompareBaseAdr = (qboolean (*)(netadr_t, netadr_t))func_NET_CompareBaseAdr_addr;
 	server.common.functions.MSG_Init = (void (*)(msg_t*, byte*, int))func_MSG_Init_addr;
 	server.common.functions.MSG_ReadByte = (int (*)(msg_t*))func_MSG_ReadByte_addr;
 	server.common.functions.MSG_ReadDeltaUsercmdKey = (void (*)(msg_t*, int, usercmd_t*, usercmd_t*))func_MSG_ReadDeltaUsercmdKey_addr;
+	server.common.functions.MSG_ReadShort = (int (*)(msg_t*))func_MSG_ReadShort_addr;
 	server.common.functions.MSG_ReadLong = (int (*)(msg_t*))func_MSG_ReadLong_addr;
 	server.common.functions.MSG_ReadString = (char* (*)(msg_t*))func_MSG_ReadString_addr;
 	server.common.functions.MSG_ReadStringLine = (char* (*)(msg_t*))func_MSG_ReadStringLine_addr;
@@ -87,6 +96,7 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.common.functions.Sys_Print = (void (*)(const char*))func_Sys_Print_addr;
 	server.common.functions.Cmd_Argv = (char* (*)(int))func_Cmd_Argv_addr;
 	server.common.functions.Cmd_ExecuteString = (void (*)(const char*))func_Cmd_ExecuteString_addr;
+	server.common.functions.Cmd_TokenizeString = (void (*)(const char*))func_Cmd_TokenizeString_addr;
 	server.common.functions.Huff_Decompress = (void (*)(msg_t*, int))func_Huff_Decompress_addr;
 }
 

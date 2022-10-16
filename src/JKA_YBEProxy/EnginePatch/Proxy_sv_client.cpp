@@ -22,7 +22,7 @@ static qboolean Proxy_SV_ClientCommand(client_t* cl, msg_t* msg) {
 
 	// drop the connection if we have somehow lost commands
 	if (seq > cl->lastClientCommand + 1) {
-		Proxy_Common_Com_Printf("Client %s lost %i clientCommands\n", cl->name,
+		server.common.functions.Com_Printf("Client %s lost %i clientCommands\n", cl->name,
 			seq - cl->lastClientCommand + 1);
 		server.functions.SV_DropClient(cl, "Lost reliable commands");
 		return qfalse;
@@ -89,13 +89,13 @@ static void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 
 	if (cmdCount < 1)
 	{
-		Proxy_Common_Com_Printf("cmdCount < 1\n");
+		server.common.functions.Com_Printf("cmdCount < 1\n");
 		return;
 	}
 
 	if (cmdCount > MAX_PACKET_USERCMDS)
 	{
-		Proxy_Common_Com_Printf("cmdCount > MAX_PACKET_USERCMDS\n");
+		server.common.functions.Com_Printf("cmdCount > MAX_PACKET_USERCMDS\n");
 		return;
 	}
 
@@ -245,7 +245,7 @@ void Proxy_SV_ExecuteClientMessage(client_t* cl, msg_t* msg) {
 		// Fix for https://bugzilla.icculus.org/show_bug.cgi?id=6324
 		if (cl->state != CS_ACTIVE && cl->messageAcknowledge > cl->gamestateMessageNum) {
 			server.common.functions.Com_DPrintf("%s : dropped gamestate, resending\n", cl->name);
-			Proxy_SV_SendClientGameState(cl);
+			server.functions.SV_SendClientGameState(cl);
 		}
 		return;
 	}
@@ -275,10 +275,10 @@ void Proxy_SV_ExecuteClientMessage(client_t* cl, msg_t* msg) {
 		Proxy_SV_UserMove(cl, msg, qfalse);
 	}
 	else if (c != clc_EOF) {
-		Proxy_Common_Com_Printf("WARNING: bad command byte for client %i\n", getClientNumFromAddr(cl));
+		server.common.functions.Com_Printf("WARNING: bad command byte for client %i\n", getClientNumFromAddr(cl));
 	}
 	//	if ( msg->readcount != msg->cursize ) {
-	//		Com_Printf( "WARNING: Junk at end of packet for client %i\n", cl - svs.clients );
+	//		server.common.functions.Com_Printf( "WARNING: Junk at end of packet for client %i\n", cl - svs.clients );
 	//	}
 }
 
@@ -309,7 +309,7 @@ void Proxy_SV_SendClientGameState(client_t* client)
 		// send additional message fragments if the last message
 		// was too large to send at once
 
-		Proxy_Common_Com_Printf("[ISM]SV_SendClientGameState() [2] for %s, writing out old fragments\n", client->name);
+		server.common.functions.Com_Printf("[ISM]SV_SendClientGameState() [2] for %s, writing out old fragments\n", client->name);
 		server.common.functions.Netchan_TransmitNextFragment(&client->netchan);
 	}
 
@@ -436,7 +436,7 @@ void Proxy_SV_SendClientGameState(client_t* client)
 	// Proxy <--------------
 
 	// deliver this to the client
-	Proxy_SV_SendMessageToClient(&msg, client);
+	server.functions.SV_SendMessageToClient(&msg, client);
 }
 
 /*

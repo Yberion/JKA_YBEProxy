@@ -26,6 +26,7 @@
 	#define func_Cmd_TokenizeString_addr 0x40f580
 	#define func_SV_UserinfoChanged_addr 0x43b8c0
 	#define func_SV_ExecuteClientMessage_addr 0x43c3a0
+	#define func_SV_PacketEvent_addr 0x4440e0
 
 	// Function address to call
 	#define func_SV_ClientEnterWorld_addr 0x43b230
@@ -38,6 +39,7 @@
 	#define func_SV_ExecuteClientCommand_addr 0x43bad0
 	#define func_SV_GetChallenge_addr 0x43aa60
 	#define func_SV_DirectConnect_addr 0x43c4e0
+	#define func_SV_Netchan_Process_addr 0x444990
 	#define func_Com_DPrintf_addr 0x40fdb0
 	#define func_Com_HashKey_addr 0x410370
 	#define func_Com_BeginRedirect_addr 0x40fb70
@@ -50,9 +52,11 @@
 	#define func_Netchan_TransmitNextFragment_addr 0x41a3b0
 	#define func_NET_AdrToString_addr 0x419f10
 	#define func_NET_OutOfBandPrint_addr 0x41a230
+	#define func_NET_CompareBaseAdr_addr 0x419e90
 	#define func_MSG_Init_addr 0x419d00
 	#define func_MSG_ReadByte_addr 0x4189f0
 	#define func_MSG_ReadDeltaUsercmdKey_addr 0x418b50
+	#define func_MSG_ReadShort_addr 0x418a20
 	#define func_MSG_ReadLong_addr 0x418a50
 	#define func_MSG_ReadString_addr 0x418a70
 	#define func_MSG_ReadStringLine_addr 0x418ae0
@@ -119,6 +123,7 @@
 	#define func_Cmd_TokenizeString_addr 0x812c454
 	#define func_SV_UserinfoChanged_addr 0x804e144
 	#define func_SV_ExecuteClientMessage_addr 0x804e8c4
+	#define func_SV_PacketEvent_addr 0x8057024
 
 	// Function address to call
 	#define func_SV_ClientEnterWorld_addr 0x804d444
@@ -131,6 +136,7 @@
 	#define func_SV_ExecuteClientCommand_addr 0x804e3d4
 	#define func_SV_GetChallenge_addr 0x804b9a4
 	#define func_SV_DirectConnect_addr 0x804c014
+	#define func_SV_Netchan_Process_addr 0x8057e14
 	#define func_Com_DPrintf_addr 0x8072ed4
 	#define func_Com_HashKey_addr 0x8073b14
 	#define func_Com_BeginRedirect_addr 0x8072c34
@@ -142,10 +148,12 @@
 	#define func_FS_Write_addr 0x812e074
 	#define func_Netchan_TransmitNextFragment_addr 0x807ab74
 	#define func_NET_AdrToString_addr 0x807b314
-	#define func_NET_OutOfBandPrint_addr 0x807b744 // won't be used on Linux for now
+	#define func_NET_OutOfBandPrint_addr 0x807b744
+	#define func_NET_CompareBaseAdr_addr 0x807b284
 	#define func_MSG_Init_addr 0x80774a4
 	#define func_MSG_ReadByte_addr 0x8077df4
 	#define func_MSG_ReadDeltaUsercmdKey_addr 0x8078b34
+	#define func_MSG_ReadShort_addr 0x8077e34
 	#define func_MSG_ReadLong_addr 0x8077e74
 	#define func_MSG_ReadString_addr 0x8077ee4
 	#define func_MSG_ReadStringLine_addr 0x8077ff4
@@ -216,8 +224,14 @@ typedef struct serverFunctions_s
 	void		(*SV_ExecuteClientCommand)						(client_t*, const char*, qboolean);
 	void		(*SV_GetChallenge)								(netadr_t);
 	void		(*SV_DirectConnect)								(netadr_t);
-	//void		(*SVC_RemoteCommand)							(netadr_t, msg_t*);
-
+	void		(*SVC_RemoteCommand)							(netadr_t, msg_t*);
+	qboolean	(*SV_Netchan_Process)							(client_t*, msg_t*);
+	void		(*SV_SendMessageToClient)						(msg_t*, client_t*);
+	void		(*SVC_Status)									(netadr_t);
+	void		(*SVC_Info)										(netadr_t);
+	void		(*SV_ConnectionlessPacket)						(netadr_t, msg_t*);
+	void		(*SV_ExecuteClientMessage)						(client_t*, msg_t*);
+	void		(*SV_SendClientGameState)						(client_t*);
 } serverFunctions_t;
 
 typedef struct serverCvars_s
@@ -272,9 +286,11 @@ typedef struct Common_s
 		void			(*Netchan_TransmitNextFragment)					(netchan_t*);
 		const char*		(*NET_AdrToString)								(netadr_t);
 		void			(QDECL* NET_OutOfBandPrint)						(netsrc_t, netadr_t, const char*, ...);
+		qboolean		(*NET_CompareBaseAdr)							(netadr_t, netadr_t);
 		void			(*MSG_Init)										(msg_t*, byte*, int);
 		int				(*MSG_ReadByte)									(msg_t*);
 		void			(*MSG_ReadDeltaUsercmdKey)						(msg_t*, int, usercmd_t*, usercmd_t*);
+		int				(*MSG_ReadShort)								(msg_t*);
 		int				(*MSG_ReadLong)									(msg_t*);
 		char*			(*MSG_ReadString)								(msg_t*);
 		char*			(*MSG_ReadStringLine)							(msg_t*);
@@ -289,6 +305,7 @@ typedef struct Common_s
 		void			(*Sys_Print)									(const char*);
 		char*			(*Cmd_Argv)                                     (int);
 		void			(*Cmd_ExecuteString)							(const char*);
+		void			(*Cmd_TokenizeString)							(const char*);
 		void			(*Huff_Decompress)								(msg_t*, int);
 	} functions;
 } common_t;
