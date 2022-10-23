@@ -9,43 +9,78 @@ typedef struct cvarTable_s {
 	qboolean	trackChange;	    // track this variable, and announce if changed
 } cvarTable_t;
 
-static cvarTable_t proxyOldAPICVarTable[] =
+static cvarTable_t proxyOriginalEngineCVarTable[] =
 {
-	{ &proxy.cvarsOldAPI.proxy_sv_pingFix, "proxy_sv_pingFix", "1", CVAR_ARCHIVE, 0, qfalse },
-	{ &proxy.cvarsOldAPI.proxy_sv_maxCallVoteMapRestartValue, "proxy_sv_maxCallVoteMapRestartValue", "60", CVAR_ARCHIVE, 0, qfalse }
+	{ &proxy.originalEngineCvars.proxy_sv_pingFix, "proxy_sv_pingFix", "1", CVAR_ARCHIVE, 0, qfalse },
 };
-static const constexpr size_t proxyOldAPICVarTableSize = ARRAY_LEN(proxyOldAPICVarTable);
+static const constexpr size_t proxyOriginalEngineCVarTableSize = ARRAY_LEN(proxyOriginalEngineCVarTable);
+
+static cvarTable_t proxyCVarTable[] =
+{
+	// New cvars
+	{ &proxy.cvars.proxy_sv_maxCallVoteMapRestartValue, "proxy_sv_maxCallVoteMapRestartValue", "60", CVAR_ARCHIVE, 0, qfalse },
+
+	// get cvars
+	{ &proxy.cvars.sv_fps, "sv_fps", "20", CVAR_SERVERINFO, 0, qfalse }
+};
+static const constexpr size_t proxyCVarTableSize = ARRAY_LEN(proxyCVarTable);
 
 // ==================================================
-// Proxy_OldAPI_CVars_Registration
+// Proxy_OriginalEngine_CVars_Registration
 // --------------------------------------------------
-// Registers all the variables in the proxyOldAPICVarTable array.
 // Those are the variables that will affect engine modifications.
 // ==================================================
 
-void Proxy_OldAPI_CVars_Registration(void)
+void Proxy_OriginalEngine_CVars_Registration(void)
 {
 	unsigned int i = 0;
-	const cvarTable_t* currentCVarTableItem = nullptr;
+	cvarTable_t* currentCVarTableItem = nullptr;
 
-	for (i = 0, currentCVarTableItem = proxyOldAPICVarTable; i < proxyOldAPICVarTableSize; ++i, ++currentCVarTableItem)
+	for (i = 0, currentCVarTableItem = proxyOriginalEngineCVarTable; i < proxyOriginalEngineCVarTableSize; ++i, ++currentCVarTableItem)
 	{
 		proxy.trap->Cvar_Register(currentCVarTableItem->vmCvar, currentCVarTableItem->cvarName, currentCVarTableItem->defaultString, currentCVarTableItem->cvarFlags);
+
+		if (currentCVarTableItem->vmCvar)
+		{
+			currentCVarTableItem->modificationCount = currentCVarTableItem->vmCvar->modificationCount;
+		}
 	}
 }
 
 // ==================================================
-// Proxy_OldAPI_UpdateCvars
+// Proxy_CVars_Registration
 // --------------------------------------------------
-// Updates all the variables.
+// Those are the variables that won't affect engine modifications.
 // ==================================================
 
-void Proxy_OldAPI_UpdateCvars(void)
+void Proxy_CVars_Registration(void)
+{
+	unsigned int i = 0;
+	cvarTable_t* currentCVarTableItem = nullptr;
+
+	for (i = 0, currentCVarTableItem = proxyCVarTable; i < proxyCVarTableSize; ++i, ++currentCVarTableItem)
+	{
+		proxy.trap->Cvar_Register(currentCVarTableItem->vmCvar, currentCVarTableItem->cvarName, currentCVarTableItem->defaultString, currentCVarTableItem->cvarFlags);
+
+		if (currentCVarTableItem->vmCvar)
+		{
+			currentCVarTableItem->modificationCount = currentCVarTableItem->vmCvar->modificationCount;
+		}
+	}
+}
+
+// ==================================================
+// Proxy_OriginalEngine_UpdateCvars
+// --------------------------------------------------
+// Updates all affecting engine variables.
+// ==================================================
+
+void Proxy_OriginalEngine_UpdateCvars(void)
 {
 	unsigned int i = 0;
 	cvarTable_t* currentCVarTable = nullptr;
 
-	for (i = 0, currentCVarTable = proxyOldAPICVarTable; i < proxyOldAPICVarTableSize; ++i, ++currentCVarTable)
+	for (i = 0, currentCVarTable = proxyOriginalEngineCVarTable; i < proxyOriginalEngineCVarTableSize; ++i, ++currentCVarTable)
 	{
 		if (currentCVarTable->vmCvar)
 		{
@@ -64,4 +99,62 @@ void Proxy_OldAPI_UpdateCvars(void)
 			}
 		}
 	}
+}
+
+// ==================================================
+// Proxy_UpdateCvars
+// --------------------------------------------------
+// Updates all proxy variables.
+// ==================================================
+
+void Proxy_UpdateCvars(void)
+{
+	unsigned int i = 0;
+	cvarTable_t* currentCVarTable = nullptr;
+
+	for (i = 0, currentCVarTable = proxyCVarTable; i < proxyCVarTableSize; ++i, ++currentCVarTable)
+	{
+		if (currentCVarTable->vmCvar)
+		{
+			int vmCvarModificationCount = currentCVarTable->vmCvar->modificationCount;
+			proxy.trap->Cvar_Update(currentCVarTable->vmCvar);
+
+			if (currentCVarTable->modificationCount != vmCvarModificationCount)
+			{
+				currentCVarTable->modificationCount = vmCvarModificationCount;
+
+				if (currentCVarTable->trackChange)
+				{
+					proxy.trap->SendServerCommand(-1, va("print \"Server: %s changed to %s\n\"",
+						currentCVarTable->cvarName, currentCVarTable->vmCvar->string));
+				}
+			}
+		}
+	}
+}
+
+// ==================================================
+// Proxy_UpdateAllCvars
+// --------------------------------------------------
+// Updates all the variables once per second~.
+// ==================================================
+
+void Proxy_UpdateAllCvars(void)
+{
+	// TODO: won't be once per second on sv_fps change
+	static unsigned int frame = 0;
+
+	if (frame == proxy.cvars.sv_fps.integer)
+	{
+		Proxy_UpdateCvars();
+
+		if (proxy.isOriginalEngine)
+		{
+			Proxy_OriginalEngine_UpdateCvars();
+		}
+
+		frame = 0;
+	}
+
+	frame++;
 }

@@ -123,7 +123,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	}
 
 	// Fix: callvote map_restart with high value
-	if (!Q_stricmpn(cmd, "callvote", 8) && !Q_stricmpn(cmd_arg1, "map_restart", 11) && cmdArg2NumberValue > proxy.cvarsOldAPI.proxy_sv_maxCallVoteMapRestartValue.integer)
+	if (!Q_stricmpn(cmd, "callvote", 8) && !Q_stricmpn(cmd_arg1, "map_restart", 11) && cmdArg2NumberValue > proxy.cvars.proxy_sv_maxCallVoteMapRestartValue.integer)
 	{
 		return qfalse;
 	}

@@ -61,6 +61,12 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 
 			proxy.trap->Print("----- Proxy: %s properly loaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
 			
+			proxy.trap->Print("----- Proxy: Initializing Proxy CVars\n");
+
+			Proxy_CVars_Registration();
+
+			proxy.trap->Print("----- Proxy: Proxy CVars properly initialized\n");
+
 			char version[MAX_STRING_CHARS];
 
 			proxy.trap->Cvar_VariableStringBuffer("version", version, sizeof(version));
@@ -80,11 +86,11 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 
 				proxy.trap->Print("----- Proxy: Memory layer properly initialized\n");
 
-				proxy.trap->Print("----- Proxy: Initializing original API CVars\n");
+				proxy.trap->Print("----- Proxy: Initializing original engine Proxy CVars\n");
 
-				Proxy_OldAPI_CVars_Registration();
+				Proxy_OriginalEngine_CVars_Registration();
 
-				proxy.trap->Print("----- Proxy: Original API CVars properly initialized\n");
+				proxy.trap->Print("----- Proxy: Original engine Proxy CVars properly initialized\n");
 
 				proxy.trap->Print("----- Proxy: Patching engine\n");
 
@@ -102,8 +108,8 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		{
 			if (proxy.isOriginalEngine)
 			{
-				// On "rcon map XXX" or "rcon map_restart 0" it directly goes there from Proxy_SVC_RemoteCommand and unpatch the engine
-				// the problem here is that it seems that Com_EndRedirect() isn't called after the
+				// On "rcon map XXX" or "rcon map_restart 0" it directly goes there from SVC_RemoteCommand
+				// the problem here is that Com_EndRedirect() isn't called after the
 				// Cmd_ExecuteString() of the map change
 				// We need to manually call the Com_EndRedirect()
 				server.common.functions.Com_EndRedirect();
@@ -141,10 +147,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		// of our own active functions.
 		// ==================================================
 		{
-			if (proxy.isOriginalEngine)
-			{
-				Proxy_OldAPI_UpdateCvars();
-			}
+			Proxy_UpdateAllCvars();
 
 			break;
 		}

@@ -127,10 +127,18 @@ typedef struct Proxy_s {
 		int					cmdIndex;
 	} clientData[MAX_CLIENTS];
 
-	struct Proxy_CVars_OldAPI_s {
+	struct Proxy_OriginalEngine_CVars_s {
+		// New cvars
 		vmCvar_t proxy_sv_pingFix;
+	} originalEngineCvars;
+
+	struct Proxy_CVars_s {
+		// New cvars
 		vmCvar_t proxy_sv_maxCallVoteMapRestartValue;
-	} cvarsOldAPI;
+
+		// get cvars
+		vmCvar_t sv_fps;
+	} cvars;
 } Proxy_t;
 
 // ==================================================
@@ -147,8 +155,11 @@ extern Proxy_t proxy;
 // Proxy_CVar
 // ------------------------
 
-void Proxy_OldAPI_CVars_Registration(void);
-void Proxy_OldAPI_UpdateCvars(void);
+void Proxy_OriginalEngine_CVars_Registration(void);
+void Proxy_CVars_Registration(void);
+void Proxy_OriginalEngine_UpdateCvars(void);
+void Proxy_UpdateCvars(void);
+void Proxy_UpdateAllCvars(void);
 
 // ------------------------
 // Proxy_Files
