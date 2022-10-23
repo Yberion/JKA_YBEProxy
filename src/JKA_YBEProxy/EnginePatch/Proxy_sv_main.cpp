@@ -132,58 +132,6 @@ void Proxy_SVC_RemoteCommand(netadr_t from, msg_t* msg) {
 	}
 
 	Original_SVC_RemoteCommand(from, msg);
-	
-	/*
-	qboolean	valid;
-	char		remaining[1024];
-	// TTimo - scaled down to accumulate, but not overflow anything network wise, print wise etc.
-	// (OOB messages are the bottleneck here)
-#define	SV_OUTPUTBUF_LENGTH	(1024 - 16)
-	char		sv_outputbuf[SV_OUTPUTBUF_LENGTH];
-	char* cmd_aux;
-
-	if (!strlen(server.cvars.sv_rconPassword->string) ||
-		strcmp(server.common.functions.Cmd_Argv(1), server.cvars.sv_rconPassword->string)) {
-		valid = qfalse;
-		server.common.functions.Com_Printf("Bad rcon from %s: %s\n", server.common.functions.NET_AdrToString(from), Cmd_ArgsFrom(2));
-	}
-	else {
-		valid = qtrue;
-		server.common.functions.Com_Printf("Rcon from %s: %s\n", server.common.functions.NET_AdrToString(from), Cmd_ArgsFrom(2));
-	}
-
-	// start redirecting all print outputs to the packet
-	server.svs->redirectAddress = from;
-	server.common.functions.Com_BeginRedirect(sv_outputbuf, SV_OUTPUTBUF_LENGTH, server.functions.SV_FlushRedirect);
-
-	if (!strlen(server.cvars.sv_rconPassword->string)) {
-		server.common.functions.Com_Printf("No rconpassword set.\n");
-	}
-	else if (!valid) {
-		server.common.functions.Com_Printf("Bad rconpassword.\n");
-	}
-	else {
-		remaining[0] = 0;
-
-		// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=543
-		// get the command directly, "rcon <pass> <command>" to avoid quoting issues
-		// extract the command by walking
-		// since the cmd formatting can fuckup (amount of spaces), using a dumb step by step parsing
-		cmd_aux = Cmd_Cmd();
-		cmd_aux += 4;
-		while (cmd_aux[0] == ' ')
-			cmd_aux++;
-		while (cmd_aux[0] && cmd_aux[0] != ' ') // password
-			cmd_aux++;
-		while (cmd_aux[0] == ' ')
-			cmd_aux++;
-
-		Q_strcat(remaining, sizeof(remaining), cmd_aux);
-
-		server.common.functions.Cmd_ExecuteString(remaining);
-	}
-	server.common.functions.Com_EndRedirect();
-	*/
 }
 
 /*

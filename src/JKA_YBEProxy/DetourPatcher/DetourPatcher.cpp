@@ -155,6 +155,21 @@ void Patch( unsigned char *pAddress, unsigned char bByte )
 }
 
 // ==================================================
+// Patch_NOP_Bytes
+// --------------------------------------------------
+// Patches X bytes to NOP at the target address, 
+// usually performed to skip instructions from that 
+// given address.
+// ==================================================
+
+void Patch_NOP_Bytes(unsigned char* pAddress, size_t iLen)
+{
+	UnProtect(pAddress, iLen);
+	memset(pAddress, 0x90, iLen);
+	ReProtect(pAddress, iLen);
+}
+
+// ==================================================
 // ReProtect
 // --------------------------------------------------
 // Reapplies protection to the target address, must

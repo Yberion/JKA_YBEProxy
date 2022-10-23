@@ -16,4 +16,10 @@ Features : https://hackmd.io/kvj--DTaTmOofjxL5bud-Q
 ## Notes
 
 If you deal with `static` functions, you better copy/paste them in the Proxy instead of making a trampoline of them because it won't work properly.  
-Then after that, each function that call this `static` function should be redefined in a trampoline.
+Then after that, each function that call this `static` function should be redefined in a trampoline.  
+
+I'm not sure yet but it seems that sometimes with Discord (and even without) opened it would crash with typing from in-game `rcon map_restart 0` / `rcon map mp/ffa2` (any map) with one of the following hook/trampoline:  
+
+- `SV_PacketEvent`
+- `SV_ConnectionlessPacket`
+- `SVC_RemoteCommand`

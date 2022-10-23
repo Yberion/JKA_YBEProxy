@@ -16,5 +16,6 @@ unsigned char	*GetTramp( unsigned char *pAddress, size_t iLen );
 unsigned int	 InlineFetch( unsigned char *pAddress );
 unsigned int	 InlinePatch( unsigned char *pAddress, unsigned char *pNewAddress );
 void			 Patch( unsigned char *pAddress, unsigned char bByte );
+void			 Patch_NOP_Bytes(unsigned char* pAddress, size_t iLen);
 void			 ReProtect( void *pAddress, size_t iLen );
 void			 UnProtect( void *pAddress, size_t iLen );

@@ -88,6 +88,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 
 				proxy.trap->Print("----- Proxy: Patching engine\n");
 
+				Proxy_Inline_Patch();
 				Proxy_Patch_Attach();
 
 				proxy.trap->Print("----- Proxy: Engine properly patched\n");

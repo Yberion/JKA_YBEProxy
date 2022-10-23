@@ -227,6 +227,7 @@ void Proxy_Translate_GameCalls(void);
 
 void Proxy_Patch_Attach(void);
 void Proxy_Patch_Detach(void);
+void Proxy_Inline_Patch(void);
 
 // ------------------------
 // Proxy_Server

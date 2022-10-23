@@ -12,6 +12,10 @@
 // ==================================================
 
 #if defined(_WIN32) && !defined(MINGW32)
+	// Address to NOPs
+	#define func_SVC_RemoteCommand_timer_start_block_addr 0x443ced // We want to NOP mostly all bytes related to the timer check, including the call to Com_Milliseconds()
+	#define func_SVC_RemoteCommand_timer_NOP_amount 25			   // from this address, we want to NOP 25 bytes
+
 	// Function address to hook
 	#define func_Com_Printf_addr 0x40fbe0
 	#define func_SV_CalcPings_addr 0x444220
@@ -109,6 +113,10 @@
 	#define cvar_common_fs_gamedirvar_addr 0x4ff464
 
 #else
+	// Address to NOPs
+	#define func_SVC_RemoteCommand_timer_start_block_addr 0x8056b26 // We want to NOP mostly all bytes related to the timer check, including the call to Com_Milliseconds()
+	#define func_SVC_RemoteCommand_timer_NOP_amount 25			    // from this address, we want to NOP 25 bytes
+
 	// Function address to hook
 	#define func_Com_Printf_addr 0x8072ca4
 	#define func_SV_CalcPings_addr 0x8057204

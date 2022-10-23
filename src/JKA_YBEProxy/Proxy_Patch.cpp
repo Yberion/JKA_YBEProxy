@@ -4,7 +4,7 @@
 #include "Proxy_Server.hpp"
 
 // ==================================================
-// Proxy_EnginePatch_Attach
+// Proxy_Patch_Attach
 // --------------------------------------------------
 // Attach all the engine functions, shouldn't be very
 // long without these detours. This allows me to detour
@@ -31,7 +31,7 @@ void Proxy_Patch_Attach(void)
 }
 
 // ==================================================
-// Proxy_EnginePatch_Detach
+// Proxy_Patch_Detach
 // --------------------------------------------------
 // We are closing and we should remove the detour,
 // otherwise the jump might be done to an undefined
@@ -55,4 +55,17 @@ void Proxy_Patch_Detach(void)
 	Detach((unsigned char*)func_SV_PacketEvent_addr, (unsigned char*)Original_SV_PacketEvent);
 	Detach((unsigned char*)func_SV_ConnectionlessPacket_addr, (unsigned char*)Original_SV_ConnectionlessPacket);
 	Detach((unsigned char*)func_SVC_RemoteCommand_addr, (unsigned char*)Original_SVC_RemoteCommand);
+}
+
+// ==================================================
+// Proxy_Inline_Patch
+// --------------------------------------------------
+// Patches that doesn't require to be unpatched.
+// It is not a problem to re-execute those patches.
+// ==================================================
+
+void Proxy_Inline_Patch(void)
+{
+	// Remove all the timer block in SVC_RemoteCommand, fix rcon disabler
+	Patch_NOP_Bytes((unsigned char*)func_SVC_RemoteCommand_timer_start_block_addr, func_SVC_RemoteCommand_timer_NOP_amount);
 }
