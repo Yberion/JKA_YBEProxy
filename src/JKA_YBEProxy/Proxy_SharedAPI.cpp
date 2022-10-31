@@ -34,7 +34,7 @@ void Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean i
 	// Doesn't work on the new API
 	if (firstTime && !isBot)
 	{
-		//proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
+		proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
 	}
 }
 
