@@ -31,6 +31,10 @@
 	#define func_SV_UserinfoChanged_addr 0x43b8c0
 	#define func_SV_ExecuteClientMessage_addr 0x43c3a0
 	#define func_SV_PacketEvent_addr 0x4440e0
+	#define func_SV_ExecuteClientCommand_addr 0x43bad0
+	#define func_SV_BeginDownload_f_addr 0x43b3c0
+	#define func_SV_DoneDownload_f_addr 0x43b390
+	#define func_SV_WriteDownloadToClient_addr 0x43b3f0
 
 	// Function address to call
 	#define func_SV_ClientEnterWorld_addr 0x43b230
@@ -40,19 +44,27 @@
 	//#define func_SV_RateMsec_addr 0x444d60
 	#define func_SV_FlushRedirect_addr 0x443cb0
 	#define func_SV_UpdateServerCommandsToClient_addr 0x444c80
-	#define func_SV_ExecuteClientCommand_addr 0x43bad0
 	#define func_SV_GetChallenge_addr 0x43aa60
 	#define func_SV_DirectConnect_addr 0x43c4e0
 	#define func_SV_Netchan_Process_addr 0x444990
+	#define func_SV_SendServerCommand_addr 0x4435d0
+	#define func_SV_SendClientSnapshot_addr 0x4455c0
 	#define func_Com_DPrintf_addr 0x40fdb0
 	#define func_Com_HashKey_addr 0x410370
 	#define func_Com_BeginRedirect_addr 0x40fb70
-	#define func_Com_EndRedirect_addr Windows_Com_EndRedirect // There's no function on Windows version as it was optimized, so do a proxy function
+	#define func_Com_EndRedirect_addr Proxy_Windows_Com_EndRedirect // There's no function on Windows version as it was optimized, so do a proxy function
 	#define func_Cvar_VariableString_addr 0x411ef0
+	#define func_Cvar_VariableValue_addr 0x411e70
 	#define func_FS_FOpenFileWrite_addr 0x413690
 	#define func_FS_ForceFlush_addr 0x413240
 	#define func_FS_Initialized_addr 0x412e10
 	#define func_FS_Write_addr 0x414350
+	#define func_FS_FileIsInPAK_addr 0x414580
+	#define func_FS_LoadedPakPureChecksums_addr 0x415de0
+	#define func_FS_ReferencedPakNames_addr 0x415ea0
+	#define func_FS_SV_FOpenFileRead_addr 0x4133e0
+	#define func_FS_Read_addr 0x414280
+	#define func_FS_FCloseFile_addr 0x4135e0
 	#define func_Netchan_TransmitNextFragment_addr 0x41a3b0
 	#define func_NET_AdrToString_addr 0x419f10
 	#define func_NET_OutOfBandPrint_addr 0x41a230
@@ -71,11 +83,15 @@
 	#define func_MSG_WriteDeltaEntity_addr 0x418e40
 	#define func_MSG_WriteLong_addr 0x418880
 	#define func_MSG_WriteShort_addr 0x418860
+	#define func_MSG_WriteString_addr 0x4188a0
+	#define func_MSG_WriteData_addr 0x418530
 	#define func_Sys_IsLANAddress_addr 0x457490
 	#define func_Sys_Print_addr 0x44b930 // directly Conbuf_AppendText()
 	#define func_Cmd_Argv_addr 0x40f490
 	#define func_Cmd_ExecuteString_addr 0x40fa10
 	#define func_Huff_Decompress_addr 0x417900
+	#define func_Z_Free_addr 0x426c40
+	#define func_Z_Malloc_addr 0x427000
 
 	// Function address called in ASM
 	#define func_Sys_Milliseconds_addr 0x4580E0
@@ -105,6 +121,7 @@
 	#define cvar_sv_maxRate_addr 0x6102b4
 	#define cvar_sv_rconPassword_addr 0x606210
 	#define cvar_sv_floodProtect_addr 0x610288
+	#define cvar_sv_allowDownload_addr 0x610290
 	#define cvar_common_com_dedicated_addr 0x4dc5dc
 	#define cvar_common_com_sv_running_addr 0x4dc5e0
 	#define cvar_common_com_cl_running_addr 0x4e3778
@@ -132,6 +149,10 @@
 	#define func_SV_UserinfoChanged_addr 0x804e144
 	#define func_SV_ExecuteClientMessage_addr 0x804e8c4
 	#define func_SV_PacketEvent_addr 0x8057024
+	#define func_SV_ExecuteClientCommand_addr 0x804e3d4
+	#define func_SV_BeginDownload_f_addr 0x804d714
+	#define func_SV_DoneDownload_f_addr 0x804eaa4
+	#define func_SV_WriteDownloadToClient_addr 0x804d764
 
 	// Function address to call
 	#define func_SV_ClientEnterWorld_addr 0x804d444
@@ -141,19 +162,27 @@
 	//#define func_SV_RateMsec_addr 0x8058c04
 	#define func_SV_FlushRedirect_addr 0x8057b44
 	#define func_SV_UpdateServerCommandsToClient_addr 0x80582c4
-	#define func_SV_ExecuteClientCommand_addr 0x804e3d4
 	#define func_SV_GetChallenge_addr 0x804b9a4
 	#define func_SV_DirectConnect_addr 0x804c014
 	#define func_SV_Netchan_Process_addr 0x8057e14
+	#define func_SV_SendServerCommand_addr 0x8056214
+	#define func_SV_SendClientSnapshot_addr 0x8058e04
 	#define func_Com_DPrintf_addr 0x8072ed4
 	#define func_Com_HashKey_addr 0x8073b14
 	#define func_Com_BeginRedirect_addr 0x8072c34
 	#define func_Com_EndRedirect_addr 0x8072c74
 	#define func_Cvar_VariableString_addr 0x80756f4
+	#define func_Cvar_VariableValue_addr 0x8075694
 	#define func_FS_FOpenFileWrite_addr 0x812d2a4
 	#define func_FS_ForceFlush_addr 0x812c8a4
 	#define func_FS_Initialized_addr 0x812b754
 	#define func_FS_Write_addr 0x812e074
+	#define func_FS_FileIsInPAK_addr 0x812e354
+	#define func_FS_LoadedPakPureChecksums_addr 0x8130d44
+	#define func_FS_ReferencedPakNames_addr 0x8131024
+	#define func_FS_SV_FOpenFileRead_addr 0x812cd74
+	#define func_FS_Read_addr 0x812df44
+	#define func_FS_FCloseFile_addr 0x812d1b4
 	#define func_Netchan_TransmitNextFragment_addr 0x807ab74
 	#define func_NET_AdrToString_addr 0x807b314
 	#define func_NET_OutOfBandPrint_addr 0x807b744
@@ -172,11 +201,15 @@
 	#define func_MSG_WriteDeltaEntity_addr 0x8078d74
 	#define func_MSG_WriteLong_addr 0x8077ad4
 	#define func_MSG_WriteShort_addr 0x8077aa4
+	#define func_MSG_WriteString_addr 0x8077b34
+	#define func_MSG_WriteData_addr 0x8077a54
 	#define func_Sys_IsLANAddress_addr 0x80c5f84
 	#define func_Sys_Print_addr 0x80c57a4
 	#define func_Cmd_Argv_addr 0x812c264
 	#define func_Cmd_ExecuteString_addr 0x8124144
 	#define func_Huff_Decompress_addr 0x807c224
+	#define func_Z_Free_addr 0x8080474
+	#define func_Z_Malloc_addr 0x80800f4
 
 	// Function address called in ASM
 	#define func_Sys_Milliseconds_addr 0x80c6714
@@ -205,6 +238,7 @@
 	#define cvar_sv_maxRate_addr 0x831219c
 	#define cvar_sv_rconPassword_addr 0x83121d4
 	#define cvar_sv_floodProtect_addr 0x8273e88
+	#define cvar_sv_allowDownload_addr 0x83121b0
 	#define cvar_common_com_dedicated_addr 0x831f254
 	#define cvar_common_com_sv_running_addr 0x831f300
 	#define cvar_common_com_cl_running_addr 0x831f400
@@ -240,6 +274,10 @@ typedef struct serverFunctions_s
 	void		(*SV_ConnectionlessPacket)						(netadr_t, msg_t*);
 	void		(*SV_ExecuteClientMessage)						(client_t*, msg_t*);
 	void		(*SV_SendClientGameState)						(client_t*);
+	void		(QDECL* SV_SendServerCommand)					(client_t*, const char*, ...);
+	void		(*SV_UserinfoChanged)							(client_t*);
+	void		(*SV_SendClientSnapshot)						(client_t*);
+
 } serverFunctions_t;
 
 typedef struct serverCvars_s
@@ -254,6 +292,7 @@ typedef struct serverCvars_s
 	cvar_t* sv_maxRate;
 	cvar_t* sv_rconPassword;
 	cvar_t* sv_floodProtect;
+	cvar_t* sv_allowDownload;
 } serverCvars_t;
 
 typedef struct Common_s
@@ -287,10 +326,17 @@ typedef struct Common_s
 		void			(*Com_BeginRedirect)							(char*, int, void (*)(char*));
 		void			(*Com_EndRedirect)								(void);
 		char*			(*Cvar_VariableString)							(const char*);
+		float			(*Cvar_VariableValue)							(const char*);
 		fileHandle_t	(*FS_FOpenFileWrite)							(const char*);
 		void			(*FS_ForceFlush)								(fileHandle_t);
 		qboolean		(*FS_Initialized)								();
 		int				(*FS_Write)										(const void*, int, fileHandle_t);
+		int				(*FS_FileIsInPAK)								(const char*, int*);
+		const char*		(*FS_LoadedPakPureChecksums)					(void);
+		const char*		(*FS_ReferencedPakNames)						(void);
+		int				(*FS_SV_FOpenFileRead)							(const char*, fileHandle_t*);
+		int				(*FS_Read)										(void*, int, fileHandle_t);
+		void			(*FS_FCloseFile)								(fileHandle_t);
 		void			(*Netchan_TransmitNextFragment)					(netchan_t*);
 		const char*		(*NET_AdrToString)								(netadr_t);
 		void			(QDECL* NET_OutOfBandPrint)						(netsrc_t, netadr_t, const char*, ...);
@@ -309,12 +355,16 @@ typedef struct Common_s
 		void			(*MSG_WriteDeltaEntity)							(msg_t*, struct entityState_s*, struct entityState_s*, qboolean);
 		void			(*MSG_WriteLong)								(msg_t*, int);
 		void			(*MSG_WriteShort)								(msg_t*, int);
+		void			(*MSG_WriteString)								(msg_t*, const char*);
+		void			(*MSG_WriteData)								(msg_t*, const void*, int);
 		qboolean		(*Sys_IsLANAddress)								(netadr_t);
 		void			(*Sys_Print)									(const char*);
 		char*			(*Cmd_Argv)                                     (int);
 		void			(*Cmd_ExecuteString)							(const char*);
 		void			(*Cmd_TokenizeString)							(const char*);
 		void			(*Huff_Decompress)								(msg_t*, int);
+		void			(*Z_Free)										(void*);
+		void*			(*Z_Malloc)										(int, memtag_t, qboolean, int);
 	} functions;
 } common_t;
 

@@ -63,7 +63,7 @@ void Proxy_SV_Status_f(void)
 
 	server.common.functions.Com_Printf("hostname: %s^7\n", hostname);
 	server.common.functions.Com_Printf("server  : %s:%i, %s, %s\n", server.common.functions.Cvar_VariableString("net_ip"), proxy.trap->Cvar_VariableIntegerValue("net_port"), STATUS_OS, ded_table[server.common.cvars.com_dedicated->integer]);
-	server.common.functions.Com_Printf("game    : %s %i, %s\n", VERSION_STRING_DOTTED, PROTOCOL_VERSION, FS_GetCurrentGameDir());
+	server.common.functions.Com_Printf("game    : %s %i, %s\n", VERSION_STRING_DOTTED, PROTOCOL_VERSION, Proxy_FS_GetCurrentGameDir());
 	server.common.functions.Com_Printf("map     : ^7%s^7, %s(%i)\n", server.cvars.sv_mapname->string, gametypeNames[server.cvars.sv_gametype->integer], server.cvars.sv_gametype->integer);//Do we need to validate sv_gametype is 0-9? don't think so
 	server.common.functions.Com_Printf("players : %i %s, %i %s(%i max)\n", humans, (humans == 1 ? "human" : "humans"), bots, (bots == 1 ? "bot" : "bots"), server.cvars.sv_maxclients->integer - server.cvars.sv_privateClients->integer);
 
@@ -93,4 +93,25 @@ void Proxy_SV_Status_f(void)
 	}
 
 	server.common.functions.Com_Printf("\n");
+}
+
+/*
+===============================================================================
+
+OPERATOR CONSOLE ONLY COMMANDS
+
+These commands can only be entered from stdin or by a remote operator datagram
+===============================================================================
+*/
+
+const char* Proxy_SV_GetStringEdString(char* refSection, char* refName)
+{
+	//Well, it would've been lovely doing it the above way, but it would mean mixing
+	//languages for the client depending on what the server is. So we'll mark this as
+	//a stringed reference with @@@ and send the refname to the client, and when it goes
+	//to print it will get scanned for the stringed reference indication and dealt with
+	//properly.
+	static char text[1024] = { 0 };
+	Com_sprintf(text, sizeof(text), "@@@%s", refName);
+	return text;
 }

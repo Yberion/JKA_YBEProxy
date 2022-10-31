@@ -206,7 +206,7 @@ void Proxy_SV_ExecuteClientMessage(client_t* cl, msg_t* msg) {
 	if (cl->messageAcknowledge < 0) {
 		// usually only hackers create messages like this
 		// it is more annoying for them to let them hanging
-		//SV_DropClient( cl, "illegible client message" );
+		//server.functions.SV_DropClient( cl, "illegible client message" );
 		return;
 	}
 
@@ -218,7 +218,7 @@ void Proxy_SV_ExecuteClientMessage(client_t* cl, msg_t* msg) {
 	if (cl->reliableAcknowledge < cl->reliableSequence - MAX_RELIABLE_COMMANDS) {
 		// usually only hackers create messages like this
 		// it is more annoying for them to let them hanging
-		//SV_DropClient( cl, "illegible client message" );
+		//server.functions.SV_DropClient( cl, "illegible client message" );
 		cl->reliableAcknowledge = cl->reliableSequence;
 		return;
 	}
@@ -466,4 +466,466 @@ void Proxy_SV_UserinfoChanged(client_t* cl) {
 	}
 
 	Original_SV_UserinfoChanged(cl);
+}
+
+/*
+==================
+SV_BeginDownload_f
+==================
+*/
+void (*Original_SV_BeginDownload_f)(client_t*);
+void Proxy_SV_BeginDownload_f(client_t* cl)
+{
+	if (cl->state == CS_ACTIVE)
+		return;
+	
+	const char* fileName = server.common.functions.Cmd_Argv(1);
+	const size_t fileNameLength = strlen(fileName);
+
+	if (fileNameLength < 5 || FS_CheckDirTraversal(fileName) || Q_stricmpn(&fileName[fileNameLength - 4], ".pk3", 4) != 0) {
+		return;
+	}
+
+	Original_SV_BeginDownload_f(cl);
+}
+
+/*
+==================
+SV_CloseDownload
+
+clear/free any download vars
+==================
+*/
+static void Proxy_SV_CloseDownload(client_t* cl) {
+	int i;
+
+	// EOF
+	if (cl->download) {
+		server.common.functions.FS_FCloseFile(cl->download);
+	}
+	cl->download = 0;
+	*cl->downloadName = 0;
+
+	// Free the temporary buffer space
+	for (i = 0; i < MAX_DOWNLOAD_WINDOW; i++) {
+		if (cl->downloadBlocks[i]) {
+			server.common.functions.Z_Free(cl->downloadBlocks[i]);
+			cl->downloadBlocks[i] = NULL;
+		}
+	}
+}
+
+/*
+==================
+SV_NextDownload_f
+
+The argument will be the last acknowledged block from the client, it should be
+the same as cl->downloadClientBlock
+==================
+*/
+static void Proxy_SV_NextDownload_f(client_t* cl)
+{
+	if (cl->state == CS_ACTIVE)
+		return;
+
+	int block = atoi(server.common.functions.Cmd_Argv(1));
+
+	if (block == cl->downloadClientBlock) {
+		server.common.functions.Com_DPrintf("clientDownload: %d : client acknowledge of block %d\n", cl - server.svs->clients, block);
+
+		// Find out if we are done.  A zero-length block indicates EOF
+		if (cl->downloadBlockSize[cl->downloadClientBlock % MAX_DOWNLOAD_WINDOW] == 0) {
+			server.common.functions.Com_Printf("clientDownload: %d : file \"%s\" completed\n", cl - server.svs->clients, cl->downloadName);
+			Proxy_SV_CloseDownload(cl);
+			return;
+		}
+
+		cl->downloadSendTime = server.svs->time;
+		cl->downloadClientBlock++;
+		return;
+	}
+	// We aren't getting an acknowledge for the correct block, drop the client
+	// FIXME: this is bad... the client will never parse the disconnect message
+	//			because the cgame isn't loaded yet
+	server.functions.SV_DropClient(cl, "broken download");
+}
+
+/*
+==================
+SV_StopDownload_f
+
+Abort a download if in progress
+==================
+*/
+static void Proxy_SV_StopDownload_f(client_t* cl)
+{
+	if (cl->state == CS_ACTIVE)
+		return;
+
+	if (*cl->downloadName)
+		server.common.functions.Com_DPrintf("clientDownload: %d : file \"%s\" aborted\n", cl - server.svs->clients, cl->downloadName);
+
+	Proxy_SV_CloseDownload(cl);
+}
+
+/*
+==================
+SV_DoneDownload_f
+
+Downloads are finished
+==================
+*/
+void (*Original_SV_DoneDownload_f)(client_t*);
+void Proxy_SV_DoneDownload_f(client_t* cl)
+{
+	if (cl->state == CS_ACTIVE)
+		return;
+
+	Original_SV_DoneDownload_f(cl);
+}
+
+/*
+=================
+SV_ResetPureClient_f
+=================
+*/
+static void Proxy_SV_ResetPureClient_f(client_t* cl) {
+	cl->pureAuthentic = 0;
+}
+
+/*
+=================
+SV_Disconnect_f
+
+The client is going to disconnect, so remove the connection immediately  FIXME: move to game?
+=================
+*/
+const char* Proxy_SV_GetStringEdString(char* refSection, char* refName);
+static void Proxy_SV_Disconnect_f(client_t* cl) {
+	//	SV_DropClient( cl, "disconnected" );
+	server.functions.SV_DropClient(cl, Proxy_SV_GetStringEdString("MP_SVGAME", "DISCONNECTED"));
+}
+
+/*
+==================
+SV_UpdateUserinfo_f
+==================
+*/
+#define INFO_CHANGE_MIN_INTERVAL	6000 //6 seconds is reasonable I suppose
+#define INFO_CHANGE_MAX_COUNT		3 //only allow 3 changes within the 6 seconds
+
+static void Proxy_SV_UpdateUserinfo_f(client_t* cl) {
+	char* arg = server.common.functions.Cmd_Argv(1);
+
+	// Stop random empty /userinfo calls without hurting anything
+	if (!arg || !*arg)
+		return;
+
+#ifdef FINAL_BUILD
+	if (cl->lastUserInfoChange > server.svs->time)
+	{
+		cl->lastUserInfoCount++;
+
+		if (cl->lastUserInfoCount >= INFO_CHANGE_MAX_COUNT)
+		{
+			//	SV_SendServerCommand(cl, "print \"Warning: Too many info changes, last info ignored\n\"\n");
+			server.functions.SV_SendServerCommand(cl, "print \"@@@TOO_MANY_INFO\n\"\n");
+			return;
+		}
+	}
+	else
+#endif
+	{
+		cl->lastUserInfoCount = 0;
+		cl->lastUserInfoChange = server.svs->time + INFO_CHANGE_MIN_INTERVAL;
+	}
+
+	Q_strncpyz(cl->userinfo, arg, sizeof(cl->userinfo));
+	server.functions.SV_UserinfoChanged(cl);
+	// call prog code to allow overrides
+	Proxy_OldAPI_VM_Call(GAME_CLIENT_USERINFO_CHANGED, cl - server.svs->clients);
+}
+
+/*
+=================
+SV_VerifyPaks_f
+
+If we are pure, disconnect the client if they do no meet the following conditions:
+
+1. the first two checksums match our view of cgame and ui
+2. there are no any additional checksums that we do not have
+
+This routine would be a bit simpler with a goto but i abstained
+
+=================
+*/
+static void Proxy_SV_VerifyPaks_f(client_t* cl) {
+	int nChkSum1, nChkSum2, nClientPaks, nServerPaks, i, j, nCurArg;
+	int nClientChkSum[1024];
+	int nServerChkSum[1024];
+	const char* pPaks, * pArg;
+	qboolean bGood = qtrue;
+
+	// if we are pure, we "expect" the client to load certain things from 
+	// certain pk3 files, namely we want the client to have loaded the
+	// ui and cgame that we think should be loaded based on the pure setting
+	//
+	if (server.cvars.sv_pure->integer != 0) {
+
+		bGood = qtrue;
+		nChkSum1 = nChkSum2 = 0;
+		// we run the game, so determine which cgame and ui the client "should" be running
+		//dlls are valid too now -rww
+		if (server.common.functions.Cvar_VariableValue("vm_cgame"))
+		{
+			bGood = (qboolean)(server.common.functions.FS_FileIsInPAK("vm/cgame.qvm", &nChkSum1) == 1);
+		}
+		else
+		{
+			bGood = (qboolean)(server.common.functions.FS_FileIsInPAK("cgamex86.dll", &nChkSum1) == 1);
+		}
+
+		if (bGood)
+		{
+			if (server.common.functions.Cvar_VariableValue("vm_ui"))
+			{
+				bGood = (qboolean)(server.common.functions.FS_FileIsInPAK("vm/ui.qvm", &nChkSum2) == 1);
+			}
+			else
+			{
+				bGood = (qboolean)(server.common.functions.FS_FileIsInPAK("uix86.dll", &nChkSum2) == 1);
+			}
+		}
+
+		nClientPaks = *server.common.vars.cmd_argc;
+
+		// start at arg 1 ( skip cl_paks )
+		nCurArg = 1;
+
+		// we basically use this while loop to avoid using 'goto' :)
+		while (bGood) {
+
+			// must be at least 6: "cl_paks cgame ui @ firstref ... numChecksums"
+			// numChecksums is encoded
+			if (nClientPaks < 6) {
+				bGood = qfalse;
+				break;
+			}
+			// verify first to be the cgame checksum
+			pArg = server.common.functions.Cmd_Argv(nCurArg++);
+			if (!pArg || *pArg == '@' || atoi(pArg) != nChkSum1) {
+				bGood = qfalse;
+				break;
+			}
+			// verify the second to be the ui checksum
+			pArg = server.common.functions.Cmd_Argv(nCurArg++);
+			if (!pArg || *pArg == '@' || atoi(pArg) != nChkSum2) {
+				bGood = qfalse;
+				break;
+			}
+			// should be sitting at the delimeter now
+			pArg = server.common.functions.Cmd_Argv(nCurArg++);
+			if (*pArg != '@') {
+				bGood = qfalse;
+				break;
+			}
+			// store checksums since tokenization is not re-entrant
+			for (i = 0; nCurArg < nClientPaks; i++) {
+				nClientChkSum[i] = atoi(server.common.functions.Cmd_Argv(nCurArg++));
+			}
+
+			// store number to compare against (minus one cause the last is the number of checksums)
+			nClientPaks = i - 1;
+
+			// make sure none of the client check sums are the same
+			// so the client can't send 5 the same checksums
+			for (i = 0; i < nClientPaks; i++) {
+				for (j = 0; j < nClientPaks; j++) {
+					if (i == j)
+						continue;
+					if (nClientChkSum[i] == nClientChkSum[j]) {
+						bGood = qfalse;
+						break;
+					}
+				}
+				if (bGood == qfalse)
+					break;
+			}
+			if (bGood == qfalse)
+				break;
+
+			// get the pure checksums of the pk3 files loaded by the server
+			pPaks = server.common.functions.FS_LoadedPakPureChecksums();
+			server.common.functions.Cmd_TokenizeString(pPaks);
+			nServerPaks = *server.common.vars.cmd_argc;
+			if (nServerPaks > 1024)
+				nServerPaks = 1024;
+
+			for (i = 0; i < nServerPaks; i++) {
+				nServerChkSum[i] = atoi(server.common.functions.Cmd_Argv(i));
+			}
+
+			// check if the client has provided any pure checksums of pk3 files not loaded by the server
+			for (i = 0; i < nClientPaks; i++) {
+				for (j = 0; j < nServerPaks; j++) {
+					if (nClientChkSum[i] == nServerChkSum[j]) {
+						break;
+					}
+				}
+				if (j >= nServerPaks) {
+					bGood = qfalse;
+					break;
+				}
+			}
+			if (bGood == qfalse) {
+				break;
+			}
+
+			// check if the number of checksums was correct
+			nChkSum1 = server.sv->checksumFeed;
+			for (i = 0; i < nClientPaks; i++) {
+				nChkSum1 ^= nClientChkSum[i];
+			}
+			nChkSum1 ^= nClientPaks;
+			if (nChkSum1 != nClientChkSum[nClientPaks]) {
+				bGood = qfalse;
+				break;
+			}
+
+			// break out
+			break;
+		}
+
+		if (bGood) {
+			cl->pureAuthentic = 1;
+		}
+		else {
+			cl->pureAuthentic = 0;
+			cl->nextSnapshotTime = -1;
+			cl->state = CS_ACTIVE;
+			server.functions.SV_SendClientSnapshot(cl);
+			server.functions.SV_DropClient(cl, "Unpure client detected. Invalid .PK3 files referenced!");
+		}
+	}
+}
+
+/*
+==================
+SV_ExecuteClientCommand
+Also called by bot code
+==================
+*/
+typedef struct {
+	char* name;
+	void	(*func)(client_t* cl);
+} ucmd_t;
+
+static ucmd_t ucmds[] = {
+	{"userinfo", Proxy_SV_UpdateUserinfo_f},
+	{"disconnect", Proxy_SV_Disconnect_f},
+	{"cp", Proxy_SV_VerifyPaks_f},
+	{"vdr", Proxy_SV_ResetPureClient_f},
+	{"download", Proxy_SV_BeginDownload_f},
+	{"nextdl", Proxy_SV_NextDownload_f},
+	{"stopdl", Proxy_SV_StopDownload_f},
+	{"donedl", Proxy_SV_DoneDownload_f},
+	{NULL, NULL}
+};
+
+void (*Original_SV_ExecuteClientCommand)(client_t*, const char*, qboolean);
+void Proxy_SV_ExecuteClientCommand(client_t* cl, const char* s, qboolean clientOK) {
+	ucmd_t* u;
+
+	server.common.functions.Cmd_TokenizeString(s);
+
+	// see if it is a server level command
+	for (u = ucmds; u->name; u++) {
+		if (!strcmp(server.common.functions.Cmd_Argv(0), u->name)) {
+			u->func(cl);
+			break;
+		}
+	}
+
+	if (clientOK) {
+		// pass unknown strings to the game
+		if (!u->name && server.sv->state == SS_GAME) {
+			Proxy_OldAPI_VM_Call(GAME_CLIENT_COMMAND, cl - server.svs->clients);
+		}
+	}
+}
+
+/*
+==================
+SV_WriteDownloadToClient
+
+Check to see if the client wants a file, open it if needed and start pumping the client
+Fill up msg with data
+==================
+*/
+void (*Original_SV_WriteDownloadToClient)(client_t*, msg_t*);
+void Proxy_SV_WriteDownloadToClient(client_t* cl, msg_t* msg)
+{
+	int curindex;
+	qboolean unreferenced = qtrue;
+	char errorMessage[1024];
+	char pakbuf[MAX_QPATH], * pakptr;
+	int numRefPaks;
+
+	if (!*cl->downloadName)
+		return;	// Nothing being downloaded
+
+	if (!cl->download)
+	{
+		// Chop off filename extension.
+		Com_sprintf(pakbuf, sizeof(pakbuf), "%s", cl->downloadName);
+		pakptr = strrchr(pakbuf, '.');
+
+		if (pakptr)
+		{
+			*pakptr = '\0';
+
+			// Check for pk3 filename extension
+			if (!Q_stricmp(pakptr + 1, "pk3"))
+			{
+				const char* referencedPaks = server.common.functions.FS_ReferencedPakNames();
+
+				// Check whether the file appears in the list of referenced
+				// paks to prevent downloading of arbitrary files.
+				Proxy_Cmd_TokenizeStringIgnoreQuotes(referencedPaks);
+				numRefPaks = *server.common.vars.cmd_argc;
+
+				for (curindex = 0; curindex < numRefPaks; curindex++)
+				{
+					if (!FS_FilenameCompare(server.common.functions.Cmd_Argv(curindex), pakbuf))
+					{
+						unreferenced = qfalse;
+
+						break;
+					}
+				}
+			}
+		}
+
+		cl->download = 0;
+
+		if (unreferenced)
+		{
+			server.common.functions.Com_Printf("clientDownload: %d : \"%s\" is not referenced and cannot be downloaded.\n", (int)(cl - server.svs->clients), cl->downloadName);
+			Com_sprintf(errorMessage, sizeof(errorMessage), "File \"%s\" is not referenced and cannot be downloaded.", cl->downloadName);
+			
+			server.common.functions.MSG_WriteByte(msg, svc_download);
+			server.common.functions.MSG_WriteShort(msg, 0); // client is expecting block zero
+			server.common.functions.MSG_WriteLong(msg, -1); // illegal file size
+			server.common.functions.MSG_WriteString(msg, errorMessage);
+
+			*cl->downloadName = 0;
+
+			if (cl->download)
+				server.common.functions.FS_FCloseFile(cl->download);
+
+			return;
+		}
+	}
+
+	Original_SV_WriteDownloadToClient(cl, msg);
 }

@@ -1,6 +1,6 @@
 #include "JKA_YBEProxy/EnginePatch/Proxy_EnginePatch.hpp"
 
-const char* FS_GetCurrentGameDir(bool emptybase)
+const char* Proxy_FS_GetCurrentGameDir(bool emptybase)
 {
 	if (server.common.cvars.fs_gamedirvar->string[0])
 		return server.common.cvars.fs_gamedirvar->string;
@@ -12,7 +12,7 @@ const char* FS_GetCurrentGameDir(bool emptybase)
 // common.cpp
 // ==================================================
 
-void Windows_Com_EndRedirect(void)
+void Proxy_Windows_Com_EndRedirect(void)
 {
 
 	if (*server.common.vars.rd_flush) {
@@ -151,6 +151,15 @@ void Proxy_Cmd_TokenizeString(const char* text_in) {
 
 /*
 ============
+Cmd_TokenizeStringIgnoreQuotes
+============
+*/
+void Proxy_Cmd_TokenizeStringIgnoreQuotes(const char* text_in) {
+	Cmd_TokenizeString2(text_in, qtrue);
+}
+
+/*
+============
 Cmd_ArgsFrom
 
 Returns a single string containing argv(arg) to argv(argc()-1)
@@ -158,7 +167,7 @@ Returns a single string containing argv(arg) to argv(argc()-1)
 /!\ not used in the original engine, it is safe to use it without a trampoline
 ============
 */
-char* Cmd_ArgsFrom(int arg) {
+char* Proxy_Cmd_ArgsFrom(int arg) {
 	static	char	cmd_args[BIG_INFO_STRING];
 	int		i;
 
@@ -184,7 +193,7 @@ For rcon use when you want to transmit without altering quoting
 https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=543
 ============
 */
-char* Cmd_Cmd(void)
+char* Proxy_Cmd_Cmd(void)
 {
 	return cmd_cmd;
 }

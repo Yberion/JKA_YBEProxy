@@ -34,7 +34,15 @@ void Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean i
 	// Doesn't work on the new API
 	if (firstTime && !isBot)
 	{
-		proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
+		//proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
+	}
+}
+
+void Proxy_SharedAPI_ClientDisconnect(int clientNum)
+{
+	if (clientNum >= 0 && clientNum < MAX_CLIENTS && proxy.clientData[clientNum].isConnected) {
+		// Reset client's data on disconnect
+		memset(&proxy.clientData[clientNum], 0, sizeof(*proxy.clientData));
 	}
 }
 
@@ -144,19 +152,19 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		return qfalse;
 	}
 
+	if (!Q_stricmpn(cmd, "myratio", 7))
+	{
+		Proxy_ClientCommand_MyRatio(clientNum);
+
+		return qfalse;
+	}
+
 	// Only work on default engine since it require memory hook
 	if (proxy.isOriginalEngine)
 	{
 		if (!Q_stricmpn(cmd, "netstatus", 9) || !Q_stricmpn(cmd, "showNet", 7))
 		{
 			Proxy_ClientCommand_NetStatus(clientNum);
-
-			return qfalse;
-		}
-
-		if (!Q_stricmpn(cmd, "myratio", 7))
-		{
-			Proxy_ClientCommand_MyRatio(clientNum);
 
 			return qfalse;
 		}

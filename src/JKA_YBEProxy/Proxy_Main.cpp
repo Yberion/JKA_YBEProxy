@@ -37,11 +37,11 @@ static void Proxy_GameLegacyAPI_Init(void)
 	}
 
 	// "Send our own Proxy systemCall function pointer to the Original dllEntry"
-	proxy.originalDllEntry(Proxy_OldAPI_SystemCall);
+	proxy.originalDllEntry(Proxy_OldAPI_VM_DllSyscall);
 }
 
 Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_t arg2, intptr_t arg3, intptr_t arg4,
-	intptr_t arg5, intptr_t arg6, intptr_t arg7, intptr_t arg8, intptr_t arg9, intptr_t arg10, intptr_t arg11)
+	intptr_t arg5, intptr_t arg6, intptr_t arg7, intptr_t arg8, intptr_t arg9, intptr_t arg10)
 {
 	switch (command)
 	{
@@ -124,7 +124,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 			if (proxy.jampgameHandle)
 			{
 				// Send the shutdown signal to the original game module and store the response
-				proxy.originalVmMainResponse = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+				proxy.originalVmMainResponse = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
 
 				proxy.trap->Print("----- Proxy: Unloading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
 
@@ -148,6 +148,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		// ==================================================
 		{
 			Proxy_UpdateAllCvars();
+			proxy.proxyData.svsTime = (int)arg0;
 
 			break;
 		}
@@ -155,7 +156,15 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CLIENT_CONNECT: // (int clientNum, qboolean firstTime, qboolean isBot)
 		//==================================================
 		{
-			Proxy_SharedAPI_ClientConnect(arg0, (qboolean)arg1, (qboolean)arg2);
+			Proxy_SharedAPI_ClientConnect((int)arg0, (qboolean)arg1, (qboolean)arg2);
+
+			break;
+		}
+		//==================================================
+		case GAME_CLIENT_DISCONNECT: // (int clientNum, qboolean firstTime, qboolean isBot)
+		//==================================================
+		{
+			Proxy_SharedAPI_ClientDisconnect((int)arg0);
 
 			break;
 		}
@@ -163,7 +172,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CLIENT_BEGIN: // (int clientNum, qboolean allowTeamReset)
 		//==================================================
 		{
-			Proxy_SharedAPI_ClientBegin(arg0, (qboolean)arg1);
+			Proxy_SharedAPI_ClientBegin((int)arg0, (qboolean)arg1);
 
 			break;
 		}
@@ -171,7 +180,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CLIENT_COMMAND: // (int clientNum)
 		//==================================================
 		{
-			if (!Proxy_SharedAPI_ClientCommand(arg0))
+			if (!Proxy_SharedAPI_ClientCommand((int)arg0))
 			{
 				return 0;
 			}
@@ -202,7 +211,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 			break;
 	}
 
-	return proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+	return proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
 }
 
 // The engine sends the system call function pointer to the game module through dllEntry

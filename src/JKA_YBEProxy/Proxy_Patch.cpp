@@ -28,6 +28,10 @@ void Proxy_Patch_Attach(void)
 	Original_SV_PacketEvent = (void (*)(netadr_t, msg_t *)) Attach((unsigned char*)func_SV_PacketEvent_addr, (unsigned char*)&Proxy_SV_PacketEvent);
 	Original_SV_ConnectionlessPacket = (void (*)(netadr_t, msg_t*)) Attach((unsigned char*)func_SV_ConnectionlessPacket_addr, (unsigned char*)&Proxy_SV_ConnectionlessPacket);
 	Original_SVC_RemoteCommand = (void (*)(netadr_t, msg_t *)) Attach((unsigned char*)func_SVC_RemoteCommand_addr, (unsigned char*)&Proxy_SVC_RemoteCommand);
+	Original_SV_BeginDownload_f = (void (*)(client_t*)) Attach((unsigned char*)func_SV_BeginDownload_f_addr, (unsigned char*)&Proxy_SV_BeginDownload_f);
+	Original_SV_DoneDownload_f = (void (*)(client_t*)) Attach((unsigned char*)func_SV_DoneDownload_f_addr, (unsigned char*)&Proxy_SV_DoneDownload_f);
+	Original_SV_ExecuteClientCommand = (void (*)(client_t*, const char*, qboolean)) Attach((unsigned char*)func_SV_ExecuteClientCommand_addr, (unsigned char*)&Proxy_SV_ExecuteClientCommand);
+	Original_SV_WriteDownloadToClient = (void (*)(client_t*, msg_t*)) Attach((unsigned char*)func_SV_WriteDownloadToClient_addr, (unsigned char*)&Proxy_SV_WriteDownloadToClient);
 }
 
 // ==================================================
@@ -55,6 +59,10 @@ void Proxy_Patch_Detach(void)
 	Detach((unsigned char*)func_SV_PacketEvent_addr, (unsigned char*)Original_SV_PacketEvent);
 	Detach((unsigned char*)func_SV_ConnectionlessPacket_addr, (unsigned char*)Original_SV_ConnectionlessPacket);
 	Detach((unsigned char*)func_SVC_RemoteCommand_addr, (unsigned char*)Original_SVC_RemoteCommand);
+	Detach((unsigned char*)func_SV_BeginDownload_f_addr, (unsigned char*)Original_SV_BeginDownload_f);
+	Detach((unsigned char*)func_SV_DoneDownload_f_addr, (unsigned char*)Original_SV_DoneDownload_f);
+	Detach((unsigned char*)func_SV_ExecuteClientCommand_addr, (unsigned char*)Original_SV_ExecuteClientCommand);
+	Detach((unsigned char*)func_SV_WriteDownloadToClient_addr, (unsigned char*)Original_SV_WriteDownloadToClient);
 }
 
 // ==================================================

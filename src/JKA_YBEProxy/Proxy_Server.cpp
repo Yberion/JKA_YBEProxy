@@ -23,6 +23,7 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.cvars.sv_maxRate = *(cvar_t**)cvar_sv_maxRate_addr;
 	server.cvars.sv_rconPassword = *(cvar_t**)cvar_sv_rconPassword_addr;
 	server.cvars.sv_floodProtect = *(cvar_t**)cvar_sv_floodProtect_addr;
+	server.cvars.sv_allowDownload = *(cvar_t**)cvar_sv_allowDownload_addr;
 
 	// functions
 	server.functions.SV_ClientEnterWorld = (void (*)(client_t*, usercmd_t*))func_SV_ClientEnterWorld_addr;
@@ -43,6 +44,9 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.functions.SV_ConnectionlessPacket = (void (*)(netadr_t, msg_t*))func_SV_ConnectionlessPacket_addr;
 	server.functions.SV_ExecuteClientMessage = (void (*)(client_t*, msg_t*))func_SV_ExecuteClientMessage_addr;
 	server.functions.SV_SendClientGameState = (void (*)(client_t*))func_SV_SendClientGameState_addr;
+	server.functions.SV_SendServerCommand = (void (QDECL *)(client_t*, const char*, ...))func_SV_SendServerCommand_addr;
+	server.functions.SV_UserinfoChanged = (void (*)(client_t*))func_SV_UserinfoChanged_addr;
+	server.functions.SV_SendClientSnapshot = (void (*)(client_t*))func_SV_SendClientSnapshot_addr;
 
 	// ----------- COMMON
 
@@ -70,10 +74,17 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.common.functions.Com_BeginRedirect = (void (*)(char*, int, void (*)(char*)))func_Com_BeginRedirect_addr;
 	server.common.functions.Com_EndRedirect = (void (*)(void))func_Com_EndRedirect_addr;
 	server.common.functions.Cvar_VariableString = (char* (*)(const char*))func_Cvar_VariableString_addr;
+	server.common.functions.Cvar_VariableValue = (float (*)(const char*))func_Cvar_VariableValue_addr;
 	server.common.functions.FS_FOpenFileWrite = (fileHandle_t (*)(const char*))func_FS_FOpenFileWrite_addr;
 	server.common.functions.FS_ForceFlush = (void (*)(fileHandle_t))func_FS_ForceFlush_addr;
 	server.common.functions.FS_Initialized = (qboolean(*)())func_FS_Initialized_addr;
 	server.common.functions.FS_Write = (int (*)(const void*, int, fileHandle_t))func_FS_Write_addr;
+	server.common.functions.FS_FileIsInPAK = (int (*)(const char*, int*))func_FS_FileIsInPAK_addr;
+	server.common.functions.FS_LoadedPakPureChecksums = (const char* (*)(void))func_FS_LoadedPakPureChecksums_addr;
+	server.common.functions.FS_ReferencedPakNames = (const char* (*)(void))func_FS_ReferencedPakNames_addr;
+	server.common.functions.FS_SV_FOpenFileRead = (int (*)(const char*, fileHandle_t*))func_FS_SV_FOpenFileRead_addr;
+	server.common.functions.FS_Read = (int (*)(void*, int, fileHandle_t))func_FS_Read_addr;
+	server.common.functions.FS_FCloseFile = (void (*)(fileHandle_t))func_FS_FCloseFile_addr;
 	server.common.functions.Netchan_TransmitNextFragment = (void (*)(netchan_t*))func_Netchan_TransmitNextFragment_addr;
 	server.common.functions.NET_AdrToString = (const char* (*)(netadr_t))func_NET_AdrToString_addr;
 	server.common.functions.NET_OutOfBandPrint = (void (QDECL*)(netsrc_t, netadr_t, const char*, ...))func_NET_OutOfBandPrint_addr;
@@ -92,12 +103,16 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.common.functions.MSG_WriteDeltaEntity = (void (*)(msg_t*, struct entityState_s*, struct entityState_s*, qboolean))func_MSG_WriteDeltaEntity_addr;
 	server.common.functions.MSG_WriteLong = (void (*)(msg_t*, int))func_MSG_WriteLong_addr;
 	server.common.functions.MSG_WriteShort = (void (*)(msg_t*, int))func_MSG_WriteShort_addr;
+	server.common.functions.MSG_WriteString = (void (*)(msg_t*, const char*))func_MSG_WriteString_addr;
+	server.common.functions.MSG_WriteData = (void (*)(msg_t*, const void*, int))func_MSG_WriteData_addr;
 	server.common.functions.Sys_IsLANAddress = (qboolean(*)(netadr_t))func_Sys_IsLANAddress_addr;
 	server.common.functions.Sys_Print = (void (*)(const char*))func_Sys_Print_addr;
 	server.common.functions.Cmd_Argv = (char* (*)(int))func_Cmd_Argv_addr;
 	server.common.functions.Cmd_ExecuteString = (void (*)(const char*))func_Cmd_ExecuteString_addr;
 	server.common.functions.Cmd_TokenizeString = (void (*)(const char*))func_Cmd_TokenizeString_addr;
 	server.common.functions.Huff_Decompress = (void (*)(msg_t*, int))func_Huff_Decompress_addr;
+	server.common.functions.Z_Free = (void (*)(void*))func_Z_Free_addr;
+	server.common.functions.Z_Malloc = (void* (*)(int, memtag_t, qboolean, int))func_Z_Malloc_addr;
 }
 
 // Update value of packets and FPS

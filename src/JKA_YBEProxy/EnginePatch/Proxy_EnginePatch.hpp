@@ -65,9 +65,22 @@ void Proxy_Cmd_TokenizeString(const char* text_in);
 extern void (*Original_SV_UserinfoChanged)(client_t*);
 void Proxy_SV_UserinfoChanged(client_t* cl);
 
+extern void (*Original_SV_BeginDownload_f)(client_t*);
+void Proxy_SV_BeginDownload_f(client_t* cl);
+
+extern void (*Original_SV_DoneDownload_f)(client_t*);
+void Proxy_SV_DoneDownload_f(client_t* cl);
+
+extern void (*Original_SV_ExecuteClientCommand)(client_t*, const char*, qboolean);
+void Proxy_SV_ExecuteClientCommand(client_t* cl, const char* s, qboolean clientOK);
+
+extern void (*Original_SV_WriteDownloadToClient)(client_t*, msg_t*);
+void Proxy_SV_WriteDownloadToClient(client_t* cl, msg_t* msg);
+
 // ------------- common
 
-const char* FS_GetCurrentGameDir(bool emptybase = false);
-char* Cmd_ArgsFrom(int arg);
-char* Cmd_Cmd(void);
-void Windows_Com_EndRedirect(void);
+const char* Proxy_FS_GetCurrentGameDir(bool emptybase = false);
+void Proxy_Cmd_TokenizeStringIgnoreQuotes(const char*);
+char* Proxy_Cmd_ArgsFrom(int arg);
+char* Proxy_Cmd_Cmd(void);
+void Proxy_Windows_Com_EndRedirect(void);

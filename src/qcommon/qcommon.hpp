@@ -319,3 +319,7 @@ inline int Round(float value)
 }
 
 cvar_t* Cvar_SetValue(const char* var_name, float value);
+
+qboolean FS_CheckDirTraversal(const char* checkdir);
+qboolean FS_FilenameCompare(const char* s1, const char* s2);
+qboolean FS_idPak(char* pak, char* base);

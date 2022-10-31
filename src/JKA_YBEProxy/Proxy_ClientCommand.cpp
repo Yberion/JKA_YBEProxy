@@ -135,12 +135,12 @@ void Proxy_ClientCommand_MyRatio(int clientNum)
 {
 	Proxy_s::ClientData_s *currentClientData = &proxy.clientData[clientNum];
 
-	if (currentClientData->lastTimeMyratioCheck + 1000 > server.svs->time)
+	if (currentClientData->lastTimeMyratioCheck + 1000 > proxy.proxyData.svsTime)
 	{
 		return;
 	}
 
-	currentClientData->lastTimeMyratioCheck = server.svs->time;
+	currentClientData->lastTimeMyratioCheck = proxy.proxyData.svsTime;
 
 	char ratioStringBuffer[16];
 	playerState_t* ps;
@@ -151,7 +151,7 @@ void Proxy_ClientCommand_MyRatio(int clientNum)
 
 	ratioString(ps->persistant[PERS_SCORE], ps->persistant[PERS_KILLED], ps->fd.suicides, ratioStringBuffer, sizeof(ratioStringBuffer));
 
-	if (server.cvars.sv_gametype->integer != GT_DUEL && server.cvars.sv_gametype->integer != GT_TEAM && server.cvars.sv_gametype->integer != GT_FFA)
+	if (proxy.cvars.sv_gametype.integer != GT_DUEL && proxy.cvars.sv_gametype.integer != GT_TEAM && proxy.cvars.sv_gametype.integer != GT_FFA)
 	{
 		proxy.trap->SendServerCommand(clientNum, "print \"Command not supported for this gametype\n\"");
 

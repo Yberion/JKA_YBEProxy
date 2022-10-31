@@ -62,7 +62,7 @@
 // ==================================================
 
 typedef intptr_t	(QDECL *systemCallFuncPtr_t)(intptr_t command, ...);
-typedef intptr_t	(*vmMainFuncPtr_t)(intptr_t command, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t);
+typedef intptr_t	(*vmMainFuncPtr_t)(intptr_t command, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t);
 typedef void		(*dllEntryFuncPtr_t)(systemCallFuncPtr_t);
 
 // ==================================================
@@ -104,6 +104,10 @@ typedef struct Proxy_s {
 
 	bool					isOriginalEngine;
 
+	struct ProxyData_s {
+		int					svsTime;
+	} proxyData;
+
 	struct LocatedGameData_s {
 		sharedEntity_t*		g_entities;
 		int					g_entitySize;
@@ -138,6 +142,7 @@ typedef struct Proxy_s {
 
 		// get cvars
 		vmCvar_t sv_fps;
+		vmCvar_t sv_gametype;
 	} cvars;
 } Proxy_t;
 
@@ -150,6 +155,13 @@ extern Proxy_t proxy;
 // ==================================================
 // FUNCTION
 // ==================================================
+
+// ------------------------
+// Proxy_Main
+// ------------------------
+
+Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_t arg2, intptr_t arg3, intptr_t arg4,
+	intptr_t arg5, intptr_t arg6, intptr_t arg7, intptr_t arg8, intptr_t arg9, intptr_t arg10);
 
 // ------------------------
 // Proxy_CVar
@@ -193,6 +205,7 @@ void Proxy_NewAPI_GetUsercmd(int clientNum, usercmd_t* cmd);
 void Proxy_NewAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 void Proxy_NewAPI_ClientCommand(int clientNum);
 char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
+void Proxy_NewAPI_ClientDisconnect(int clientNum);
 void Proxy_NewAPI_ClientThink(int clientNum, usercmd_t* ucmd);
 qboolean Proxy_NewAPI_ClientUserinfoChanged(int clientNum);
 void Proxy_NewAPI_RunFrame(int levelTime);
@@ -202,8 +215,10 @@ void Proxy_NewAPI_ShutdownGame(int restart);
 // Proxy_OldAPIWrappers
 // ------------------------
 
-// VM_DllSyscall can handle up to 1 (command) + 15 args
-intptr_t QDECL Proxy_OldAPI_SystemCall(intptr_t command, ...);
+// VM_DllSyscall can handle up to 1 (command) + 16 args
+intptr_t QDECL Proxy_OldAPI_VM_DllSyscall(intptr_t command, ...);
+// VM_Call can handle up to 1 (command) + 11 args
+intptr_t QDECL Proxy_OldAPI_VM_Call(intptr_t command, ...);
 
 // ------------------------
 // Proxy_SharedAPI
@@ -215,6 +230,7 @@ void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* cmd);
 
 // -- Export table
 void Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
+void Proxy_SharedAPI_ClientDisconnect(int clientNum);
 void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum);
 //void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd);

@@ -11,7 +11,7 @@ typedef struct cvarTable_s {
 
 static cvarTable_t proxyOriginalEngineCVarTable[] =
 {
-	{ &proxy.originalEngineCvars.proxy_sv_pingFix, "proxy_sv_pingFix", "1", CVAR_ARCHIVE, 0, qfalse },
+	{ &proxy.originalEngineCvars.proxy_sv_pingFix, "proxy_sv_pingFix", "0", CVAR_ARCHIVE, 0, qfalse },
 };
 static const constexpr size_t proxyOriginalEngineCVarTableSize = ARRAY_LEN(proxyOriginalEngineCVarTable);
 
@@ -21,7 +21,8 @@ static cvarTable_t proxyCVarTable[] =
 	{ &proxy.cvars.proxy_sv_maxCallVoteMapRestartValue, "proxy_sv_maxCallVoteMapRestartValue", "60", CVAR_ARCHIVE, 0, qfalse },
 
 	// get cvars
-	{ &proxy.cvars.sv_fps, "sv_fps", "20", CVAR_SERVERINFO, 0, qfalse }
+	{ &proxy.cvars.sv_fps, "sv_fps", "20", CVAR_SERVERINFO, 0, qfalse },
+	{ &proxy.cvars.sv_gametype, "sv_gametype", "0", CVAR_SERVERINFO, 0, qfalse }
 };
 static const constexpr size_t proxyCVarTableSize = ARRAY_LEN(proxyCVarTable);
 
@@ -144,7 +145,7 @@ void Proxy_UpdateAllCvars(void)
 	// TODO: won't be once per second on sv_fps change
 	static unsigned int frame = 0;
 
-	if (frame == proxy.cvars.sv_fps.integer)
+	if (frame == (unsigned int)proxy.cvars.sv_fps.integer)
 	{
 		Proxy_UpdateCvars();
 
