@@ -524,6 +524,40 @@ char* Q_CleanStr(char* string)
 	return string;
 }
 
+char* Q_CleanAsciiStr(char* string) {
+	char* d;
+	char* s;
+	int	c;
+
+	s = string;
+	d = string;
+	while ((c = *s) != 0) {
+		if (c >= 0x20 && c <= 0x7E) {
+			*d++ = c;
+		}
+		s++;
+	}
+	*d = '\0';
+
+	return string;
+}
+
+qboolean Q_IsValidAsciiStr(char* string) {
+	char* s;
+	int	c;
+
+	s = string;
+
+	while ((c = *s) != 0) {
+		if (c < 0x20 || c > 0x7E) {
+			return qfalse;
+		}
+		s++;
+	}
+
+	return qtrue;
+}
+
 qboolean Q_isintegral(float f)
 {
 	return (qboolean)((int)f == f);

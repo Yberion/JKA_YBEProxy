@@ -190,7 +190,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 		return;
 	}
 
-	int len = 0;
+	size_t len = 0;
 	char* val = NULL;
 
 	val = Info_ValueForKey(userinfo, "name");
@@ -208,7 +208,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	// There's also a check done in SV_UserinfoChanged
 	if (val)
 	{
-		len = (int)strlen(val);
+		len = strlen(val);
 
 		if (!Q_stricmpn(val, "darksidetools", len))
 		{
@@ -220,7 +220,8 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 			!Q_stricmpn(val, "jedi_/blue", len))) ||
 			!Q_stricmpn(val, "rancor", len) ||
 			!Q_stricmpn(val, "wampa", len) ||
-			len > MAX_QPATH)
+			!Q_IsValidAsciiStr(val) ||
+			len >= MAX_QPATH)
 		{
 			Info_SetValueForKey(userinfo, "model", "kyle");
 		}
@@ -231,7 +232,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	
 	Q_strncpyz(forcePowers, Info_ValueForKey(userinfo, "forcepowers"), sizeof(forcePowers));
 
-	len = (int)strlen(forcePowers);
+	len = strlen(forcePowers);
 
 	qboolean badForce = qfalse;
 

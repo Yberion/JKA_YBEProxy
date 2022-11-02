@@ -457,9 +457,9 @@ void Proxy_SV_UserinfoChanged(client_t* cl) {
 	// There's also a check done in ClientUserinfoChanged
 	if (val)
 	{
-		const size_t modelLen = (int)strlen(val);
+		const size_t modelLen = strlen(val);
 
-		if (modelLen > MAX_QPATH)
+		if (!Q_IsValidAsciiStr(val) || modelLen >= MAX_QPATH)
 		{
 			Info_SetValueForKey(cl->userinfo, "model", "kyle");
 		}
