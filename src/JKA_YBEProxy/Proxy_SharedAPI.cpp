@@ -122,24 +122,64 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		return qfalse;
 	}
 
-	const int cmdArg2NumberValue = atoi(cmd_arg2);
-
-	// Fix: callvote fraglimit/timelimit with negative value
-	if (!Q_stricmpn(cmd, "callvote", 8) && (!Q_stricmpn(cmd_arg1, "fraglimit", 9) || !Q_stricmpn(cmd_arg1, "timelimit", 9)) && cmdArg2NumberValue < 0)
+	if (!Q_stricmpn(cmd, "callvote", 8))
 	{
-		return qfalse;
-	}
+		const int cmdArg2NumberValue = atoi(cmd_arg2);
 
-	// Fix: callvote map_restart with high value
-	if (!Q_stricmpn(cmd, "callvote", 8) && !Q_stricmpn(cmd_arg1, "map_restart", 11) && cmdArg2NumberValue > proxy.cvars.proxy_sv_maxCallVoteMapRestartValue.integer)
-	{
-		return qfalse;
-	}
+		int minArg2Value = 0;
+		int maxArg2Value = 1;
+		qboolean checkNeeded = qfalse;
 
-	// Fix: callvote map_restart with negative value
-	if (!Q_stricmpn(cmd, "callvote", 8) && !Q_stricmpn(cmd_arg1, "map_restart", 11) && cmdArg2NumberValue < 0 )
-	{
-		return qfalse;
+		// Fix: callvote long string length crash
+		if (strlen(cmd_arg2) >= MAX_CVAR_VALUE_STRING)
+		{
+			return qfalse;
+		}
+
+		// Fix: callvote capturelimit with wrong values
+		if (!Q_stricmpn(cmd_arg1, "capturelimit", 12))
+		{
+			minArg2Value = 0;
+			maxArg2Value = 0x7FFFFFFF;
+			checkNeeded = qtrue;
+		}
+
+		// Fix: callvote fraglimit with wrong values
+		if (!Q_stricmpn(cmd_arg1, "fraglimit", 9))
+		{
+			minArg2Value = 0;
+			maxArg2Value = 0x7FFFFFFF;
+			checkNeeded = qtrue;
+		}
+
+		// Fix: callvote g_doWarmup with wrong values
+		if (!Q_stricmpn(cmd_arg1, "g_doWarmup", 10))
+		{
+			minArg2Value = 0;
+			maxArg2Value = 1;
+			checkNeeded = qtrue;
+		}
+
+		// Fix: callvote map_restart with wrong values
+		if (!Q_stricmpn(cmd_arg1, "map_restart", 11))
+		{
+			minArg2Value = 0;
+			maxArg2Value = proxy.cvars.proxy_sv_maxCallVoteMapRestartValue.integer;
+			checkNeeded = qtrue;
+		}
+
+		// Fix: callvote timelimit with wrong values
+		if (!Q_stricmpn(cmd_arg1, "timelimit", 9))
+		{
+			minArg2Value = 0;
+			maxArg2Value = 35790;
+			checkNeeded = qtrue;
+		}
+
+		if (checkNeeded && (cmdArg2NumberValue < minArg2Value || cmdArg2NumberValue > maxArg2Value))
+		{
+			return qfalse;
+		}
 	}
 
 	if (Q_strchrs(argsConcat, "\r\n"))
@@ -240,7 +280,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	{
 		byte seps = 0;
 
-		for (int i = 0; i < len; i++)
+		for (size_t i = 0; i < len; i++)
 		{
 			if (forcePowers[i] != '-' && (forcePowers[i] < '0' || forcePowers[i] > '9'))
 			{
