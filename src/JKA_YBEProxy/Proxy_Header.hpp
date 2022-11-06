@@ -140,6 +140,7 @@ typedef struct Proxy_s {
 	struct Proxy_CVars_s {
 		// New cvars
 		vmCvar_t proxy_sv_maxCallVoteMapRestartValue;
+		vmCvar_t proxy_sv_modelPathLength;
 
 		// get cvars
 		vmCvar_t sv_fps;

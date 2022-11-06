@@ -459,7 +459,7 @@ void Proxy_SV_UserinfoChanged(client_t* cl) {
 	{
 		const size_t modelLen = strlen(val);
 
-		if (!Q_IsValidAsciiStr(val) || modelLen >= MAX_QPATH)
+		if (!Q_IsValidAsciiStr(val) || modelLen >= /*MAX_QPATH*/ proxy.cvars.proxy_sv_modelPathLength.integer)
 		{
 			Info_SetValueForKey(cl->userinfo, "model", "kyle");
 		}
