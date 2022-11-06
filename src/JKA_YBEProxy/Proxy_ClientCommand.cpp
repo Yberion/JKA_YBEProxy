@@ -76,8 +76,8 @@ void Proxy_ClientCommand_NetStatus(int clientNum)
 	currentClientData->lastTimeNetStatus = server.svs->time;
 
 	char buffer[1012] = { 0 };
-	int statusLength = strlen(status);
-	int currentProgress = 0;
+	size_t statusLength = strlen(status);
+	size_t currentProgress = 0;
 
 	while (currentProgress < statusLength)
 	{

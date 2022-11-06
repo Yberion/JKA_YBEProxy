@@ -261,7 +261,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 			!Q_stricmpn(val, "rancor", len) ||
 			!Q_stricmpn(val, "wampa", len) ||
 			!Q_IsValidAsciiStr(val) ||
-			len >= /*MAX_QPATH*/ proxy.cvars.proxy_sv_modelPathLength.integer)
+			len >= /*MAX_QPATH*/ (size_t)proxy.cvars.proxy_sv_modelPathLength.integer)
 		{
 			Info_SetValueForKey(userinfo, "model", "kyle");
 		}

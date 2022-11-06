@@ -133,7 +133,7 @@ unsigned int InlinePatch( unsigned char *pAddress, unsigned char *pNewAddress )
 	unsigned int pReturnAddress = InlineFetch( pAddress );
 
 	UnProtect( pAddress, 5 );
-	*( unsigned int * )( pAddress + 1 )= ( unsigned int )(( unsigned int )( pNewAddress ) - ( unsigned int )( pAddress + 5 ));
+	*( unsigned int * )( pAddress + 1 ) = ( unsigned int )(( unsigned int )( pNewAddress ) - ( unsigned int )( pAddress + 5 ));
 	ReProtect( pAddress, 5 );
 
 	return pReturnAddress;

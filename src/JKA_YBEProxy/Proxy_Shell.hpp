@@ -1,3 +1,5 @@
+#pragma once
+
 // ==================================================
 // Assembly Shell System by Deathspike & BobaFett
 // Modified by Yberion by adding Sil's fix

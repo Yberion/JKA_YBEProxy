@@ -123,11 +123,11 @@ void (*Original_SVC_RemoteCommand)(netadr_t, msg_t*);
 void Proxy_SVC_RemoteCommand(netadr_t from, msg_t* msg) {
 	static unsigned int commandCoolDown = 0;
 
-	if (proxy.originalEngineCvars.proxy_sv_enableRconCmdCooldown.integer && server.svs->time < commandCoolDown + 500) {
+	if (proxy.originalEngineCvars.proxy_sv_enableRconCmdCooldown.integer && (unsigned int)server.svs->time < commandCoolDown + 500) {
 		return;
 	}
 
-	commandCoolDown = server.svs->time;
+	commandCoolDown = (unsigned int)server.svs->time;
 	
 	// Only allow writeconfig on cfg files
 	if (!Q_stricmpn(server.common.functions.Cmd_Argv(2), "writeconfig", 11)) {
