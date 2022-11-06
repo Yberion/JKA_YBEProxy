@@ -1,6 +1,5 @@
 #include "JKA_YBEProxy/EnginePatch/Proxy_EnginePatch.hpp"
 
-#include <mutex>
 
 /*
 =============
@@ -15,15 +14,8 @@ A raw string should NEVER be passed as fmt, because of "%f" type crashers.
 
 void (QDECL *Original_Common_Com_Printf)(const char*, ...);
 
-// Proxy -------------->
-std::recursive_mutex printfLock;
-// Proxy <--------------
 void QDECL Proxy_Common_Com_Printf(const char* fmt, ...)
 {
-	// Proxy -------------->
-	std::lock_guard<std::recursive_mutex> l(printfLock);
-	// Proxy <--------------
-
 	static qboolean opening_qconsole = qfalse;
 	va_list			argptr;
 	char			msg[MAXPRINTMSG];
