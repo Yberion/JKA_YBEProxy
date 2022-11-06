@@ -26,8 +26,8 @@ void Proxy_ClientCommand_NetStatus(int clientNum)
 
 	status[0] = 0;
 
-	Q_strcat(status, sizeof(status), "score ping rate   fps packets timeNudge snaps id name \n");
-	Q_strcat(status, sizeof(status), "----- ---- ------ --- ------- --------- ----- -- ---------------\n");
+	Q_strcat(status, sizeof(status), "score ping rate   fps  packets timeNudge snaps id name \n");
+	Q_strcat(status, sizeof(status), "----- ---- ------ ---- ------- --------- ----- -- ---------------\n");
 
 	for (i = 0, cl = server.svs->clients; i < server.cvars.sv_maxclients->integer; i++, cl++)
 	{
@@ -71,7 +71,7 @@ void Proxy_ClientCommand_NetStatus(int clientNum)
 		}
 
 		// No need for truncation "feature" if we move name to the end
-		Q_strcat(status, sizeof(status), va("%5i %s %6i %3i %7i %9i %5i %2i %s^7\n", ps->persistant[PERS_SCORE], state, cl->rate, fps, packets, proxy.clientData[selectedClientNum].timenudge, snaps, i, cl->name));
+		Q_strcat(status, sizeof(status), va("%5i %s %6i %4i %7i %9i %5i %2i %s^7\n", ps->persistant[PERS_SCORE], state, cl->rate, fps, packets, proxy.clientData[selectedClientNum].timenudge, snaps, i, cl->name));
 	}
 
 	currentClientData->lastTimeNetStatus = server.svs->time;
