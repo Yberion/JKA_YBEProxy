@@ -16,6 +16,9 @@
 	#define func_SVC_RemoteCommand_timer_start_block_addr 0x443ced // We want to NOP mostly all bytes related to the timer check, including the call to Com_Milliseconds()
 	#define func_SVC_RemoteCommand_timer_NOP_amount 25			   // from this address, we want to NOP 25 bytes
 
+	// Address to patch a single byte
+	#define func_SVC_RemoteCommand_Com_BeginRedirect_SV_OUTPUTBUF_LENGTH_addr 0x443de8 // the address to the byte that will allow use to change the value from 49136 to 1008
+
 	// Function address to hook
 	#define func_Com_Printf_addr 0x40fbe0
 	#define func_SV_CalcPings_addr 0x444220
@@ -133,6 +136,9 @@
 	// Address to NOPs
 	#define func_SVC_RemoteCommand_timer_start_block_addr 0x8056b26 // We want to NOP mostly all bytes related to the timer check, including the call to Com_Milliseconds()
 	#define func_SVC_RemoteCommand_timer_NOP_amount 25			    // from this address, we want to NOP 25 bytes
+
+	// Address to patch a single byte
+	#define func_SVC_RemoteCommand_Com_BeginRedirect_SV_OUTPUTBUF_LENGTH_addr 0x8056c7d // the address to the byte that will allow use to change the value from 49136 to 1008
 
 	// Function address to hook
 	#define func_Com_Printf_addr 0x8072ca4

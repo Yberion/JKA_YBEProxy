@@ -76,4 +76,7 @@ void Proxy_Inline_Patch(void)
 {
 	// Remove all the timer block in SVC_RemoteCommand, fix rcon disabler
 	Patch_NOP_Bytes((unsigned char*)func_SVC_RemoteCommand_timer_start_block_addr, func_SVC_RemoteCommand_timer_NOP_amount);
+	// When calling Com_BeginRedirect in SVC_RemoteCommand, change the length of the buffer from 49136 to 1008
+	// It fix truncated text from SVC_RemoteCommand with the new Com_Printf
+	Patch((unsigned char*)func_SVC_RemoteCommand_Com_BeginRedirect_SV_OUTPUTBUF_LENGTH_addr, 0x03);
 }
