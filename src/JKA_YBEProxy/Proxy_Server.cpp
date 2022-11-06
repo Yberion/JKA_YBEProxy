@@ -115,6 +115,16 @@ void Proxy_Server_Initialize_MemoryAddress(void)
 	server.common.functions.Z_Malloc = (void* (*)(int, memtag_t, qboolean, int))func_Z_Malloc_addr;
 }
 
+void Proxy_Server_UpdateUcmdStats(int clientNum, usercmd_t* cmd, int packetIndex)
+{
+	Proxy_s::ClientData_s* currentClientData = &proxy.clientData[clientNum];
+
+	currentClientData->cmdIndex++;
+	const int cmdIndex = currentClientData->cmdIndex & (CMD_MASK - 1);
+	currentClientData->cmdStats[cmdIndex].serverTime = cmd->serverTime;
+	currentClientData->cmdStats[cmdIndex].packetIndex = packetIndex;
+}
+
 // Update value of packets and FPS
 // From JK2MV (updated version by fau)
 void Proxy_Server_CalcPacketsAndFPS(int clientNum, int* packets, int* fps)
@@ -142,16 +152,6 @@ void Proxy_Server_CalcPacketsAndFPS(int clientNum, int* packets, int* fps)
 			}
 		}
 	}
-}
-
-void Proxy_Server_UpdateUcmdStats(int clientNum, usercmd_t* cmd, int packetIndex)
-{
-	Proxy_s::ClientData_s *currentClientData = &proxy.clientData[clientNum];
-
-	currentClientData->cmdIndex++;
-	const int cmdIndex = currentClientData->cmdIndex & (CMD_MASK - 1);
-	currentClientData->cmdStats[cmdIndex].serverTime = cmd->serverTime;
-	currentClientData->cmdStats[cmdIndex].packetIndex = packetIndex;
 }
 
 // Some clientside timings (delta or whatever) that we can't calc here (I think)

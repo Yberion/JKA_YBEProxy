@@ -180,8 +180,11 @@ static void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 			continue;
 		}
 
-		Proxy_Server_UpdateUcmdStats(getClientNumFromAddr(client), &cmds[i], packetIndex);
-		Proxy_Server_UpdateTimenudge(client, &cmds[i], proxy.trap->Milliseconds());
+		if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer)
+		{
+			Proxy_Server_UpdateUcmdStats(getClientNumFromAddr(client), &cmds[i], packetIndex);
+			Proxy_Server_UpdateTimenudge(client, &cmds[i], proxy.trap->Milliseconds());
+		}
 		// Proxy <--------------
 	}
 }

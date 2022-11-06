@@ -202,7 +202,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	// Only work on default engine since it require memory hook
 	if (proxy.isOriginalEngine)
 	{
-		if (!Q_stricmpn(cmd, "netstatus", 9) || !Q_stricmpn(cmd, "showNet", 7))
+		if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer && (!Q_stricmpn(cmd, "netStatus", 9) || !Q_stricmpn(cmd, "showNet", 7)))
 		{
 			Proxy_ClientCommand_NetStatus(clientNum);
 

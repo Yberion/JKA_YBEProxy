@@ -135,6 +135,7 @@ typedef struct Proxy_s {
 		// New cvars
 		vmCvar_t proxy_sv_pingFix;
 		vmCvar_t proxy_sv_enableRconCmdCooldown;
+		vmCvar_t proxy_sv_enableNetStatus;
 	} originalEngineCvars;
 
 	struct Proxy_CVars_s {
