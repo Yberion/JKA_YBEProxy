@@ -231,7 +231,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	}
 
 	size_t len = 0;
-	char* val = NULL;
+	const char* val = NULL;
 
 	val = Info_ValueForKey(userinfo, "name");
 

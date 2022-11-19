@@ -104,7 +104,7 @@ These commands can only be entered from stdin or by a remote operator datagram
 ===============================================================================
 */
 
-const char* Proxy_SV_GetStringEdString(char* refSection, char* refName)
+const char* Proxy_SV_GetStringEdString(const char* refSection, const char* refName)
 {
 	//Well, it would've been lovely doing it the above way, but it would mean mixing
 	//languages for the client depending on what the server is. So we'll mark this as

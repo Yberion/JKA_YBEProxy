@@ -142,7 +142,7 @@ key and returns the associated value, or an empty string.
 FIXME: overflow check?
 ===============
 */
-char* Info_ValueForKey(const char* s, const char* key) {
+const char* Info_ValueForKey(const char* s, const char* key) {
 	char	pkey[BIG_INFO_KEY];
 	static	char value[2][BIG_INFO_VALUE];	// use two buffers so compares
 											// work without stomping on each other
@@ -542,8 +542,8 @@ char* Q_CleanAsciiStr(char* string) {
 	return string;
 }
 
-qboolean Q_IsValidAsciiStr(char* string) {
-	char* s;
+qboolean Q_IsValidAsciiStr(const char* string) {
+	const char* s;
 	int	c;
 
 	s = string;

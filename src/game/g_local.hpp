@@ -52,10 +52,6 @@ extern vec3_t gPainPoint;
 
 #define BODY_QUEUE_SIZE		8
 
-#ifndef INFINITE
-#define INFINITE			1000000
-#endif
-
 #define	FRAMETIME			100					// msec
 #define	CARNAGE_REWARD_TIME	3000
 #define REWARD_SPRITE_TIME	2000

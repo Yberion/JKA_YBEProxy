@@ -451,7 +451,7 @@ into a more C friendly form.
 */
 void (*Original_SV_UserinfoChanged)(client_t*);
 void Proxy_SV_UserinfoChanged(client_t* cl) {
-	char* val = nullptr;
+	const char* val = nullptr;
 
 	val = Info_ValueForKey(cl->userinfo, "model");
 
@@ -603,7 +603,7 @@ SV_Disconnect_f
 The client is going to disconnect, so remove the connection immediately  FIXME: move to game?
 =================
 */
-const char* Proxy_SV_GetStringEdString(char* refSection, char* refName);
+const char* Proxy_SV_GetStringEdString(const char* refSection, const char* refName);
 static void Proxy_SV_Disconnect_f(client_t* cl) {
 	//	SV_DropClient( cl, "disconnected" );
 	server.functions.SV_DropClient(cl, Proxy_SV_GetStringEdString("MP_SVGAME", "DISCONNECTED"));
@@ -819,8 +819,8 @@ Also called by bot code
 ==================
 */
 typedef struct {
-	char* name;
-	void	(*func)(client_t* cl);
+	const char* name;
+	void		(*func)(client_t* cl);
 } ucmd_t;
 
 static ucmd_t ucmds[] = {

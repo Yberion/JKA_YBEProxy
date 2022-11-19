@@ -1,5 +1,5 @@
 // ==================================================
-// DetourPatcher by Deathspike
+// DetourPatcher by Deathspike, modified by Yberion
 // --------------------------------------------------
 // Collection of functions written to assist in detouring
 // functions and patching bytes. It mainly allocates
@@ -13,7 +13,6 @@
 	#include <unistd.h>
 #else
 	#include <windows.h>
-	unsigned long OldProtect;
 #endif
 
 #include		<cstdlib>
@@ -22,44 +21,37 @@
 #include		"DetourPatcher.hpp"
 
 // ==================================================
-// Attach
+// AllocateMemory
 // --------------------------------------------------
-// Attaches a detour on the target function and makes 
-// it jump to the new provided address, should be a
-// pointer.
+// Use OS specific way of allocating memory when available
 // ==================================================
 
-unsigned char *Attach( unsigned char *pAddress, unsigned char *pNewAddress )
+unsigned char* AllocateMemory(size_t iLen)
 {
-    size_t iLen = GetLen( pAddress );
-	unsigned char *pTramp = GetTramp( pAddress, iLen );
-
-	UnProtect( pAddress, iLen );
-	*(( unsigned char * )(( unsigned int ) pAddress )) = 0xE9;
-	*(( unsigned int *  )(( unsigned int ) pAddress + 1 )) = ( unsigned int ) pNewAddress - ( unsigned int )(( unsigned int ) pAddress + 5 );
-	ReProtect( pAddress, iLen );
-
-	return pTramp;
+#ifndef WIN32
+	//return (unsigned char*)malloc(iLen + 5);
+	return (unsigned char*)mmap(nullptr, iLen + 5, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+#else
+	return (unsigned char*)VirtualAlloc(0, iLen + 5, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+#endif
 }
 
 // ==================================================
-// Detach
+// ReleaseMemory
 // --------------------------------------------------
-// Detaches a function detour. The length is calculated
-// and the original bytes are restored, tramp is then
-// released.
+// Use OS specific way of releasing memory when available
 // ==================================================
 
-unsigned char *Detach( unsigned char *pAddress, unsigned char *pTramp )
+void ReleaseMemory(unsigned char* address, size_t iLen)
 {
-    size_t iLen = GetLen( pAddress );
-
-	UnProtect( pAddress, iLen );
-	memcpy( pAddress, pTramp, iLen );
-	ReProtect( pAddress, iLen );
-
-	free( pTramp );
-	return pAddress;
+#ifndef WIN32
+	//std::free(address);
+	munmap(address, iLen + 5);
+#else
+	// avoid C4100
+	iLen = 0;
+	VirtualFree((LPVOID)address, 0, MEM_RELEASE);
+#endif
 }
 
 // ==================================================
@@ -83,26 +75,6 @@ size_t GetLen( unsigned char *pAddress )
 	}
 
     return iSize;
-}
-
-// ==================================================
-// GetTramp
-// --------------------------------------------------
-// Creates a trampoline, allocates the minimum amount
-// of memory for the length, copies the opcodes to
-// the trampoline and creates a jump to continue
-// execution.
-// ==================================================
-
-unsigned char *GetTramp( unsigned char *pAddress, size_t iLen )
-{
-	unsigned char *pTramp = ( unsigned char * ) malloc( iLen + 5 );
-
-	memcpy( pTramp, pAddress, iLen );
-	*( unsigned char * )( pTramp + iLen ) = 0xE9;
-	*( unsigned int * )( pTramp + iLen + 1 ) = ( unsigned int )(( unsigned int )( pAddress + iLen ) - ( unsigned int )( pTramp + iLen + 5 ));
-
-	return pTramp;
 }
 
 // ==================================================
@@ -165,7 +137,7 @@ void Patch( unsigned char *pAddress, unsigned char bByte )
 void Patch_NOP_Bytes(unsigned char* pAddress, size_t iLen)
 {
 	UnProtect(pAddress, iLen);
-	memset(pAddress, 0x90, iLen);
+	std::memset(pAddress, 0x90, iLen);
 	ReProtect(pAddress, iLen);
 }
 
@@ -179,10 +151,21 @@ void Patch_NOP_Bytes(unsigned char* pAddress, size_t iLen)
 void ReProtect( void *pAddress, size_t iLen )
 {
 #ifndef WIN32
-	// Since we have no real way to get the original protection
-	// on a Linux machine, we can't restore the bytes either.
+	int iPage1 = ( int ) pAddress &~ ( getpagesize() - 1 );
+	int iPage2 = (( int ) pAddress + iLen ) &~ ( getpagesize() - 1 );
+
+	if ( iPage1 == iPage2 )
+	{
+		mprotect(( char * ) iPage1, getpagesize(), PROT_READ | PROT_WRITE | PROT_EXEC );
+	}
+	else
+	{
+		mprotect(( char * ) iPage1, getpagesize(), PROT_READ | PROT_EXEC );
+		mprotect(( char * ) iPage2, getpagesize(), PROT_READ | PROT_EXEC );
+	}
 #else
-	VirtualProtect( pAddress, iLen, OldProtect, &OldProtect );
+	DWORD dummy;
+	VirtualProtect( pAddress, iLen, PAGE_EXECUTE_READ, &dummy);
 #endif
 }
 
@@ -213,7 +196,8 @@ void UnProtect( void *pAddress, size_t iLen )
 	}
 
 #else
-	VirtualProtect( pAddress, iLen, /*PAGE_EXECUTE_READWRITE*/ 0x40, &OldProtect );
+	DWORD dummy;
+	VirtualProtect( pAddress, iLen, PAGE_EXECUTE_READWRITE, &dummy);
 #endif
 }
 
