@@ -35,8 +35,8 @@ svEntity_t* Proxy_SV_SvEntityForGentity(sharedEntity_t* gEnt);
 extern void (*Original_SV_ExecuteClientMessage)(client_t*, msg_t*);
 void Proxy_SV_ExecuteClientMessage(client_t* cl, msg_t* msg);
 
-extern void (QDECL* Original_Common_Com_Printf)(const char*, ...);
-void QDECL Proxy_Common_Com_Printf(const char* fmt, ...);
+extern void (QDECL* Original_Com_Printf)(const char*, ...);
+void QDECL Proxy_Com_Printf(const char* fmt, ...);
 
 extern void (*Original_SV_Status_f)(void);
 void Proxy_SV_Status_f(void);

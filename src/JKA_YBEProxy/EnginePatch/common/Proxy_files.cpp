@@ -12,9 +12,8 @@ A raw string should NEVER be passed as fmt, because of "%f" type crashers.
 =============
 */
 
-void (QDECL *Original_Common_Com_Printf)(const char*, ...);
-
-void QDECL Proxy_Common_Com_Printf(const char* fmt, ...)
+void (QDECL *Original_Com_Printf)(const char*, ...);
+void QDECL Proxy_Com_Printf(const char* fmt, ...)
 {
 	static qboolean opening_qconsole = qfalse;
 	va_list			argptr;
