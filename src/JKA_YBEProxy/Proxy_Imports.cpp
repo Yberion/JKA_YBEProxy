@@ -355,14 +355,14 @@ int Q_vsnprintf(char* str, size_t size, const char* format, va_list args)
 		// implementation, so we have no choice but to return size.
 
 		str[size - 1] = '\0';
-		return size;
+		return (int)size;
 	}
 
 	return retval;
 }
 #endif
 
-int Q_stricmpn(const char* s1, const char* s2, int n)
+int Q_stricmpn(const char* s1, const char* s2, size_t n)
 {
 	int		c1;
 
@@ -481,9 +481,9 @@ void Q_strncpyz(char* dest, const char* src, size_t destsize) {
 }
 
 // never goes past bounds or leaves without a terminating 0
-void Q_strcat(char* dest, int size, const char* src)
+void Q_strcat(char* dest, size_t size, const char* src)
 {
-	int		l1;
+	size_t		l1;
 
 	l1 = strlen(dest);
 	if (l1 >= size)

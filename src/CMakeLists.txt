@@ -65,6 +65,42 @@ source_group("src/JKA_YBEProxy/DetourPatcher" FILES ${JKA_YBEProxyDetourFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDetourFiles})
 
 #============================================================================
+# src/JKA_YBEProxy/DetourPatcher/LengthDisassembler/
+#============================================================================
+
+set(JKA_YBEProxyLengthDisassemblerFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/hde.hpp"
+	)
+source_group("src/JKA_YBEProxy/DetourPatcher/LengthDisassembler" FILES ${JKA_YBEProxyLengthDisassemblerFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyLengthDisassemblerFiles})
+
+if (CMAKE_SIZEOF_VOID_P EQUAL 4 OR "${TARGET_ARCH}" MATCHES "x86")
+#============================================================================
+# src/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x86
+#============================================================================
+
+set(JKA_YBEProxyLengthDisassemblerX86Files
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x86/hde32.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x86/hde32.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x86/table32.hpp"
+	)
+source_group("src/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x86" FILES ${JKA_YBEProxyLengthDisassemblerX86Files})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyLengthDisassemblerX86Files})
+else ()
+#============================================================================
+# src/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x64
+#============================================================================
+
+set(JKA_YBEProxyLengthDisassemblerX64Files
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x64/hde64.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x64/hde64.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x64/table64.hpp"
+	)
+source_group("src/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x64" FILES ${JKA_YBEProxyLengthDisassemblerX64Files})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyLengthDisassemblerX64Files})
+endif ()
+
+#============================================================================
 # src/JKA_YBEProxy/EnginePatch
 #============================================================================
 

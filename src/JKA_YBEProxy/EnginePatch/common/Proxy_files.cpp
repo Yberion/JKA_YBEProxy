@@ -92,7 +92,7 @@ void QDECL Proxy_Com_Printf(const char* fmt, ...)
 
 		if (*server.common.vars.logfile && server.common.functions.FS_Initialized())
 		{
-			server.common.functions.FS_Write(msg, strlen(msg), *server.common.vars.logfile);
+			server.common.functions.FS_Write(msg, (int)strlen(msg), *server.common.vars.logfile);
 		}
 	}
 
