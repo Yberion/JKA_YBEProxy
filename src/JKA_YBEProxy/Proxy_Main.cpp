@@ -7,7 +7,7 @@
 
 Proxy_t proxy = { 0 };
 
-static void Proxy_GameLegacyAPI_Init(void)
+static void Proxy_GetOriginalGameAPI(void)
 {
 	// 1) Original Engine -> Load the Proxy dllEntry (store the original server's systemCall function pointer in originalSystemCall)
 	// 2) The Proxy get the Original dllEntry
@@ -57,7 +57,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 
 			Proxy_LoadGameLibrary();
 
-			Proxy_GameLegacyAPI_Init();
+			Proxy_GetOriginalGameAPI();
 
 			proxy.trap->Print("----- Proxy: %s properly loaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
 			
@@ -251,7 +251,7 @@ Q_CABI Q_EXPORT gameExport_t* QDECL GetModuleAPI(int apiVersion, gameImport_t* i
 		proxy.trap->Print("----- Proxy: Failed to find GetModuleAPI function, loading vmMain and dllEntry\n");
 		proxy.trap->Print("==================================================================================\n");
 
-		Proxy_GameLegacyAPI_Init();
+		Proxy_GetOriginalGameAPI();
 
 		return nullptr;
 	}
