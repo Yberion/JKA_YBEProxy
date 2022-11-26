@@ -3,7 +3,16 @@
 // Inspired by JMPProxy from DeathSpike (https://github.com/Deathspike/JMPProxy)
 // ==================================================
 
+#include "Proxy_Main.hpp"
 #include "Proxy_Header.hpp"
+#include "Proxy_CVars.hpp"
+#include "Proxy_Files.hpp"
+#include "RuntimePatch/Engine/Proxy_Engine_Patch.hpp"
+#include "RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
+#include "Proxy_SharedAPI.hpp"
+#include "Proxy_Translate_SystemCalls.hpp"
+#include "Wrappers/Proxy_OpenJKAPI_Wrappers.hpp"
+#include "Wrappers/Proxy_OriginalAPI_Wrappers.hpp"
 
 Proxy_t proxy = { 0 };
 
@@ -37,7 +46,7 @@ static void Proxy_GetOriginalGameAPI(void)
 	}
 
 	// "Send our own Proxy systemCall function pointer to the Original dllEntry"
-	proxy.originalDllEntry(Proxy_OldAPI_VM_DllSyscall);
+	proxy.originalDllEntry(Proxy_OriginalAPI_VM_DllSyscall);
 }
 
 Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_t arg2, intptr_t arg3, intptr_t arg4,
@@ -80,22 +89,13 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 			{
 				proxy.trap->Print("----- Proxy: Original engine detected\n");
 
-				proxy.trap->Print("----- Proxy: Initializing memory layer\n");
-
-				Proxy_Server_Initialize_MemoryAddress();
-
-				proxy.trap->Print("----- Proxy: Memory layer properly initialized\n");
-
-				proxy.trap->Print("----- Proxy: Initializing original engine Proxy CVars\n");
-
+				Proxy_Engine_Initialize_MemoryLayer();
 				Proxy_OriginalEngine_CVars_Registration();
-
-				proxy.trap->Print("----- Proxy: Original engine Proxy CVars properly initialized\n");
-
+				
 				proxy.trap->Print("----- Proxy: Patching engine\n");
 
-				Proxy_Inline_Patch();
-				Proxy_Patch_Attach();
+				Proxy_Engine_Inline_Patches();
+				Proxy_Engine_Attach_Patches();
 
 				proxy.trap->Print("----- Proxy: Engine properly patched\n");
 			}
@@ -116,7 +116,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 
 				proxy.trap->Print("----- Proxy: Unpatching engine\n");
 
-				Proxy_Patch_Detach();
+				Proxy_Engine_Detach_Patches();
 
 				proxy.trap->Print("----- Proxy: Engine properly unpatched\n");
 			}
@@ -256,19 +256,19 @@ Q_CABI Q_EXPORT gameExport_t* QDECL GetModuleAPI(int apiVersion, gameImport_t* i
 		return nullptr;
 	}
 
-	static gameImport_t _copyNewAPIGameImportTable = { 0 };
-	static gameExport_t _copyNewAPIGameExportTable = { 0 };
+	static gameImport_t _copyOpenJKAPIGameImportTable = { 0 };
+	static gameExport_t _copyOpenJKAPIGameExportTable = { 0 };
 
-	proxy.originalNewAPIGameImportTable = import;
-	memcpy(&_copyNewAPIGameImportTable, import, sizeof(gameImport_t));
-	proxy.copyNewAPIGameImportTable = &_copyNewAPIGameImportTable;
+	proxy.originalOpenJKAPIGameImportTable = import;
+	std::memcpy(&_copyOpenJKAPIGameImportTable, import, sizeof(gameImport_t));
+	proxy.copyOpenJKAPIGameImportTable = &_copyOpenJKAPIGameImportTable;
 
-	proxy.originalNewAPIGameExportTable = jampGameGetModuleAPI(apiVersion, &_copyNewAPIGameImportTable);
-	memcpy(&_copyNewAPIGameExportTable, proxy.originalNewAPIGameExportTable, sizeof(gameExport_t));
-	proxy.copyNewAPIGameExportTable = &_copyNewAPIGameExportTable;
+	proxy.originalOpenJKAPIGameExportTable = jampGameGetModuleAPI(apiVersion, &_copyOpenJKAPIGameImportTable);
+	std::memcpy(&_copyOpenJKAPIGameExportTable, proxy.originalOpenJKAPIGameExportTable, sizeof(gameExport_t));
+	proxy.copyOpenJKAPIGameExportTable = &_copyOpenJKAPIGameExportTable;
 
-	Proxy_NewAPI_InitLayerExportTable();
-	Proxy_NewAPI_InitLayerImportTable();
+	Proxy_OpenJKAPI_InitLayerExportTable();
+	Proxy_OpenJKAPI_InitLayerImportTable();
 
-	return proxy.copyNewAPIGameExportTable;
+	return proxy.copyOpenJKAPIGameExportTable;
 }

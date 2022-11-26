@@ -22,9 +22,8 @@ along with this program; if not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */
 
-// this file is only included when building a dll
-
 #include "Proxy_Header.hpp"
+#include "Proxy_Translate_SystemCalls.hpp"
 
 NORETURN_PTR void (*Com_Error)(int level, const char* fmt, ...);
 void (*Com_Printf)(const char* fmt, ...);
@@ -94,7 +93,7 @@ void trap_DropClient(int clientNum, const char* reason) {
 	proxy.originalSystemCall(G_DROP_CLIENT, clientNum, reason);
 }
 void trap_SendServerCommand(int clientNum, const char* text) {
-	if (strlen(text) > 1022)
+	if (std::strlen(text) > 1022)
 	{
 		return;
 	}

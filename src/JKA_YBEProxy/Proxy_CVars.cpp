@@ -1,13 +1,5 @@
 #include "Proxy_Header.hpp"
-
-typedef struct cvarTable_s {
-	vmCvar_t*	vmCvar;
-	const char*	cvarName;
-	const char*	defaultString;
-	int			cvarFlags;
-	int			modificationCount;  // for tracking changes
-	qboolean	trackChange;	    // track this variable, and announce if changed
-} cvarTable_t;
+#include "Proxy_CVars.hpp"
 
 static cvarTable_t proxyOriginalEngineCVarTable[] =
 {
@@ -15,7 +7,7 @@ static cvarTable_t proxyOriginalEngineCVarTable[] =
 	{ &proxy.originalEngineCvars.proxy_sv_enableRconCmdCooldown, "proxy_sv_enableRconCmdCooldown", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.originalEngineCvars.proxy_sv_enableNetStatus, "proxy_sv_enableNetStatus", "0", CVAR_ARCHIVE, 0, qfalse },
 };
-static const constexpr size_t proxyOriginalEngineCVarTableSize = ARRAY_LEN(proxyOriginalEngineCVarTable);
+static constexpr std::size_t proxyOriginalEngineCVarTableSize = ARRAY_LEN(proxyOriginalEngineCVarTable);
 
 static cvarTable_t proxyCVarTable[] =
 {
@@ -27,7 +19,7 @@ static cvarTable_t proxyCVarTable[] =
 	{ &proxy.cvars.sv_fps, "sv_fps", "20", CVAR_SERVERINFO, 0, qfalse },
 	{ &proxy.cvars.sv_gametype, "sv_gametype", "0", CVAR_SERVERINFO, 0, qfalse }
 };
-static const constexpr size_t proxyCVarTableSize = ARRAY_LEN(proxyCVarTable);
+static constexpr std::size_t proxyCVarTableSize = ARRAY_LEN(proxyCVarTable);
 
 // ==================================================
 // Proxy_OriginalEngine_CVars_Registration
@@ -37,6 +29,8 @@ static const constexpr size_t proxyCVarTableSize = ARRAY_LEN(proxyCVarTable);
 
 void Proxy_OriginalEngine_CVars_Registration(void)
 {
+	proxy.trap->Print("----- Proxy: Initializing original engine Proxy CVars\n");
+
 	unsigned int i = 0;
 	cvarTable_t* currentCVarTableItem = nullptr;
 
@@ -49,6 +43,8 @@ void Proxy_OriginalEngine_CVars_Registration(void)
 			currentCVarTableItem->modificationCount = currentCVarTableItem->vmCvar->modificationCount;
 		}
 	}
+
+	proxy.trap->Print("----- Proxy: Original engine Proxy CVars properly initialized\n");
 }
 
 // ==================================================
@@ -79,7 +75,7 @@ void Proxy_CVars_Registration(void)
 // Updates all affecting engine variables.
 // ==================================================
 
-void Proxy_OriginalEngine_UpdateCvars(void)
+static void Proxy_OriginalEngine_UpdateCvars(void)
 {
 	unsigned int i = 0;
 	cvarTable_t* currentCVarTable = nullptr;
@@ -111,7 +107,7 @@ void Proxy_OriginalEngine_UpdateCvars(void)
 // Updates all proxy variables.
 // ==================================================
 
-void Proxy_UpdateCvars(void)
+static void Proxy_UpdateCvars(void)
 {
 	unsigned int i = 0;
 	cvarTable_t* currentCVarTable = nullptr;

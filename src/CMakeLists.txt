@@ -36,144 +36,230 @@ endif(WIN32)
 set(JKA_YBEProxyDefines ${MPSharedDefines} "_GAME" )
 set(JKA_YBEProxyMainFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_ClientCommand.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_ClientCommand.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_CVars.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_CVars.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Files.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Files.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Header.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Imports.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Main.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_NewAPIWrappers.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_OldAPIWrappers.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Patch.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Server.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Main.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SharedAPI.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SharedAPI.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Shell.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Translate_SystemCalls.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Translate_SystemCalls.hpp"
 	)
 source_group("src/JKA_YBEProxy" FILES ${JKA_YBEProxyMainFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyMainFiles})
 
 #============================================================================
-# src/JKA_YBEProxy/DetourPatcher
+# src/JKA_YBEProxy/Imports/game
 #============================================================================
 
-set(JKA_YBEProxyDetourFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/DetourPatcher.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/DetourPatcher.hpp"
+set(JKA_YBEProxyImportsGameFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Imports/game/g_cmds.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Imports/game/g_cmds.hpp"
 	)
-source_group("src/JKA_YBEProxy/DetourPatcher" FILES ${JKA_YBEProxyDetourFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDetourFiles})
+source_group("src/JKA_YBEProxy/Imports/game" FILES ${JKA_YBEProxyImportsGameFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyImportsGameFiles})
 
 #============================================================================
-# src/JKA_YBEProxy/DetourPatcher/LengthDisassembler/
+# src/JKA_YBEProxy/Imports/qcommon
+#============================================================================
+
+set(JKA_YBEProxyImportsQcommonFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Imports/qcommon/cvar.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Imports/qcommon/cvar.hpp"
+	)
+source_group("src/JKA_YBEProxy/Imports/qcommon" FILES ${JKA_YBEProxyImportsQcommonFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyImportsQcommonFiles})
+
+#============================================================================
+# src/JKA_YBEProxy/Imports/server
+#============================================================================
+
+set(JKA_YBEProxyImportsServerFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Imports/server/sv_game.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Imports/server/sv_game.hpp"
+	)
+source_group("src/JKA_YBEProxy/Imports/server" FILES ${JKA_YBEProxyImportsServerFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyImportsServerFiles})
+
+#============================================================================
+# src/JKA_YBEProxy/RuntimePatch/Engine
+#============================================================================
+
+set(JKA_YBEProxyRuntimePatchEngineFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Utils.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
+	)
+source_group("src/JKA_YBEProxy/RuntimePatch/Engine" FILES ${JKA_YBEProxyRuntimePatchEngineFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyRuntimePatchEngineFiles})
+
+#============================================================================
+# src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon
+#============================================================================
+
+set(JKA_YBEProxyRuntimePatchEnginePatchesQcommonFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_common.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_common.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_files.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_files.hpp"
+	)
+source_group("src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon" FILES ${JKA_YBEProxyRuntimePatchEnginePatchesQcommonFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyRuntimePatchEnginePatchesQcommonFiles})
+
+#============================================================================
+# src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server
+#============================================================================
+
+set(JKA_YBEProxyRuntimePatchEnginePatchesServerFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_game.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_game.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_snapshot.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_snapshot.hpp"
+	)
+source_group("src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server" FILES ${JKA_YBEProxyRuntimePatchEnginePatchesServerFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyRuntimePatchEnginePatchesServerFiles})
+
+#============================================================================
+# src/JKA_YBEProxy/RuntimePatch/HookUtils
+#============================================================================
+
+set(JKA_YBEProxyHookUtilsFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp"
+	)
+source_group("src/JKA_YBEProxy/RuntimePatch/HookUtils" FILES ${JKA_YBEProxyHookUtilsFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyHookUtilsFiles})
+
+#============================================================================
+# src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/
 #============================================================================
 
 set(JKA_YBEProxyLengthDisassemblerFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/hde.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/hde.hpp"
 	)
-source_group("src/JKA_YBEProxy/DetourPatcher/LengthDisassembler" FILES ${JKA_YBEProxyLengthDisassemblerFiles})
+source_group("src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler" FILES ${JKA_YBEProxyLengthDisassemblerFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyLengthDisassemblerFiles})
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 4 OR "${TARGET_ARCH}" MATCHES "x86")
-#============================================================================
-# src/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x86
-#============================================================================
+	#============================================================================
+	# src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86
+	#============================================================================
 
-set(JKA_YBEProxyLengthDisassemblerX86Files
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x86/hde32.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x86/hde32.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x86/table32.hpp"
-	)
-source_group("src/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x86" FILES ${JKA_YBEProxyLengthDisassemblerX86Files})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyLengthDisassemblerX86Files})
+	set(JKA_YBEProxyLengthDisassemblerX86Files
+		"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86/hde32.cpp"
+		"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86/hde32.hpp"
+		"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86/table32.hpp"
+		)
+	source_group("src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86" FILES ${JKA_YBEProxyLengthDisassemblerX86Files})
+	set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyLengthDisassemblerX86Files})
 else ()
-#============================================================================
-# src/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x64
-#============================================================================
+	#============================================================================
+	# src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x64
+	#============================================================================
 
-set(JKA_YBEProxyLengthDisassemblerX64Files
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x64/hde64.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x64/hde64.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x64/table64.hpp"
-	)
-source_group("src/JKA_YBEProxy/DetourPatcher/LengthDisassembler/x64" FILES ${JKA_YBEProxyLengthDisassemblerX64Files})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyLengthDisassemblerX64Files})
+	set(JKA_YBEProxyLengthDisassemblerX64Files
+		"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x64/hde64.cpp"
+		"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x64/hde64.hpp"
+		"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x64/table64.hpp"
+		)
+	source_group("src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x64" FILES ${JKA_YBEProxyLengthDisassemblerX64Files})
+	set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyLengthDisassemblerX64Files})
 endif ()
 
 #============================================================================
-# src/JKA_YBEProxy/EnginePatch
+# src/JKA_YBEProxy/Wrappers
 #============================================================================
 
-set(JKA_YBEProxyEnginePatchFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/common/Proxy_common.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/common/Proxy_files.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_EnginePatch.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_client.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_ccmds.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_game.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_main.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/EnginePatch/Proxy_sv_snapshot.cpp"
+set(JKA_YBEProxyWrapperFiles
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Wrappers/Proxy_OpenJKAPI_Wrappers.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Wrappers/Proxy_OpenJKAPI_Wrappers.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.hpp"
 	)
-source_group("src/JKA_YBEProxy/EnginePatch" FILES ${JKA_YBEProxyEnginePatchFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyEnginePatchFiles})
+source_group("src/JKA_YBEProxy/Wrapper" FILES ${JKA_YBEProxyWrapperFiles})
+set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyWrapperFiles})
 
 #============================================================================
-# src/server
+# src/sdk/server
 #============================================================================
 
 set(JKA_YBEProxyServerFiles
-	"${JKA_YBEProxyDir}/server/server.hpp"
+	"${JKA_YBEProxyDir}/sdk/server/server.hpp"
+	"${JKA_YBEProxyDir}/sdk/server/sv_client.cpp"
+	"${JKA_YBEProxyDir}/sdk/server/sv_client.hpp"
 	)
-source_group("src/server" FILES ${JKA_YBEProxyServerFiles})
+source_group("src/sdk/server" FILES ${JKA_YBEProxyServerFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyServerFiles})
 
 #============================================================================
-# src/sys
+# src/sdk/sys
 #============================================================================
 
 set(JKA_YBEProxySysFiles
-	"${JKA_YBEProxyDir}/sys/sys_public.hpp"
+	"${JKA_YBEProxyDir}/sdk/sys/sys_public.hpp"
 	)
-source_group("src/sys" FILES ${JKA_YBEProxySysFiles})
+source_group("src/sdk/sys" FILES ${JKA_YBEProxySysFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxySysFiles})
 
 #============================================================================
-# src/qcommon
+# src/sdk/qcommon
 #============================================================================
 
 set(JKA_YBEProxyDSKCommonFiles
-	"${JKA_YBEProxyDir}/qcommon/disablewarnings.hpp"
-	"${JKA_YBEProxyDir}/qcommon/game_version.hpp"
-	"${JKA_YBEProxyDir}/qcommon/q_color.hpp"
-	"${JKA_YBEProxyDir}/qcommon/q_math.hpp"
-	"${JKA_YBEProxyDir}/qcommon/q_platform.hpp"
-	"${JKA_YBEProxyDir}/qcommon/q_shared.hpp"
-	"${JKA_YBEProxyDir}/qcommon/q_string.hpp"
-	"${JKA_YBEProxyDir}/qcommon/qcommon.hpp"
-	"${JKA_YBEProxyDir}/qcommon/tags.hpp"
+	"${JKA_YBEProxyDir}/sdk/qcommon/disablewarnings.hpp"
+	"${JKA_YBEProxyDir}/sdk/qcommon/files.cpp"
+	"${JKA_YBEProxyDir}/sdk/qcommon/game_version.hpp"
+	"${JKA_YBEProxyDir}/sdk/qcommon/q_color.hpp"
+	"${JKA_YBEProxyDir}/sdk/qcommon/q_math.hpp"
+	"${JKA_YBEProxyDir}/sdk/qcommon/q_platform.hpp"
+	"${JKA_YBEProxyDir}/sdk/qcommon/q_shared.cpp"
+	"${JKA_YBEProxyDir}/sdk/qcommon/q_shared.hpp"
+	"${JKA_YBEProxyDir}/sdk/qcommon/q_string.cpp"
+	"${JKA_YBEProxyDir}/sdk/qcommon/q_string.hpp"
+	"${JKA_YBEProxyDir}/sdk/qcommon/qcommon.hpp"
+	"${JKA_YBEProxyDir}/sdk/qcommon/tags.hpp"
 	)
-source_group("src/qcommon" FILES ${JKA_YBEProxyDSKCommonFiles})
+source_group("src/sdk/qcommon" FILES ${JKA_YBEProxyDSKCommonFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDSKCommonFiles})
 
 #============================================================================
-# src/game
+# src/sdk/game
 #============================================================================
 
 set(JKA_YBEProxySDKGameFiles
-	"${JKA_YBEProxyDir}/game/ai.hpp"
-	"${JKA_YBEProxyDir}/game/anims.hpp"
-	"${JKA_YBEProxyDir}/game/b_public.hpp"
-	"${JKA_YBEProxyDir}/game/bg_public.hpp"
-	"${JKA_YBEProxyDir}/game/bg_vehicles.hpp"
-	"${JKA_YBEProxyDir}/game/bg_weapons.hpp"
-	"${JKA_YBEProxyDir}/game/g_local.hpp"
-	"${JKA_YBEProxyDir}/game/g_public.hpp"
-	"${JKA_YBEProxyDir}/game/g_team.hpp"
-	"${JKA_YBEProxyDir}/game/g_xcvar.hpp"
-	"${JKA_YBEProxyDir}/game/surfaceflags.hpp"
-	"${JKA_YBEProxyDir}/game/teams.hpp"
+	"${JKA_YBEProxyDir}/sdk/game/ai.hpp"
+	"${JKA_YBEProxyDir}/sdk/game/anims.hpp"
+	"${JKA_YBEProxyDir}/sdk/game/b_public.hpp"
+	"${JKA_YBEProxyDir}/sdk/game/bg_public.hpp"
+	"${JKA_YBEProxyDir}/sdk/game/bg_vehicles.hpp"
+	"${JKA_YBEProxyDir}/sdk/game/bg_weapons.hpp"
+	"${JKA_YBEProxyDir}/sdk/game/g_local.hpp"
+	"${JKA_YBEProxyDir}/sdk/game/g_public.hpp"
+	"${JKA_YBEProxyDir}/sdk/game/g_team.hpp"
+	"${JKA_YBEProxyDir}/sdk/game/g_xcvar.hpp"
+	"${JKA_YBEProxyDir}/sdk/game/surfaceflags.hpp"
+	"${JKA_YBEProxyDir}/sdk/game/teams.hpp"
 	)
-source_group("src/game" FILES ${JKA_YBEProxySDKGameFiles})
+source_group("src/sdk/game" FILES ${JKA_YBEProxySDKGameFiles})
 set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxySDKGameFiles})
 
 add_library(${JKA_YBEProxy} SHARED ${JKA_YBEProxyFiles})
