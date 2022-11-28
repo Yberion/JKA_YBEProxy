@@ -1,5 +1,10 @@
 #include "Proxy_Header.hpp"
-#include "server/server.hpp"
+#include "sdk/server/server.hpp"
+#include "Proxy_ClientCommand.hpp"
+#include "sdk/server/sv_client.hpp"
+#include "Proxy_SharedAPI.hpp"
+#include "Imports/game/g_cmds.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.hpp"
 
 // ==================================================
 // IMPORT TABLE
@@ -42,7 +47,7 @@ void Proxy_SharedAPI_ClientDisconnect(int clientNum)
 {
 	if (clientNum >= 0 && clientNum < MAX_CLIENTS && proxy.clientData[clientNum].isConnected) {
 		// Reset client's data on disconnect
-		memset(&proxy.clientData[clientNum], 0, sizeof(*proxy.clientData));
+		std::memset(&proxy.clientData[clientNum], 0, sizeof(*proxy.clientData));
 	}
 }
 
@@ -56,7 +61,7 @@ void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset)
 
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 {
-	Proxy_s::ClientData_s *currentClientData = &proxy.clientData[clientNum];
+	ClientData_t *currentClientData = &proxy.clientData[clientNum];
 
 	if (!currentClientData->isConnected)
 	{
@@ -86,7 +91,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		// 256 because we don't need more, the chat can handle 150 max char
 		// and allowing 256 prevent a message to not be sent instead of being truncated
 		// if this is a bit more than 150
-		if (strlen(argsConcat) > 256)
+		if (std::strlen(argsConcat) > 256)
 		{
 			return qfalse;
 		}
@@ -131,7 +136,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		qboolean checkNeeded = qfalse;
 
 		// Fix: callvote long string length crash
-		if (strlen(cmd_arg2) >= MAX_CVAR_VALUE_STRING)
+		if (std::strlen(cmd_arg2) >= MAX_CVAR_VALUE_STRING)
 		{
 			return qfalse;
 		}
@@ -204,7 +209,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	{
 		if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer && (!Q_stricmpn(cmd, "netStatus", 9) || !Q_stricmpn(cmd, "showNet", 7)))
 		{
-			Proxy_ClientCommand_NetStatus(clientNum);
+			Proxy_Engine_ClientCommand_NetStatus(clientNum);
 
 			return qfalse;
 		}
@@ -225,17 +230,17 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	
 	proxy.trap->GetUserinfo(clientNum, userinfo, sizeof(userinfo));
 
-	if (strlen(userinfo) == 0)
+	if (std::strlen(userinfo) == 0)
 	{
 		return;
 	}
 
-	size_t len = 0;
+	std::size_t len = 0;
 	const char* val = NULL;
 
 	val = Info_ValueForKey(userinfo, "name");
 
-	Proxy_s::ClientData_s *currentClientData = &proxy.clientData[clientNum];
+	ClientData_t *currentClientData = &proxy.clientData[clientNum];
 
 	// Fix bad names
 	Proxy_ClientCleanName(val, currentClientData->cleanName, sizeof(currentClientData->cleanName));
@@ -248,7 +253,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	// There's also a check done in SV_UserinfoChanged
 	if (val)
 	{
-		len = strlen(val);
+		len = std::strlen(val);
 
 		if (!Q_stricmpn(val, "darksidetools", len))
 		{
@@ -261,7 +266,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 			!Q_stricmpn(val, "rancor", len) ||
 			!Q_stricmpn(val, "wampa", len) ||
 			!Q_IsValidAsciiStr(val) ||
-			len >= /*MAX_QPATH*/ (size_t)proxy.cvars.proxy_sv_modelPathLength.integer)
+			len >= /*MAX_QPATH*/ (std::size_t)proxy.cvars.proxy_sv_modelPathLength.integer)
 		{
 			Info_SetValueForKey(userinfo, "model", "kyle");
 		}
@@ -272,7 +277,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	
 	Q_strncpyz(forcePowers, Info_ValueForKey(userinfo, "forcepowers"), sizeof(forcePowers));
 
-	len = strlen(forcePowers);
+	len = std::strlen(forcePowers);
 
 	qboolean badForce = qfalse;
 
@@ -280,7 +285,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	{
 		byte seps = 0;
 
-		for (size_t i = 0; i < len; i++)
+		for (std::size_t i = 0; i < len; i++)
 		{
 			if (forcePowers[i] != '-' && (forcePowers[i] < '0' || forcePowers[i] > '9'))
 			{

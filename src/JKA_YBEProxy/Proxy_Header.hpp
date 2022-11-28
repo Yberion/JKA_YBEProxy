@@ -9,6 +9,15 @@
 // PLATFORM SPECIFIC STUFF
 // ==================================================
 
+// /!\ Should start at 0 because it will be used as index to array
+enum Proxy_Platform_e
+{
+	PROXY_WINDOWS = 0,
+	PROXY_LINUX,
+
+	PROXY_PLATFORM_LENGTH
+};
+
 #ifdef _MSC_VER
 	#include <windows.h>
 
@@ -19,6 +28,8 @@
 	#define YBEProxy_GetFunctionAddress(a, b) GetProcAddress((HMODULE)a, b)
 
 	#define ORIGINAL_ENGINE_VERSION "(internal)JAmp: v1.0.1.0 win-x86 Oct 30 2003"
+
+	constexpr Proxy_Platform_e PROXY_PLATFORM = Proxy_Platform_e::PROXY_WINDOWS;
 #else
 	#include <dlfcn.h>
 
@@ -29,15 +40,20 @@
 	#define YBEProxy_GetFunctionAddress(a, b) dlsym(a, b)
 
 	#define ORIGINAL_ENGINE_VERSION "JAmp: v1.0.1.1 linux-i386 Nov 10 2003"
+
+	constexpr Proxy_Platform_e PROXY_PLATFORM = Proxy_Platform_e::PROXY_LINUX;
 #endif
 
 // ==================================================
 // INCLUDE
 // ==================================================
 
-#include "game/g_local.hpp"
-#include "server/server.hpp"
-#include "Proxy_Server.hpp"
+#include "sdk/game/g_local.hpp"
+#include "sdk/game/g_public.hpp"
+#include "sdk/qcommon/q_shared.hpp"
+
+#include <cstdint>
+#include <cstddef>
 
 // ==================================================
 // DEFINE
@@ -61,31 +77,81 @@
 // TYPEDEF
 // ==================================================
 
-typedef intptr_t	(QDECL *systemCallFuncPtr_t)(intptr_t command, ...);
-typedef intptr_t	(*vmMainFuncPtr_t)(intptr_t command, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t);
-typedef void		(*dllEntryFuncPtr_t)(systemCallFuncPtr_t);
+using systemCallFuncPtr_t =	intptr_t (QDECL *)(intptr_t command, ...);
+using vmMainFuncPtr_t = 	intptr_t (*)(intptr_t command, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t);
+using dllEntryFuncPtr_t = 	void (*)(systemCallFuncPtr_t);
 
 // ==================================================
 // STRUCTS
 // ==================================================
 
-typedef struct timenudgeData_s
+struct timenudgeData_t
 {
 	int             delayCount;
 	int             delaySum;
 	int             pingSum;
 	int             lastTimeTimeNudgeCalculation;
-} timenudgeData_t;
+};
 
-typedef struct ucmdStat_s
+struct ucmdStat_t
 {
-	int		serverTime;
-	int		packetIndex;
-} ucmdStat_t;
+	int				serverTime;
+	std::size_t		packetIndex;
+};
 
 #define CMD_MASK 1024
 
-typedef struct Proxy_s {
+struct ProxyData_t
+{
+	int					svsTime;
+};
+
+struct LocatedGameData_t
+{
+	sharedEntity_t*		g_entities;
+	int					g_entitySize;
+	int					num_entities;
+
+	playerState_t*		g_clients;
+	int					g_clientSize;
+};
+
+struct ClientData_t
+{
+	bool				isConnected;
+	char				cleanName[MAX_NETNAME];
+
+	timenudgeData_t		timenudgeData;
+	int					timenudge; // Approximation (+- 7 with stable connection)
+
+	int					lastTimeNetStatus;
+	int					lastTimeMyratioCheck;
+
+	ucmdStat_t			cmdStats[CMD_MASK];
+	std::size_t			cmdIndex;
+};
+
+struct Proxy_OriginalEngine_CVars_t
+{
+	// New cvars
+	vmCvar_t proxy_sv_pingFix;
+	vmCvar_t proxy_sv_enableRconCmdCooldown;
+	vmCvar_t proxy_sv_enableNetStatus;
+};
+
+struct Proxy_CVars_t
+{
+	// New cvars
+	vmCvar_t proxy_sv_maxCallVoteMapRestartValue;
+	vmCvar_t proxy_sv_modelPathLength;
+
+	// get cvars
+	vmCvar_t sv_fps;
+	vmCvar_t sv_gametype;
+};
+
+struct Proxy_t
+{
 	void					*jampgameHandle;
 
 	vmMainFuncPtr_t			originalVmMain;
@@ -96,181 +162,24 @@ typedef struct Proxy_s {
 
 	gameImport_t*			trap;
 
-	gameImport_t*			originalNewAPIGameImportTable;
-	gameExport_t*			originalNewAPIGameExportTable;
+	gameImport_t*			originalOpenJKAPIGameImportTable;
+	gameExport_t*			originalOpenJKAPIGameExportTable;
 
-	gameImport_t*			copyNewAPIGameImportTable;
-	gameExport_t*			copyNewAPIGameExportTable;
+	gameImport_t*			copyOpenJKAPIGameImportTable;
+	gameExport_t*			copyOpenJKAPIGameExportTable;
 
 	bool					isOriginalEngine;
 
-	struct ProxyData_s {
-		int					svsTime;
-	} proxyData;
-
-	struct LocatedGameData_s {
-		sharedEntity_t*		g_entities;
-		int					g_entitySize;
-		int					num_entities;
-
-		playerState_t*		g_clients;
-		int					g_clientSize;
-	} locatedGameData;
-
-	struct ClientData_s {
-		bool				isConnected;
-		char				cleanName[MAX_NETNAME];
-
-		timenudgeData_t		timenudgeData;
-		int					timenudge; // Approximation (+- 7 with stable connection)
-
-		int					lastTimeNetStatus;
-		int					lastTimeMyratioCheck;
-
-		ucmdStat_t			cmdStats[CMD_MASK];
-		int					cmdIndex;
-	} clientData[MAX_CLIENTS];
-
-	struct Proxy_OriginalEngine_CVars_s {
-		// New cvars
-		vmCvar_t proxy_sv_pingFix;
-		vmCvar_t proxy_sv_enableRconCmdCooldown;
-		vmCvar_t proxy_sv_enableNetStatus;
-	} originalEngineCvars;
-
-	struct Proxy_CVars_s {
-		// New cvars
-		vmCvar_t proxy_sv_maxCallVoteMapRestartValue;
-		vmCvar_t proxy_sv_modelPathLength;
-
-		// get cvars
-		vmCvar_t sv_fps;
-		vmCvar_t sv_gametype;
-	} cvars;
-} Proxy_t;
+	ProxyData_t				proxyData;
+	LocatedGameData_t		locatedGameData;
+	ClientData_t			clientData[MAX_CLIENTS];
+	
+	Proxy_OriginalEngine_CVars_t originalEngineCvars;
+	Proxy_CVars_t			 cvars;
+};
 
 // ==================================================
 // EXTERN VARIABLE
 // ==================================================
 
 extern Proxy_t proxy;
-
-// ==================================================
-// FUNCTION
-// ==================================================
-
-// ------------------------
-// Proxy_Main
-// ------------------------
-
-Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_t arg2, intptr_t arg3, intptr_t arg4,
-	intptr_t arg5, intptr_t arg6, intptr_t arg7, intptr_t arg8, intptr_t arg9, intptr_t arg10);
-
-// ------------------------
-// Proxy_CVar
-// ------------------------
-
-void Proxy_OriginalEngine_CVars_Registration(void);
-void Proxy_CVars_Registration(void);
-void Proxy_OriginalEngine_UpdateCvars(void);
-void Proxy_UpdateCvars(void);
-void Proxy_UpdateAllCvars(void);
-
-// ------------------------
-// Proxy_Files
-// ------------------------
-
-void Proxy_LoadGameLibrary(void);
-
-// ------------------------
-// Proxy_Imports
-// ------------------------
-
-// -- server utilities
-playerState_t* Proxy_GetPlayerStateByClientNum(int clientNum);
-void Proxy_ClientCleanName(const char* in, char* out, int outSize);
-
-// -- other
-char* ConcatArgs(int start);
-
-// ------------------------
-// Proxy_NewAPIWrappers
-// ------------------------
-
-void Proxy_NewAPI_InitLayerExportTable(void);
-void Proxy_NewAPI_InitLayerImportTable(void);
-
-// -- Import table
-void Proxy_NewAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient);
-void Proxy_NewAPI_GetUsercmd(int clientNum, usercmd_t* cmd);
-
-// -- Export table
-void Proxy_NewAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
-void Proxy_NewAPI_ClientCommand(int clientNum);
-char* Proxy_NewAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
-void Proxy_NewAPI_ClientDisconnect(int clientNum);
-void Proxy_NewAPI_ClientThink(int clientNum, usercmd_t* ucmd);
-qboolean Proxy_NewAPI_ClientUserinfoChanged(int clientNum);
-void Proxy_NewAPI_RunFrame(int levelTime);
-void Proxy_NewAPI_ShutdownGame(int restart);
-
-// ------------------------
-// Proxy_OldAPIWrappers
-// ------------------------
-
-// VM_DllSyscall can handle up to 1 (command) + 16 args
-intptr_t QDECL Proxy_OldAPI_VM_DllSyscall(intptr_t command, ...);
-// VM_Call can handle up to 1 (command) + 11 args
-intptr_t QDECL Proxy_OldAPI_VM_Call(intptr_t command, ...);
-
-// ------------------------
-// Proxy_SharedAPI
-// ------------------------
-
-// -- Import table
-void Proxy_SharedAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient);
-void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* cmd);
-
-// -- Export table
-void Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
-void Proxy_SharedAPI_ClientDisconnect(int clientNum);
-void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
-qboolean Proxy_SharedAPI_ClientCommand(int clientNum);
-//void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd);
-void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum);
-
-// ------------------------
-// Proxy_Translate_SystemCalls
-// ------------------------
-
-void Proxy_Translate_SystemCalls(void);
-
-// ------------------------
-// Proxy_Translate_GameCalls
-// ------------------------
-
-void Proxy_Translate_GameCalls(void);
-
-// ------------------------
-// Proxy_Patch
-// ------------------------
-
-void Proxy_Patch_Attach(void);
-void Proxy_Patch_Detach(void);
-void Proxy_Inline_Patch(void);
-
-// ------------------------
-// Proxy_Server
-// ------------------------
-
-void Proxy_Server_Initialize_MemoryAddress(void);
-void Proxy_Server_CalcPacketsAndFPS(int clientNum, int* packets, int* fps);
-void Proxy_Server_UpdateUcmdStats(int clientNum, usercmd_t* cmd, int packetIndex);
-void Proxy_Server_UpdateTimenudge(client_t* client, usercmd_t* cmd, int _Milliseconds);
-
-// ------------------------
-// Proxy_ClientCommand
-// ------------------------
-
-void Proxy_ClientCommand_NetStatus(int clientNum);
-void Proxy_ClientCommand_MyRatio(int clientNum);
