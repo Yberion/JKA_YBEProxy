@@ -13,6 +13,8 @@ Todo : https://hackmd.io/LDI7ekrzREu7WFHZJKooMQ
 
 Features : https://hackmd.io/kvj--DTaTmOofjxL5bud-Q
 
+Trampoline hook : https://hackmd.io/7SyusRFMR-m06e-nQ2ehDw
+
 ## Notes
 
 If you deal with `static` functions, you better copy/paste them in the Proxy instead of making a trampoline of them because it won't work properly.  
