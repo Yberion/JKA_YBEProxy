@@ -144,6 +144,7 @@ struct Proxy_CVars_t
 	// New cvars
 	vmCvar_t proxy_sv_maxCallVoteMapRestartValue;
 	vmCvar_t proxy_sv_modelPathLength;
+	vmCvar_t proxy_sv_disableKillCmd;
 
 	// get cvars
 	vmCvar_t sv_fps;

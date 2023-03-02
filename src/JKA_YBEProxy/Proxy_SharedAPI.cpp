@@ -127,6 +127,11 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		return qfalse;
 	}
 
+	if (proxy.cvars.proxy_sv_disableKillCmd.integer && !Q_stricmpn(cmd, "kill", 4))
+	{
+		return qfalse;
+	}
+
 	if (!Q_stricmpn(cmd, "callvote", 8))
 	{
 		const int cmdArg2NumberValue = atoi(cmd_arg2);
