@@ -52,6 +52,7 @@ constexpr intptr_t func_SV_ExecuteClientCommand_addr[] = 	{ 0x43bad0, 0x804e3d4 
 constexpr intptr_t func_SV_BeginDownload_f_addr[] = 		{ 0x43b3c0, 0x804d714 };
 constexpr intptr_t func_SV_DoneDownload_f_addr[] = 			{ 0x43b390, 0x804eaa4 };
 constexpr intptr_t func_SV_WriteDownloadToClient_addr[] =	{ 0x43b3f0, 0x804d764 };
+constexpr intptr_t tutu[] =	{ 0x20092f60, 0x20092f60 };
 
 // --------------------------------
 // Function address to call

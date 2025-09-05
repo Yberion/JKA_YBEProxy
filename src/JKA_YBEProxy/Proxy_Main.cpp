@@ -13,6 +13,7 @@
 #include "Proxy_Translate_SystemCalls.hpp"
 #include "Wrappers/Proxy_OpenJKAPI_Wrappers.hpp"
 #include "Wrappers/Proxy_OriginalAPI_Wrappers.hpp"
+#include "JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp"
 
 Proxy_t proxy = { 0 };
 
@@ -49,6 +50,11 @@ static void Proxy_GetOriginalGameAPI(void)
 	proxy.originalDllEntry(Proxy_OriginalAPI_VM_DllSyscall);
 }
 
+void blublu()
+{
+	proxy.trap->Print("hihihihi\n");
+}
+
 Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_t arg2, intptr_t arg3, intptr_t arg4,
 	intptr_t arg5, intptr_t arg6, intptr_t arg7, intptr_t arg8, intptr_t arg9, intptr_t arg10)
 {
@@ -79,6 +85,16 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 			char version[MAX_STRING_CHARS];
 
 			proxy.trap->Cvar_VariableStringBuffer("version", version, sizeof(version));
+
+			((void(*)())0x20092f60)();
+
+			void (*blabla)();
+
+			HookUtils::HookEntry a = HookUtils::HookEntry("Svcmd_GameMem_f", (unsigned char*)tutu[PROXY_PLATFORM], &blabla, &blublu, 0);
+
+			HookUtils::Attach(a);
+
+			((void(*)())0x20092f60)();
 
 			if (!Q_stricmpn(version, ORIGINAL_ENGINE_VERSION, sizeof(ORIGINAL_ENGINE_VERSION) - 1))
 			{
@@ -180,6 +196,9 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CLIENT_COMMAND: // (int clientNum)
 		//==================================================
 		{
+
+			((void(*)())0x20092f60)();
+
 			if (!Proxy_SharedAPI_ClientCommand((int)arg0))
 			{
 				return 0;
