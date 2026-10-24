@@ -107,7 +107,7 @@ The output is `jampgamei386.so`.
 ## Developer notes
 
 - Check the disassembly before hooking a `static` function of the original binaries. The compiler may have inlined it into its callers, or given it a non-standard calling convention, and in both cases a plain trampoline hook does not work. See the pitfalls in [docs/trampoline-hook.md](docs/trampoline-hook.md#5-pitfalls).
-- Known crash: `rcon map <map>` and `rcon map_restart 0` sometimes crash the server, which was observed more often with Discord running on the server machine. The cause is identified: hook functions are still on the call stack when the engine unloads the proxy. The fix is described in F1 of [docs/audit/fixes.md](docs/audit/fixes.md).
+- Known crash: `rcon map <map>` and `rcon map_restart 0` sometimes crash the server, which was observed more often with Discord running on the server machine. The likely cause is identified, not reproduced yet: hook functions are still on the call stack when the engine unloads the proxy. The fix is described in F1 of [docs/audit/fixes.md](docs/audit/fixes.md).
 
 ## Credits
 

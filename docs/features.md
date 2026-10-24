@@ -115,7 +115,10 @@ Prints the network settings of every client:
 | `id` | Client number |
 | `name` | Name |
 
-A player can run the command at most once every 500 ms. Bots show `0` for `fps` and `packets`.
+A player can run the command at most once every 500 ms. Bots show `0` for `fps` and `packets`, and so does a human whose ping shows `0`, which can happen without [`proxy_sv_pingFix`](#proxy_sv_pingfix).
+
+> [!WARNING]
+> For any client with a ping of `0`, the command currently sets the engine's snapshot interval to 1 ms. A human player in that case then receives more snapshots than their `snaps` setting asks for, until their next userinfo change. See F9 in [audit/fixes.md](audit/fixes.md).
 
 > [!WARNING]
 > The `timeNudge` estimate needs:
@@ -172,11 +175,14 @@ Engine: Any.
   - control characters are removed;
   - runs of more than 3 spaces or `@` are shortened;
   - an empty name becomes `Padawan`.
-- The model is replaced with `kyle` when it is `jedi_/red`, `jedi_/blue`, `rancor` or `wampa`, when it contains a character outside printable ASCII, or when it is too long (see [`proxy_sv_modelPathLength`](#proxy_sv_modelpathlength)).
+- The model is replaced with `kyle` when it is `jedi_/red`, `jedi_/blue`, `rancor` or `wampa` (today also any start of these names, see F3 in [audit/fixes.md](audit/fixes.md)), when it contains a character outside printable ASCII, or when it is too long (see [`proxy_sv_modelPathLength`](#proxy_sv_modelpathlength)).
 - `forcepowers` must look like `rank-side-powers` (22 to 24 characters). Otherwise the proxy replaces it with `7-1-030000000000003332` (crash fix).
 
 > [!WARNING]
-> These fixes are not applied to the userinfo the client sends when it connects. See F2 in [audit/fixes.md](audit/fixes.md).
+> Two known gaps:
+>
+> - These fixes are not applied to the userinfo the client sends when it connects. See F2 in [audit/fixes.md](audit/fixes.md).
+> - Neither the engine nor the proxy keeps the `ip` key of the userinfo up to date, so a client can fake it and avoid an IP ban after the next map change. See O1 in [audit/other-engines.md](audit/other-engines.md).
 
 ### User commands
 
@@ -222,9 +228,9 @@ Engine: Original.
 - rcon:
   - the engine's 500 ms timer is removed (see [`proxy_sv_enableRconCmdCooldown`](#proxy_sv_enablerconcmdcooldown));
   - rcon output is sent in chunks of 1008 bytes, so long output such as `rcon status` is no longer truncated;
-  - `writeconfig` only accepts `.cfg` files. The check can still be bypassed, see F7 in [audit/fixes.md](audit/fixes.md).
+  - `writeconfig` refuses a file name with a 3-letter extension other than `.cfg`. Shorter extensions such as `.so` get through, and `vstr`/`exec` bypass the check, see F7 in [audit/fixes.md](audit/fixes.md).
 - `status` is rewritten:
   - it shows the hostname, address, OS, version, gamedir, map, gametype, and the number of humans and bots;
   - the name is printed last, so it is never truncated.
-- `SV_SvEntityForGentity` computes the entity index from the entity's address instead of trusting `s.number`.
+- `SV_SvEntityForGentity` computes the entity index from the entity's address instead of trusting `s.number`, like JK2MV's fix for the "player ghosting" bug (players walking through another player).
 - Ping calculation: bots show `0`, and the accurate mode is available (see [`proxy_sv_pingFix`](#proxy_sv_pingfix)).

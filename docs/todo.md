@@ -57,7 +57,7 @@
 - Add a mute system (look at `SV_SendServerCommand`).
 - Make `dumpuser` accept a client number.
 - Make `/rcon forceteam -1 spectator` move everyone to spectators (catch the call with `GAME_CONSOLE_COMMAND`).
-- ffa3 crash exploit with events (look at `SV_AddEntitiesVisibleFromPoint`). Not reproduced yet; it seems to need a high FPS.
+- ffa3 crash exploit with events (look at `SV_AddEntitiesVisibleFromPoint`). Needs a high FPS. EternalJK fixed it, see O9 in [audit/other-engines.md](audit/other-engines.md).
 - Rate policy.
 - Snaps policy.
 - Rate limiter (anti-DDoS). See F6 in [audit/fixes.md](audit/fixes.md).
@@ -66,7 +66,7 @@
 
 ### Bugs
 
-- `rcon map mp/ffa3` (any map) and `rcon map_restart 0` sometimes crash the server since the hooked `SVC_RemoteCommand` was added. It happened more often with Discord running on the server machine. The cause is identified, see F1 in [audit/fixes.md](audit/fixes.md).
+- `rcon map mp/ffa3` (any map) and `rcon map_restart 0` sometimes crash the server since the hooked `SVC_RemoteCommand` was added. It happened more often with Discord running on the server machine. The likely cause is identified, not reproduced yet, see F1 in [audit/fixes.md](audit/fixes.md).
 
 ### Ban system
 
