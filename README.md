@@ -7,13 +7,15 @@ To compile a 32bits version on a 64bits linux distribution add the following def
 
 ``cmake .. -DTARGET_ARCH=x86``
 
-Patchnote : https://hackmd.io/E6LOdJOVQBi4pr1S7z11UA
+Patchnote : [docs/patchnotes.md](docs/patchnotes.md)
 
-Todo : https://hackmd.io/LDI7ekrzREu7WFHZJKooMQ
+Todo : [docs/todo.md](docs/todo.md)
 
-Features : https://hackmd.io/kvj--DTaTmOofjxL5bud-Q
+Features : [docs/features.md](docs/features.md)
 
-Trampoline hook : https://hackmd.io/7SyusRFMR-m06e-nQ2ehDw
+Trampoline hook : [docs/trampoline-hook.md](docs/trampoline-hook.md)
+
+Audit (fixes, improvements, combat feeling) : [docs/audit/README.md](docs/audit/README.md)
 
 ## Notes
 
