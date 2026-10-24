@@ -290,15 +290,15 @@ const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum)
 	{
 		len = std::strlen(val);
 
-		if (!Q_stricmpn(val, "darksidetools", len))
+		if (!Q_stricmpn(val, "darksidetools", 13))
 		{
 			return "(Anti-Cheat system) you got kicked cause of cheating";
 		}
 
-		if ((!Q_stricmpn(val, "jedi_", 5) && (!Q_stricmpn(val, "jedi_/red", len) ||
-			!Q_stricmpn(val, "jedi_/blue", len))) ||
-			!Q_stricmpn(val, "rancor", len) ||
-			!Q_stricmpn(val, "wampa", len) ||
+		if (!val[0] ||
+			!Q_stricmp(val, "jedi_") || !Q_stricmpn(val, "jedi_/", 6) ||
+			!Q_stricmpn(val, "rancor", 6) ||
+			!Q_stricmpn(val, "wampa", 5) ||
 			!Q_IsValidAsciiStr(val) ||
 			len >= /*MAX_QPATH*/ (std::size_t)proxy.cvars.proxy_sv_modelPathLength.integer)
 		{
