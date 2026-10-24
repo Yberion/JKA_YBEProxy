@@ -1,10 +1,10 @@
 # JKA_YBEProxy audit
 
-Audit done on 2026-10-24 against version `0.19.0 Beta` (commit [`57d9a59`](https://github.com/Yberion/JKA_YBEProxy/commit/57d9a59)). Second review on the same day: every claim was checked again against the sources, then corrected. Each item now has a verification status.
+Audit done on 2026-10-24 against version `0.19.0 Beta` (commit [`57d9a59`](https://github.com/Yberion/JKA_YBEProxy/commit/57d9a59)). Second review on the same day: every claim was checked again against the sources, then corrected. Each item now has a verification status. A third pass corrected the F9 fix and added a point to F10. F11 (`dumpuser` crash) was added on 2026-10-24, confirmed by observation.
 
 ## Files
 
-- [fixes.md](fixes.md): bugs and security issues to fix, ranked by severity (F1 to F10).
+- [fixes.md](fixes.md): bugs and security issues to fix, ranked by severity (F1 to F11).
 - [improvements.md](improvements.md): robustness, simplification, full OpenJK support, build (A1 to A7).
 - [other-engines.md](other-engines.md): comparison with Quake 3, ioquake3, Quake3e, OpenJK, JK2MV and TaystJK (EternalJK). Fixes missing from the proxy (O1 to O11), and differences that need nothing.
 - [feeling.md](feeling.md): why a recompiled engine (`linuxjampded`) or game module (`jampgame`) changes the combat "feeling", leads and a method to find the cause.
@@ -50,12 +50,14 @@ Engine (jediacademy):
 - `sv_gametype = Cvar_Get("g_gametype", ...)`; `sv_fps` registered with `CVAR_TEMP`; `Cvar_Get` ORs the flags into an existing cvar and applies a pending latched value; `trap_Cvar_Set` is a forced set that ignores the latch.
 - `Com_WriteConfig_f` only adds `.cfg` when the name has no extension; `FS_FOpenFileWrite` checks neither the extension nor `..`.
 - `sv_fps` below 1 is reset to 10 at the start of `SV_Frame`.
+- Bots never reach `SV_UserMove`: their usercmds go through `BOTLIB_USER_COMMAND` straight to `SV_ClientThink` (`server/sv_game.cpp:977-979`).
 - The engine never maintains the `ip` userinfo key after the connect (see O1).
 - Windows `Sys_UnpackDLL` extracts the DLL only when it is inside a pk3; Linux loads the `.so` from `fs_basepath`.
 
 Game (jediacademy):
 
 - The forcepowers crash is server-side: `BG_LegalizedForcePowers` uses uninitialised `final_Powers[]` entries as an array index ([`game/bg_misc.c:439-563`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/bg_misc.c#L439-L563)).
+- The game compares the command names and arguments that the proxy filters whole, with `Q_stricmp` (see F10).
 - `target_level_change` runs `map` with `EXEC_NOW` from inside the game ([`game/g_target.c:949`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_target.c#L949)).
 
 Other repositories:
@@ -78,7 +80,7 @@ The risk sits in two places:
 ## Suggested order
 
 1. F2, then F3: userinfo sanitised on connect, and the anti-cheat fixed in the same function. Small changes. F2 closes a server crash that any client can trigger. Add the checks of O8 (duplicate keys, failed `Info_SetValueForKey`) and O1 (`ip`) at the same time: without O8, a long userinfo still gets through.
-2. F9: one local variable. Today a display command changes the snapshot rate of real players.
+2. F9: a local variable in `netStatus`, and one test deleted in `Proxy_SV_UserMove`. Today a display command changes the snapshot rate of real players.
 3. F1: `rcon map` crash. Both checks on the binaries are done: the design works as is.
 4. F6, with F7: rcon and getstatus/getinfo rate limiting in the F1 filter, and `writeconfig`.
 5. F5: wrong cvars.

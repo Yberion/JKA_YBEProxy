@@ -706,7 +706,7 @@ The alignment test (`offset % gentitySize`) is an addition: JK2MV does not have 
 
 ## F9. `netStatus` modifies engine state (Medium)
 
-Status: **source only**, checked. The impact is **corrected**: it is a netcode change for a real player.
+Status: **source only**, checked. The impact is **corrected**: it is a netcode change for a real player. The fix is **corrected** too: the first version left `Proxy_SV_UserMove` unchanged, and a human with a ping of 0 would then show wrong `fps` and `packets` values (found while writing [tests/tests.md](tests/tests.md)).
 
 - Without `proxy_sv_pingFix`, `messageSent` and `messageAcked` both use `svs.time` ([`server/sv_snapshot.cpp:667`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_snapshot.cpp#L667), [`server/sv_client.cpp:1715`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L1715)), which only changes once per server frame. A client whose round trip is shorter than one frame (50 ms at `sv_fps 20`) shows a ping of 0.
 - [Proxy_Engine_ClientCommand.cpp:57-64](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp#L57-L64) treats any client with a ping below 1 as a bot, and sets `cl->snapshotMsec = 1`.
@@ -715,21 +715,38 @@ Status: **source only**, checked. The impact is **corrected**: it is a netcode c
 
 ### Fix
 
-Do not write to `cl`. In [Proxy_Engine_ClientCommand.cpp:57-73](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp#L57-L73):
+Two changes.
 
-```cpp
-// Bots have no snapshot rate: avoid the division by zero without touching the engine state
-const int snapshotMsec = cl->snapshotMsec > 0 ? cl->snapshotMsec : 1;
+1. Do not write to `cl`. In [Proxy_Engine_ClientCommand.cpp:57-73](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp#L57-L73):
 
-if (cl->netchan.remoteAddress.type != NA_BOT)
-{
-	Proxy_Engine_Client_CalcPacketsAndFPS(i, &packets, &fps);
-}
+   ```cpp
+   // Bots have no snapshot rate: avoid the division by zero without touching the engine state
+   const int snapshotMsec = cl->snapshotMsec > 0 ? cl->snapshotMsec : 1;
 
-snaps = std::min(1000 / snapshotMsec, server.cvars.sv_fps->integer);
-```
+   if (cl->netchan.remoteAddress.type != NA_BOT)
+   {
+   	Proxy_Engine_Client_CalcPacketsAndFPS(i, &packets, &fps);
+   }
 
-`NA_BOT` is the test `Proxy_SV_Status_f` already uses. A human with a ping of 0 then gets their `fps` and `packets` computed too.
+   snaps = std::min(1000 / snapshotMsec, server.cvars.sv_fps->integer);
+   ```
+
+   `NA_BOT` is the test `Proxy_SV_Status_f` already uses.
+
+2. Record the usercmd statistics of a human with a ping of 0. `Proxy_SV_UserMove` skips every client with a ping below 1 ([Proxy_sv_client.cpp:183-187](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L183-L187)), so it never fills `cmdStats` for such a human. Delete that test:
+
+   ```cpp
+   // Proxy -------------->
+   if (client->ping < 1)
+   {
+   	continue;
+   }
+   ```
+
+   - The test only ever skips humans. Bots never reach `SV_UserMove`: their usercmds go through `BOTLIB_USER_COMMAND` straight to `SV_ClientThink` ([`server/sv_game.cpp:977-979`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_game.cpp#L977-L979)). `SV_UserMove` is only called for network packets ([`server/sv_client.cpp:1845-1847`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L1845-L1847)).
+   - Without this change, step 1 is wrong for a human whose ping was always 0: `Proxy_Engine_Client_CalcPacketsAndFPS` counts every empty entry of `cmdStats`, and shows `fps 1024` (`CMD_MASK`) and `packets 0`.
+
+With both changes, a human with a ping of 0 gets real `fps` and `packets` values.
 
 ## F10. Low-priority bugs
 
@@ -748,9 +765,11 @@ Status per point:
   - The next client in the slot gets a new `cleanName` on its first userinfo change, or on connect once F2 is done.
   - Fix: drop the `isConnected` test and always reset.
 - **Confirmed, harmless today.** [Proxy_SharedAPI.cpp:87-133](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L87-L133): command names are compared by prefix.
-  - `"team",4` also matches `teamtask`, `"say",3` already covers `say_team`, and `"gc",2` matches anything that starts with `gc`.
-  - Each over-matched command also needs the argument condition (`follow1`, a client number…), and no other basejka command starts with these prefixes.
-  - Fix: `Q_stricmp` on the command name everywhere, except `jkaDST_`, which must stay a prefix.
+  - `"team",4` also matches `teamvote`, `"say",3` already covers `say_team`, and `"gc",2` matches anything that starts with `gc`.
+  - Each over-matched command also needs the argument condition (`follow1`, a client number…). `teamvote follow1` is dropped, but it means nothing to the game anyway.
+  - The arguments are compared by prefix too. `!Q_stricmpn(cmd_arg2, "saber_droid", 6)` ([Proxy_SharedAPI.cpp:113](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L113)) only compares `saber_`, so `npc spawn` is refused for every NPC type that starts with `saber_`, not only `saber_droid`. Whether base has other `saber_*` NPC types was not checked.
+  - The game compares all these names whole, with `Q_stricmp`: the commands (`game/g_cmds.c`, `ClientCommand`), `spawn` ([`game/NPC_spawn.c:4197`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/NPC_spawn.c#L4197)), the NPC type ([`game/NPC_stats.c:1123`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/NPC_stats.c#L1123)), `follow1`/`follow2` ([`game/g_cmds.c:771-775`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_cmds.c#L771-L775)) and the vote names ([`game/g_cmds.c:2015-2023`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_cmds.c#L2015-L2023)). An exact comparison in the proxy therefore blocks everything the game would act on, and nothing more.
+  - Fix: `Q_stricmp` on the command names and on these arguments, except `jkaDST_`, which must stay a prefix.
 - **Refuted.** [Proxy_sv_ccmds.cpp:71](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.cpp#L71), `gametypeNames[sv_gametype->integer]`: "the clamp only sets the latched value".
   - `trap_Cvar_Set` goes through `Cvar_Set`, which is `Cvar_Set2(..., force = qtrue)` ([`server/sv_game.cpp:535-537`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_game.cpp#L535-L537), [`qcommon/cvar.cpp:402-404`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/cvar.cpp#L402-L404)). That skips the latch and sets the value at once.
   - `G_InitGame` clamps `g_gametype` to `[0, GT_MAX_GAME_TYPE)` right after registering it ([`game/g_main.c:824-841`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_main.c#L824-L841)), and `gametypeNames` has `GT_MAX_GAME_TYPE` (10) entries.
@@ -780,3 +799,23 @@ Status per point:
   - With `proxy_sv_pingFix 1`, the timestamps come from `Sys_Milliseconds`, a signed `int` that turns negative after about 24.8 days of uptime. `<= 0` would then skip every frame, and every ping would show 999. Do not revert it.
   - What remains: a frame not acknowledged yet holds -1 ([`server/sv_snapshot.cpp:668`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_snapshot.cpp#L668)), but a frame never used since the client was cleared on connect holds 0, and counts as a delay of 0. That only lasts for the first 32 snapshots (`PACKET_BACKUP`), about 1.6 s at 20 snapshots per second, just after a connect. JK2MV has the same transient. Quake3e avoids it by using 0 as the "not acknowledged" marker ([`code/server/sv_snapshot.c:694`](https://github.com/ec-/Quake3e/blob/3173cef096dd0cb2fea26d91bce71049061f5a13/code/server/sv_snapshot.c#L694), [`sv_main.c:1064`](https://github.com/ec-/Quake3e/blob/3173cef096dd0cb2fea26d91bce71049061f5a13/code/server/sv_main.c#L1064)).
   - Optional fix: also skip frames that were never sent, `messageSent == 0 && messageAcked == 0`. Not worth much.
+
+## F11. `dumpuser` crashes on a long userinfo value (Medium)
+
+Status: **confirmed**, observed on the retail server on 2026-10-24 while testing O8 (see [tests/tests.md](tests/tests.md#o8-userinfo-validation)).
+
+- `Info_Print` copies each userinfo value into `char value[512]` with no bound, and each key into `char key[512]` ([`qcommon/common.cpp:509-543`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/common.cpp#L509-L543)). A value of 512 characters or more overflows the stack buffer.
+- `SV_DumpUser_f` is its only server-side caller ([`server/sv_ccmds.cpp:938`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_ccmds.cpp#L938)). On the client side it reads `Cvar_InfoString`, bounded by the cvar system, so only the server path is exposed.
+- A client sets such a value with the `userinfo` command. `Proxy_SV_UpdateUserinfo_f` stores the raw string into `cl->userinfo` up to `MAX_INFO_STRING` (1024), with no per-value limit ([Proxy_sv_client.cpp:652](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L652)). The connect packet does the same in `SV_DirectConnect`.
+- Trigger: an admin `rcon dumpuser <name>`. The value comes from an unprivileged client, so a client plants it and the server dies on the next routine `dumpuser`.
+- O8's `G_ValidateUserinfo` does not close it: a 790-character value in an otherwise valid userinfo under 1024 characters passes every O8 check (size, slash count, key counts). A legitimate userinfo never has a value that long: `name` is 32, `model` about 64, the saber names and colours all well under 512.
+- OpenJK and ioq3 size these buffers `BIG_INFO_VALUE` (8192), which holds any value from a `MAX_INFO_STRING` userinfo (OpenJK [`codemp/qcommon/common.cpp:490-492`](https://github.com/JACoders/OpenJK/blob/260c59c2907187af555a676fe0cc798893bf7757/codemp/qcommon/common.cpp#L490)).
+
+### Fix
+
+Two options, not exclusive.
+
+1. In the F2/O8 sanitiser, refuse a userinfo that has any value of `MAX_INFO_VALUE` or more, or simply of 512 or more. It reuses the drop path of F2 and O8, needs no new hook, and closes both the connect and `userinfo` command paths before the bad value is stored long enough to matter. It does not fix `Info_Print` itself.
+2. Hook `Com_Printf`-adjacent... no: hook `Info_Print` and copy the OpenJK version with `BIG_INFO_VALUE` buffers. This fixes the root cause, so `dumpuser` is safe whatever the userinfo. It needs the retail address of `Info_Print`, to find in the binaries as in F7, and A1's relocation if its first bytes hold a relative instruction.
+
+Recommended: option 1 with the F2/O8 work, and option 2 if a hook on `Info_Print` is wanted for defence in depth.
