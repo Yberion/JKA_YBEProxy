@@ -17,6 +17,8 @@
   - the startup log;
   - the welcome message, now sent when the player enters the game (OpenJK dropped it on connect);
   - a retail game module, which failed to start.
+- Fixed the gametype check of `/myratio`: it read a `sv_gametype` cvar that does not exist, so it always passed. It now reads `g_gametype`.
+- The proxy no longer adds `sv_fps` and a bogus `sv_gametype` to the serverinfo. On a server that ran an older proxy, they stay in it until the next server restart.
 
 ## 0.19.0 Beta
 

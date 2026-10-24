@@ -126,9 +126,6 @@ Engine: Any.
 
 Prints your score (used as kills), deaths, suicides, kill/death ratio, and kills minus deaths. Only in Free For All, Duel and Team FFA. A player can run it at most once per second.
 
-> [!WARNING]
-> The gametype check reads a cvar that does not exist, so it always passes. See F5 in [audit/fixes.md](audit/fixes.md).
-
 ## Automatic fixes
 
 These are always on and need no configuration.
