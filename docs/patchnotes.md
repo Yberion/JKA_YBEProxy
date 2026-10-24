@@ -10,6 +10,13 @@
 - Fixed a ghost player entry left after an anti-cheat kick.
 - Fixed the darksidetools anti-cheat: an empty model, or any start of `darksidetools` (`d`, `dark`…), kicked the player, and `darksidetools/default` was not detected. Every model that starts with `darksidetools` is now kicked.
 - Every `rancor` and `wampa` model, skins included, and `jedi_` without a species, with any skin, are now replaced with `kyle`. Before, `rancor/default` or `jedi_/green` got through. An empty model also becomes `kyle`.
+- OpenJK: the proxy no longer exports `GetModuleAPI`, so OpenJK loads it through `dllEntry` and `vmMain`, like the original engine. This fixes, on OpenJK:
+  - proxy cvars that were never registered (every model was replaced with `kyle`, every `callvote map_restart` above `0` was refused);
+  - `/myratio`, which never answered;
+  - the levitation and roll angle fixes, which had no effect;
+  - the startup log;
+  - the welcome message, now sent when the player enters the game (OpenJK dropped it on connect);
+  - a retail game module, which failed to start.
 
 ## 0.19.0 Beta
 

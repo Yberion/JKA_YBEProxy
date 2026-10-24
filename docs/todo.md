@@ -46,8 +46,6 @@
     ```
 
     </details>
-- Log to the server console when the OpenJK API is used, as with the original API. Cause: `InitGame` is not wrapped, see F4 in [audit/fixes.md](audit/fixes.md).
-- Fix `/myratio` on the OpenJK API. Cause: the `RunFrame` wrapper never updates `svsTime`, see F4 in [audit/fixes.md](audit/fixes.md).
 - **Redo the CMake project.** See also A5 in [audit/improvements.md](audit/improvements.md). Possible templates:
   - https://github.com/cpp-best-practices/cmake_conan_boilerplate_template
   - https://github.com/cpp-best-practices/cmake_template (newer)
@@ -61,7 +59,6 @@
 - Rate policy.
 - Snaps policy.
 - Rate limiter (anti-DDoS). See F6 in [audit/fixes.md](audit/fixes.md).
-- Improve the OpenJK API support. There is no fallback to the original API yet, so make it possible to disable it (JSON or INI file?). See F4 in [audit/fixes.md](audit/fixes.md) and A2 in [audit/improvements.md](audit/improvements.md).
 - Only apply hooks on x86 (check the defines).
 
 ### Bugs
@@ -116,6 +113,7 @@ Wanted behaviour: banning `152.0` bans `152.0.*.*` only, and player B can still 
 - `netstatus` not working when a bot is on the server.
 - Debug build not working: the `msg` parameter in `Proxy_SV_UserMove()` seemed invalid.
 - Better README.
+- OpenJK: the proxy no longer exports `GetModuleAPI`, so OpenJK loads it through `dllEntry` and `vmMain`. Fixes the console log, the cvars and `/myratio` on OpenJK, see F4 in [audit/fixes.md](audit/fixes.md).
 
 ## Won't do
 

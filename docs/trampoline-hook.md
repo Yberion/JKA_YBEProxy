@@ -33,7 +33,7 @@ This diagram only shows how the proxy talks with `jampDed` and `jampgame` and in
 
 `GAME_INIT` is also where the proxy patches the engine.
 
-OpenJK replaces these two entry points with tables of function pointers, exchanged through `GetModuleAPI`. The proxy wraps the entries it needs in those tables.
+OpenJK prefers tables of function pointers, exchanged through `GetModuleAPI`. The proxy does not export `GetModuleAPI`, so OpenJK falls back to `dllEntry` and `vmMain` (its legacy game API), and the same code path runs on both engines.
 
 ## 3. Building a trampoline step by step
 

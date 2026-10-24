@@ -49,11 +49,8 @@ const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qbo
 		}
 	}
 
-	// Doesn't work on the new API
-	if (firstTime && !isBot)
-	{
-		proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
-	}
+	// Sent in ClientBegin: OpenJK drops server commands to a client below CS_PRIMED, and the slot is still CS_FREE here
+	proxy.clientData[clientNum].sendWelcomeMessage = firstTime && !isBot;
 
 	return nullptr;
 }
@@ -70,7 +67,16 @@ void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset)
 {
 	if (clientNum >= 0 && clientNum < MAX_CLIENTS)
 	{
-		proxy.clientData[clientNum].isConnected = true;
+		ClientData_t* currentClientData = &proxy.clientData[clientNum];
+
+		currentClientData->isConnected = true;
+
+		if (currentClientData->sendWelcomeMessage)
+		{
+			currentClientData->sendWelcomeMessage = false;
+
+			proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
+		}
 	}
 }
 

@@ -5,9 +5,6 @@ The "Engine" information below means:
 - **Original**: only with the original 1.01 engine (`jampDed.exe` / `linuxjampded`), because the feature needs an engine patch.
 - **Any**: with the original engine and with OpenJK.
 
-> [!WARNING]
-> On OpenJK, proxy cvars are currently never registered, so they all read as `0`. Among other things, `proxy_sv_modelPathLength` at `0` replaces every model with `kyle`. See F4 in [audit/fixes.md](audit/fixes.md).
-
 ## Cvars
 
 All proxy cvars are archived (`CVAR_ARCHIVE`). The proxy reads them again about once per second, so a change applies without a restart.
@@ -87,13 +84,10 @@ When a model name is this length or longer, the proxy replaces it with `kyle`. L
 
 The proxy checks the model:
 
-- when the game processes a userinfo change (any engine);
+- on connect, and when the game processes a userinfo change (any engine);
 - in the engine's `SV_UserinfoChanged` as well (original engine only).
 
 Values: a number. Default `64`.
-
-> [!WARNING]
-> At connection time, the game module still receives the raw userinfo. See F2 in [audit/fixes.md](audit/fixes.md).
 
 ## Commands
 
@@ -133,10 +127,7 @@ Engine: Any.
 Prints your score (used as kills), deaths, suicides, kill/death ratio, and kills minus deaths. Only in Free For All, Duel and Team FFA. A player can run it at most once per second.
 
 > [!WARNING]
-> Two known issues:
->
-> - The gametype check reads a cvar that does not exist, so it always passes. See F5 in [audit/fixes.md](audit/fixes.md).
-> - On OpenJK, the command never answers. See F4 in [audit/fixes.md](audit/fixes.md).
+> The gametype check reads a cvar that does not exist, so it always passes. See F5 in [audit/fixes.md](audit/fixes.md).
 
 ## Automatic fixes
 
@@ -170,19 +161,18 @@ Engine: Any.
 
 Engine: Any.
 
+The proxy checks the userinfo on connect, on the reconnect after each map change, and on every userinfo change. Bots are not checked on connect.
+
 - Names are cleaned, using a port of OpenJK's `ClientCleanName`:
   - leading spaces and `*` are removed;
   - control characters are removed;
   - runs of more than 3 spaces or `@` are shortened;
   - an empty name becomes `Padawan`.
-- The model is replaced with `kyle` when it is `jedi_/red`, `jedi_/blue`, `rancor` or `wampa` (today also any start of these names, see F3 in [audit/fixes.md](audit/fixes.md)), when it contains a character outside printable ASCII, or when it is too long (see [`proxy_sv_modelPathLength`](#proxy_sv_modelpathlength)).
+- The model is replaced with `kyle` when it is empty, when it starts with `rancor` or `wampa` (any skin), when it is `jedi_` without a species (`jedi_` alone or with any skin), when it contains a character outside printable ASCII, or when it is too long (see [`proxy_sv_modelPathLength`](#proxy_sv_modelpathlength)).
 - `forcepowers` must look like `rank-side-powers` (22 to 24 characters). Otherwise the proxy replaces it with `7-1-030000000000003332` (crash fix).
 
 > [!WARNING]
-> Two known gaps:
->
-> - These fixes are not applied to the userinfo the client sends when it connects. See F2 in [audit/fixes.md](audit/fixes.md).
-> - Neither the engine nor the proxy keeps the `ip` key of the userinfo up to date, so a client can fake it and avoid an IP ban after the next map change. See O1 in [audit/other-engines.md](audit/other-engines.md).
+> Neither the engine nor the proxy keeps the `ip` key of the userinfo up to date, so a client can fake it and avoid an IP ban after the next map change. See O1 in [audit/other-engines.md](audit/other-engines.md).
 
 ### User commands
 
@@ -191,22 +181,16 @@ Engine: Any.
 - The proxy resets a force power selection of levitation, or out of range, to none (force exploit fix).
 - It forces the roll angle to `0` (angle exploit fix).
 
-> [!WARNING]
-> On OpenJK, these fixes currently have no effect. See F4 in [audit/fixes.md](audit/fixes.md).
-
 ### Anti-cheat
 
 Engine: Any.
 
 - A client that sends a command starting with `jkaDST_` is kicked, with a public message.
-- A client using the `darksidetools` model is kicked, with a public message.
-
-> [!WARNING]
-> The model check has false positives (empty model, any prefix of `darksidetools`) and can be bypassed. See F3 in [audit/fixes.md](audit/fixes.md).
+- A client using a model that starts with `darksidetools` is kicked, with a public message. On connect, it is refused with the same reason, without the public message.
 
 ### Welcome message
 
-Engine: Original. On their first connection, human players receive a message with the proxy name and version.
+Engine: Any. When they enter the game after their first connection, human players receive a message with the proxy name and version.
 
 ### Engine fixes
 

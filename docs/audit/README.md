@@ -5,7 +5,7 @@ Audit done on 2026-10-24 against version `0.19.0 Beta` (commit [`57d9a59`](https
 ## Files
 
 - [fixes.md](fixes.md): bugs and security issues to fix, ranked by severity (F1 to F11).
-- [improvements.md](improvements.md): robustness, simplification, full OpenJK support, build (A1 to A7).
+- [improvements.md](improvements.md): robustness, simplification, full OpenJK support, build (A1 to A8).
 - [other-engines.md](other-engines.md): comparison with Quake 3, ioquake3, Quake3e, OpenJK, JK2MV and TaystJK (EternalJK). Fixes missing from the proxy (O1 to O11), and differences that need nothing.
 - [feeling.md](feeling.md): why a recompiled engine (`linuxjampded`) or game module (`jampgame`) changes the combat "feeling", leads and a method to find the cause.
 

@@ -153,3 +153,29 @@ Comes out of the F1 discussion: a pinned loader that holds the hooks and trampol
 - **Refuted.** [Proxy_Engine_ClientCommand.cpp:76](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp#L76): "a name containing `\"` can break the `print` command".
   - The tokenizer ends a token at `"` ([Proxy_cmd.cpp:73-99](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp#L73-L99)). Neither the connect packet nor the `userinfo` command can put a `"` in the userinfo, and `cl->name` comes from the userinfo.
   - A quoted token can contain a newline. A name with a newline only breaks the layout of the `netStatus` table. Cosmetic.
+
+## A8. Cvar to disable the welcome message
+
+Request of the author. Today every human player gets the proxy name and version on their first connection, with no way to turn it off.
+
+New cvar `proxy_sv_disableWelcomeMessage`: archived, any engine, default `0` (message sent, as today), `1` disables it.
+
+- [Proxy_Header.hpp](../../src/JKA_YBEProxy/Proxy_Header.hpp), `Proxy_CVars_t`: add `vmCvar_t proxy_sv_disableWelcomeMessage;`.
+- [Proxy_CVars.cpp](../../src/JKA_YBEProxy/Proxy_CVars.cpp), `proxyCVarTable`: add `{ &proxy.cvars.proxy_sv_disableWelcomeMessage, "proxy_sv_disableWelcomeMessage", "0", CVAR_ARCHIVE, 0, qfalse },`.
+- [Proxy_SharedAPI.cpp](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp), `Proxy_SharedAPI_ClientBegin`: still clear `sendWelcomeMessage`, but only send the message when the cvar is `0`:
+
+  ```cpp
+  if (currentClientData->sendWelcomeMessage)
+  {
+  	currentClientData->sendWelcomeMessage = false;
+
+  	if (!proxy.cvars.proxy_sv_disableWelcomeMessage.integer)
+  	{
+  		proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
+  	}
+  }
+  ```
+
+- Document the cvar in [features.md](../features.md), next to the other cvars and in the "Welcome message" section.
+
+Proxy cvars are read about once per second (`Proxy_UpdateAllCvars` in `GAME_RUN_FRAME`), which is enough here.

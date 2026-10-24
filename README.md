@@ -24,10 +24,10 @@ This is an educational project.
 | --- | --- | --- |
 | Original Windows `jampDed.exe` 1.01 | `(internal)JAmp: v1.0.1.0 win-x86 Oct 30 2003` | Game module layer and engine patches |
 | Original Linux `linuxjampded` 1.01 | `JAmp: v1.0.1.1 linux-i386 Nov 10 2003` | Game module layer and engine patches |
-| OpenJK | Not checked | Game module layer only, through the OpenJK API (`GetModuleAPI`) |
+| OpenJK | Not checked | Game module layer only, through `dllEntry` and `vmMain` (OpenJK's legacy game API) |
 
 > [!WARNING]
-> OpenJK support has known issues: proxy cvars are never registered, and OpenJK with the retail game module fails to start. See F4 in [docs/audit/fixes.md](docs/audit/fixes.md) and A2 in [docs/audit/improvements.md](docs/audit/improvements.md).
+> OpenJK support is not tested yet, neither with the retail game module nor with OpenJK's.
 
 The original engine and the retail game module are 32-bit, so use the 32-bit (x86) build of the proxy with them.
 

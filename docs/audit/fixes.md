@@ -406,6 +406,7 @@ The problems:
 - `GetUsercmd` ([Proxy_OpenJKAPI_Wrappers.cpp:9-14](../../src/JKA_YBEProxy/Wrappers/Proxy_OpenJKAPI_Wrappers.cpp#L9-L14)) sanitises before the engine fills `cmd`, so it does nothing. The original API path does it in the right order ([Proxy_OriginalAPI_Wrappers.cpp:35-45](../../src/JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.cpp#L35-L45)).
 - Fallback when the retail jampgame has no `GetModuleAPI` ([Proxy_Main.cpp:248-257](../../src/JKA_YBEProxy/Proxy_Main.cpp#L248-L257)): it calls `Proxy_GetOriginalGameAPI`, then returns `nullptr`, so OpenJK stops with `ERR_FATAL`. The message the proxy prints just before is misleading.
 - The userinfo is not sanitised in `ClientConnect` (see F2).
+- The welcome message never reaches the client. The proxy sends it during `GAME_CLIENT_CONNECT`, while the slot is still `CS_FREE`, and OpenJK's `SV_AddServerCommand` drops every command to a client below `CS_PRIMED` ([`codemp/server/sv_main.cpp:124-126`](https://github.com/JACoders/OpenJK/blob/260c59c2907187af555a676fe0cc798893bf7757/codemp/server/sv_main.cpp#L124-L126)). The retail engine has no such check. This is an engine difference, not an API one: both options below leave it as is.
 
 ### Fix
 
@@ -425,6 +426,8 @@ Result:
 - Deleted: `GetModuleAPI` in [Proxy_Main.cpp](../../src/JKA_YBEProxy/Proxy_Main.cpp#L225-L274), [Proxy_OpenJKAPI_Wrappers.cpp](../../src/JKA_YBEProxy/Wrappers/Proxy_OpenJKAPI_Wrappers.cpp), and the `*OpenJKAPI*` fields of `proxy`.
 - Cost: each call goes through OpenJK's legacy `GVM_*` wrappers, one more `switch`. Negligible.
 - To test on a real OpenJK server: loading, cvars, `/myratio`, a map change. `/netStatus` stays disabled on OpenJK (`isOriginalEngine` is false).
+
+Welcome message, with either option: set a flag in `GAME_CLIENT_CONNECT` when `firstTime && !isBot`, and send the message in `GAME_CLIENT_BEGIN`, where the client is `CS_ACTIVE` on both engines. `proxy.clientData` is zeroed on every map change, and the reconnect has `firstTime = qfalse`, so the message is sent once per connection, as today.
 
 **Option B: keep the API path and fix it.**
 

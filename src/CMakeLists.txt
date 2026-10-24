@@ -190,8 +190,6 @@ endif ()
 #============================================================================
 
 set(JKA_YBEProxyWrapperFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Wrappers/Proxy_OpenJKAPI_Wrappers.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Wrappers/Proxy_OpenJKAPI_Wrappers.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.hpp"
 	)
