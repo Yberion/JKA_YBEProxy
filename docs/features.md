@@ -48,7 +48,7 @@ Values:
 - `1`: the proxy applies its own 500 ms cooldown between rcon commands.
 
 > [!WARNING]
-> The proxy cooldown is global and is counted before the password check, so enabling it brings the rcon disabler back. A replacement is planned that only limits bad passwords, so admins keep rcon during a flood even with spoofed IPs. See F6 in [audit/fixes.md](audit/fixes.md).
+> The proxy cooldown is global and is counted before the password check, so enabling it brings the rcon disabler back. A replacement is planned that only limits bad passwords, so admins keep rcon during a flood even with spoofed IPs. See F6 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
 
 ### `proxy_sv_enableNetStatus`
 
@@ -112,7 +112,7 @@ Prints the network settings of every client:
 A player can run the command at most once every 500 ms. Bots show `0` for `fps` and `packets`, and so does a human whose ping shows `0`, which can happen without [`proxy_sv_pingFix`](#proxy_sv_pingfix).
 
 > [!WARNING]
-> For any client with a ping of `0`, the command currently sets the engine's snapshot interval to 1 ms. A human player in that case then receives more snapshots than their `snaps` setting asks for, until their next userinfo change. See F9 in [audit/fixes.md](audit/fixes.md).
+> For any client with a ping of `0`, the command currently sets the engine's snapshot interval to 1 ms. A human player in that case then receives more snapshots than their `snaps` setting asks for, until their next userinfo change. See F9 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
 
 > [!WARNING]
 > The `timeNudge` estimate needs:
@@ -169,7 +169,7 @@ The proxy checks the userinfo on connect, on the reconnect after each map change
 - `forcepowers` must look like `rank-side-powers` (22 to 24 characters). Otherwise the proxy replaces it with `7-1-030000000000003332` (crash fix).
 
 > [!WARNING]
-> Neither the engine nor the proxy keeps the `ip` key of the userinfo up to date, so a client can fake it and avoid an IP ban after the next map change. See O1 in [audit/other-engines.md](audit/other-engines.md).
+> Neither the engine nor the proxy keeps the `ip` key of the userinfo up to date, so a client can fake it and avoid an IP ban after the next map change. See O1 in [audit-2026-10-25/other-engines.md](audit-2026-10-25/other-engines.md).
 
 ### User commands
 
@@ -209,7 +209,7 @@ Engine: Original.
 - rcon:
   - the engine's 500 ms timer is removed (see [`proxy_sv_enableRconCmdCooldown`](#proxy_sv_enablerconcmdcooldown));
   - rcon output is sent in chunks of 1008 bytes, so long output such as `rcon status` is no longer truncated;
-  - `writeconfig` refuses a file name with a 3-letter extension other than `.cfg`. Shorter extensions such as `.so` get through, and `vstr`/`exec` bypass the check, see F7 in [audit/fixes.md](audit/fixes.md).
+  - `writeconfig` refuses a file name with a 3-letter extension other than `.cfg`. Shorter extensions such as `.so` get through, and `vstr`/`exec` bypass the check, see F7 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
 - `status` is rewritten:
   - it shows the hostname, address, OS, version, gamedir, map, gametype, and the number of humans and bots;
   - the name is printed last, so it is never truncated.

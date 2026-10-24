@@ -107,10 +107,10 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		{
 			if (proxy.isOriginalEngine)
 			{
-				// On "rcon map XXX" or "rcon map_restart 0" it directly goes there from SVC_RemoteCommand
-				// the problem here is that Com_EndRedirect() isn't called after the
-				// Cmd_ExecuteString() of the map change
-				// We need to manually call the Com_EndRedirect()
+				// On "rcon map XXX" or "rcon map_restart 0" it directly goes there from SVC_RemoteCommand,
+				// which only calls Com_EndRedirect() once Cmd_ExecuteString() returns, after the whole map load
+				// While the redirect is active, Com_Printf skips the console and the log file: end it here,
+				// so the rest of the map load is printed there. The later Com_EndRedirect() then does nothing
 				server.common.functions.Com_EndRedirect();
 
 				proxy.trap->Print("----- Proxy: Unpatching engine\n");

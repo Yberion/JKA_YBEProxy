@@ -102,12 +102,12 @@ The output is `jampgamei386.so`.
 - [Patch notes](docs/patchnotes.md)
 - [Todo](docs/todo.md)
 - [Trampoline hooks](docs/trampoline-hook.md): how the engine hooks work.
-- [Audit](docs/audit/README.md): known bugs, improvements, and the combat "feeling" investigation.
+- [Audit](docs/audit-2026-10-25/README.md): known bugs, improvements, and the combat "feeling" investigation.
 
 ## Developer notes
 
 - Check the disassembly before hooking a `static` function of the original binaries. The compiler may have inlined it into its callers, or given it a non-standard calling convention, and in both cases a plain trampoline hook does not work. See the pitfalls in [docs/trampoline-hook.md](docs/trampoline-hook.md#5-pitfalls).
-- Known crash: `rcon map <map>` and `rcon map_restart 0` sometimes crash the server, which was observed more often with Discord running on the server machine. The likely cause is identified, not reproduced yet: hook functions are still on the call stack when the engine unloads the proxy. The fix is described in F1 of [docs/audit/fixes.md](docs/audit/fixes.md).
+- Crash on `rcon map <map>` and `rcon map_restart 0`, observed more often with Discord running on the server machine. The likely cause: hook functions were still on the call stack when the engine unloaded the proxy. The out-of-band packet checks now run in a filter at the entry of `SV_PacketEvent`, which returns before the original code runs (F1 in [docs/audit-2026-10-25/fixes.md](docs/audit-2026-10-25/fixes.md)). The crash was never reproduced, so the fix is not confirmed yet.
 
 ## Credits
 
