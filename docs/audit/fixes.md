@@ -96,11 +96,24 @@ What the filter does:
 
 - One filter only, at the entry of `SV_PacketEvent` (a global cdecl function).
 - It reads out-of-band packets and takes every drop decision the proxy takes today:
-  - rcon rate limiting per IP (see F6);
+  - rcon rate limiting on bad passwords only (see F6);
   - `writeconfig` filtering (see F7, though hooking `Com_WriteConfig_f` is better);
   - the q3infoboom check on `getstatus`/`getinfo` (`strlen(Cmd_Argv(1)) > 128`);
   - dropping `ipAuthorize`.
 - Otherwise it lets the original code run.
+
+No fix is lost. Each removed hook only checks the packet arguments, then either returns or calls the original; none of them changes anything during or after that call. Each check moves into the filter:
+
+| Current hook | Check | In the filter |
+| --- | --- | --- |
+| `Proxy_SVC_Status` | q3infoboom: drop if `strlen(Cmd_Argv(1)) > 128` | Same check when `Cmd_Argv(0)` is `getstatus` |
+| `Proxy_SVC_Info` | q3infoboom: same check | Same check when `Cmd_Argv(0)` is `getinfo` |
+| `Proxy_SVC_RemoteCommand` | 500 ms rcon cooldown (`proxy_sv_enableRconCmdCooldown`) | Replaced by the F6 rate limiting: valid passwords never limited, bad passwords limited per address and globally |
+| `Proxy_SVC_RemoteCommand` | `writeconfig` only on `.cfg` | Same check on `Cmd_Argv(2)` / `Cmd_Argv(3)`, or better F7 |
+| `Proxy_SV_ConnectionlessPacket` | `ipAuthorize` ignored | Drop when `Cmd_Argv(0)` is `ipAuthorize` |
+| `Proxy_SV_PacketEvent` | No fix, identical to Quake 3 | Nothing to move |
+
+The filter gets the same `Cmd_Argv` values as today by tokenizing the packet the same way: `MSG_BeginReadingOOB`, `MSG_ReadLong`, `MSG_ReadStringLine`, then `Cmd_TokenizeString`. The inline patches on `SVC_RemoteCommand` (timer NOP and 1008-byte output buffer) stay, because the original code still runs.
 
 What it lets you delete:
 
@@ -120,7 +133,7 @@ Pitfalls:
 
 ### Replacing the DLL file for a hot reload
 
-- Windows: a loaded DLL cannot be overwritten, but it can be renamed. Rename the old file, copy the new one, then change map.
+- Windows: the proxy DLL has to be inside a pk3. The engine reads it through its virtual filesystem (`Sys_UnpackDLL`), extracts it to disk and loads it again at every map change. The server keeps the pk3 open, so replacing it while the server runs has not been tested. Restart the server to be safe until this is tested.
 - Linux: replace the file with `mv` (new inode). **Never `cp` over a loaded `.so`: the running server crashes with SIGBUS.**
 
 ### Alternative clean design
@@ -192,12 +205,45 @@ Fix: register `"g_gametype"`, and use flags 0 for cvars the proxy only reads.
 - With the cooldown on, it is global and updated **before** the password check ([Proxy_sv_main.cpp:128-134](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp#L128-L134)). Anyone can lock the admins out. That is exactly the "rcon disabler" the option is meant to fix; the original engine timer has the same flaw.
 - `getstatus`/`getinfo`: the original JKA has no throttle at all (checked), so the server can be used as a DRDoS amplifier.
 
-Fix: port ioq3's leaky bucket.
+Constraint: attackers can spoof source IPs, so every packet can come from a different address. Admins must keep a working rcon during such a flood. The one thing a spoofing attacker cannot fake is the password.
 
-- Per-address limit before any rcon processing: `SVC_RateLimitAddress(from, 10, 1000)`.
-- A separate global bucket for bad passwords: `SVC_RateLimit(&bucket, 10, 1000)`.
-- The same per-address limit on `getstatus`/`getinfo`, plus a global outbound bucket.
-- Implement it in the F1 filter. This covers the todo item "rate limiter (anti ddos)".
+Fix: port ioq3's leaky buckets (`SVC_RateLimit`, `SVC_RateLimitAddress`) and limit **bad passwords only**:
+
+- **Valid password: never limited.** Admins keep rcon during any flood, even if the attacker spoofs the admin's own IP.
+- **Bad password:** a per-address limit, `SVC_RateLimitAddress(from, 10, 1000)`, plus one global bucket, `SVC_RateLimit(&badPasswordBucket, 10, 1000)` (bursts of 10, then one per second).
+  - The per-address limit alone does not stop a brute force spread over spoofed addresses. The attacker does not see the replies, but can detect a hit through a visible side effect, for example `rcon <guess> sv_hostname X` followed by `getstatus` from a real address. The global bucket caps guesses at about one per second in total.
+  - When a bucket is empty, drop the packet silently: no `Bad rcon` print and no reply. This also stops log flooding and replies to spoofed addresses.
+- Keep the engine's 500 ms timer removed (inline NOP patch).
+
+```cpp
+// Valid password: never limited, so admins keep rcon during a spoofed flood.
+// Bad password: per-address limit plus one global bucket, so spoofing many addresses does not speed up brute force.
+static bool Proxy_RconAllowed(netadr_t from)
+{
+	const char* password = server.cvars.sv_rconPassword->string;
+
+	if (password[0] && !strcmp(server.common.functions.Cmd_Argv(1), password))
+	{
+		return true;
+	}
+
+	static leakyBucket_t badPasswordBucket;
+
+	if (SVC_RateLimitAddress(from, 10, 1000) || SVC_RateLimit(&badPasswordBucket, 10, 1000))
+	{
+		return false; // drop silently
+	}
+
+	return true; // the original prints "Bad rcon" and replies
+}
+```
+
+`getstatus` / `getinfo`:
+
+- Per-address limit. In a reflection attack the spoofed address is the victim's, always the same one, so this limit protects the victim.
+- Plus a global outbound bucket to cap the total. During a flood the server may briefly disappear from server browsers, but players in game are not affected.
+
+Implement all of it in the F1 filter. This covers the todo item "rate limiter (anti ddos)".
 
 ## F7. `writeconfig` filter can be bypassed (Medium)
 
