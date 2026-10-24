@@ -97,6 +97,8 @@ set(JKA_YBEProxyRuntimePatchEngineFiles
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.hpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_RateLimit.cpp"
+	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_RateLimit.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Utils.hpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.cpp"
 	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"

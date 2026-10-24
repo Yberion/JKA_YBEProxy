@@ -58,7 +58,6 @@
 - ffa3 crash exploit with events (look at `SV_AddEntitiesVisibleFromPoint`). Needs a high FPS. EternalJK fixed it, see O9 in [audit-2026-10-25/other-engines.md](audit-2026-10-25/other-engines.md).
 - Rate policy.
 - Snaps policy.
-- Rate limiter (anti-DDoS). See F6 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
 - Only apply hooks on x86 (check the defines).
 
 ### Bugs
@@ -116,6 +115,7 @@ Wanted behaviour: banning `152.0` bans `152.0.*.*` only, and player B can still 
 - Debug build not working: the `msg` parameter in `Proxy_SV_UserMove()` seemed invalid.
 - Better README.
 - OpenJK: the proxy no longer exports `GetModuleAPI`, so OpenJK loads it through `dllEntry` and `vmMain`. Fixes the console log, the cvars and `/myratio` on OpenJK, see F4 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
+- Rate limiter (anti-DDoS): rcon bad passwords, `getstatus` and `getinfo`, see F6 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
 
 ### Bugs
 

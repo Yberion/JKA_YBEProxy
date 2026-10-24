@@ -20,6 +20,12 @@
 - Fixed the gametype check of `/myratio`: it read a `sv_gametype` cvar that does not exist, so it always passed. It now reads `g_gametype`.
 - The proxy no longer adds `sv_fps` and a bogus `sv_gametype` to the serverinfo. On a server that ran an older proxy, they stay in it until the next server restart.
 - Likely fix for the intermittent crash on `rcon map` and `rcon map_restart` (original engine). The out-of-band packet checks (`getstatus`/`getinfo` length, rcon cooldown and `writeconfig`, `ipAuthorize`) now run in one filter at the entry of `SV_PacketEvent`, which returns before the original packet code runs. No proxy code is left on the call stack when the engine unloads the proxy during the map change. The crash was never reproduced, so the fix is not confirmed.
+- Added rate limiting on out-of-band packets (original engine):
+  - rcon: a valid password is never limited. Bad passwords are limited for the whole server to a burst of 10, then 1 per second, so the password can no longer be brute-forced quickly;
+  - `getstatus` / `getinfo`: a burst of 10, then 1 per second per address, and 10 per second in total, so the server can no longer be used to amplify a DDoS;
+  - `getchallenge` / `connect`: the same per-address limit, shared with `getstatus` / `getinfo`, as Quake3e;
+  - with `developer 1`, each dropped request is printed in the server console, as in ioq3 and Quake3e.
+- Removed `proxy_sv_enableRconCmdCooldown`, replaced by the rcon rate limiting. When set to `1`, its 500 ms cooldown applied to every rcon packet, even with a wrong password, so a flood of rcon packets also blocked the admins' commands. With the default `0`, rcon had no limit at all.
 
 ## 0.19.0 Beta
 
@@ -40,7 +46,7 @@
 
 - Added [`proxy_sv_enableNetStatus`](features.md#proxy_sv_enablenetstatus) (default `0`).
 - Added [`proxy_sv_modelPathLength`](features.md#proxy_sv_modelpathlength) (default `64`).
-- Added [`proxy_sv_enableRconCmdCooldown`](features.md#proxy_sv_enablerconcmdcooldown) (default `0`).
+- Added `proxy_sv_enableRconCmdCooldown` (default `0`).
 - Fixed a padding issue in the `netStatus` output.
 - Fixed truncated output of rcon commands (`rcon status` and others).
 

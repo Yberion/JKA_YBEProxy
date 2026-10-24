@@ -12,7 +12,6 @@ All proxy cvars are archived (`CVAR_ARCHIVE`). The proxy reads them again about 
 | Cvar | Default | Engine | Summary |
 | --- | --- | --- | --- |
 | [`proxy_sv_pingFix`](#proxy_sv_pingfix) | `0` | Original | More accurate ping |
-| [`proxy_sv_enableRconCmdCooldown`](#proxy_sv_enablerconcmdcooldown) | `0` | Original | 500 ms cooldown between rcon commands |
 | [`proxy_sv_enableNetStatus`](#proxy_sv_enablenetstatus) | `0` | Original | Enables `/netStatus` and `/showNet` |
 | [`proxy_sv_maxCallVoteMapRestartValue`](#proxy_sv_maxcallvotemaprestartvalue) | `60` | Any | Highest delay allowed for `callvote map_restart` |
 | [`proxy_sv_disableKillCmd`](#proxy_sv_disablekillcmd) | `0` | Any | Disables `/kill` |
@@ -35,20 +34,6 @@ Values:
 
 > [!WARNING]
 > The `timeNudge` column of [`/netStatus`](#netstatus-shownet) needs this fix. With `0`, that column is wrong.
-
-### `proxy_sv_enableRconCmdCooldown`
-
-Engine: Original.
-
-The original engine accepts one rcon packet every 500 ms from anyone, before it checks the password. An attacker who keeps sending rcon packets locks the real admins out (the "rcon disabler" exploit). The proxy always removes that engine timer.
-
-Values:
-
-- `0` (default): no limit. The rcon password can be brute-forced, so use a long random `rconpassword`.
-- `1`: the proxy applies its own 500 ms cooldown between rcon commands.
-
-> [!WARNING]
-> The proxy cooldown is global and is counted before the password check, so enabling it brings the rcon disabler back. A replacement is planned that only limits bad passwords, so admins keep rcon during a flood even with spoofed IPs. See F6 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
 
 ### `proxy_sv_enableNetStatus`
 
@@ -205,9 +190,15 @@ Engine: Original.
   - paths with directory traversal are refused (q3dirtrav fix);
   - only pk3 files referenced by the server can be downloaded;
   - download commands are refused once the client is in the game.
-- `getstatus` and `getinfo` requests with an argument longer than 128 characters are ignored (q3infoboom fix).
+- `getstatus` and `getinfo`:
+  - requests with an argument longer than 128 characters are ignored (q3infoboom fix);
+  - rate limiting, so the server cannot be used to amplify a DDoS: each address gets a burst of 10, then 1 per second, and the server answers a burst of 10, then 10 per second in total. Requests beyond that are ignored. During a flood the server may briefly disappear from server browsers.
+- `getchallenge` and `connect`: the same per-address limit, shared with `getstatus` and `getinfo` (a burst of 10, then 1 per second), as Quake3e. Requests beyond that are ignored. Players behind one public address (LAN party, carrier NAT) who connect at the same time may wait a few seconds: their client retries every 3 seconds.
+- With `developer 1`, every request dropped by these limits, rcon included, is printed in the server console, as in ioq3 and Quake3e.
 - rcon:
-  - the engine's 500 ms timer is removed (see [`proxy_sv_enableRconCmdCooldown`](#proxy_sv_enablerconcmdcooldown));
+  - the engine's 500 ms timer is removed. It was global and checked before the password, so anyone could lock the admins out (rcon disabler fix);
+  - a valid password is never limited, even during a flood with spoofed addresses;
+  - bad passwords are limited for the whole server, whatever the addresses: a burst of 10, then 1 per second. Packets beyond that are ignored without a reply;
   - rcon output is sent in chunks of 1008 bytes, so long output such as `rcon status` is no longer truncated;
   - `writeconfig` refuses a file name with a 3-letter extension other than `.cfg`. Shorter extensions such as `.so` get through, and `vstr`/`exec` bypass the check, see F7 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
 - `status` is rewritten:

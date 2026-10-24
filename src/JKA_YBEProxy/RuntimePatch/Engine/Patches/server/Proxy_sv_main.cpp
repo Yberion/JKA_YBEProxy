@@ -3,6 +3,7 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
 #include "sdk/game/g_public.hpp"
 #include "Proxy_sv_main.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_RateLimit.hpp"
 
 /*
 ===================
@@ -107,7 +108,8 @@ qboolean QDECL Proxy_SV_PacketEvent_Filter(netadr_t from, msg_t* msg)
 	// connect is Huffman-compressed and the original decompresses it in place: leave it alone
 	if (!Q_strncmp("connect", (const char*)&msg->data[4], 7))
 	{
-		return qtrue;
+		// Per address only, as Quake3e: reads nothing but the address
+		return Proxy_Engine_RateLimit_AddressAllowed(from, "connect") ? qtrue : qfalse;
 	}
 
 	// Same reading as the original SV_ConnectionlessPacket, which reads and tokenizes again afterwards
@@ -126,19 +128,21 @@ qboolean QDECL Proxy_SV_PacketEvent_Filter(netadr_t from, msg_t* msg)
 			return qfalse;
 		}
 
-		return qtrue;
+		return Proxy_Engine_RateLimit_StatusAllowed(from, c) ? qtrue : qfalse;
+	}
+
+	// Per address only, as Quake3e: a global bucket would let a getstatus flood block every connection
+	if (!Q_stricmp(c, "getchallenge"))
+	{
+		return Proxy_Engine_RateLimit_AddressAllowed(from, c) ? qtrue : qfalse;
 	}
 
 	if (!Q_stricmp(c, "rcon"))
 	{
-		static unsigned int commandCoolDown = 0;
-
-		if (proxy.originalEngineCvars.proxy_sv_enableRconCmdCooldown.integer && (unsigned int)server.svs->time < commandCoolDown + 500)
+		if (!Proxy_Engine_RateLimit_RconAllowed())
 		{
 			return qfalse;
 		}
-
-		commandCoolDown = (unsigned int)server.svs->time;
 
 		// Only allow writeconfig on cfg files
 		if (!Q_stricmpn(server.common.functions.Cmd_Argv(2), "writeconfig", 11))

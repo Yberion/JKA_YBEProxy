@@ -4,7 +4,6 @@
 static cvarTable_t proxyOriginalEngineCVarTable[] =
 {
 	{ &proxy.originalEngineCvars.proxy_sv_pingFix, "proxy_sv_pingFix", "0", CVAR_ARCHIVE, 0, qfalse },
-	{ &proxy.originalEngineCvars.proxy_sv_enableRconCmdCooldown, "proxy_sv_enableRconCmdCooldown", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.originalEngineCvars.proxy_sv_enableNetStatus, "proxy_sv_enableNetStatus", "0", CVAR_ARCHIVE, 0, qfalse },
 };
 static constexpr std::size_t proxyOriginalEngineCVarTableSize = ARRAY_LEN(proxyOriginalEngineCVarTable);

@@ -136,7 +136,6 @@ struct Proxy_OriginalEngine_CVars_t
 {
 	// New cvars
 	vmCvar_t proxy_sv_pingFix;
-	vmCvar_t proxy_sv_enableRconCmdCooldown;
 	vmCvar_t proxy_sv_enableNetStatus;
 };
 

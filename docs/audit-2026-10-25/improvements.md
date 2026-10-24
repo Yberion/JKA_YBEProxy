@@ -179,3 +179,31 @@ New cvar `proxy_sv_disableWelcomeMessage`: archived, any engine, default `0` (me
 - Document the cvar in [features.md](../features.md), next to the other cvars and in the "Welcome message" section.
 
 Proxy cvars are read about once per second (`Proxy_UpdateAllCvars` in `GAME_RUN_FRAME`), which is enough here.
+
+## A9. Stateless challenges (optional)
+
+Not required: the F6 rate limiting covers the floods that come from one address. This only matters for a flood of spoofed `getchallenge` packets from many different addresses.
+
+The problem, in the retail engine ([`server/sv_client.cpp:31-73`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L31-L73)):
+
+- `SV_GetChallenge` stores each new address in `svs.challenges`, 1024 slots, and overwrites the oldest one when the table is full.
+- `SV_DirectConnect` only accepts a `connect` whose challenge is still in the table.
+- A spoofed flood of more than about 1024 new addresses in the time a player takes between `getchallenge` and `connect` evicts the player's challenge: the player gets `No or bad challenge for address.`. The F6 per-address limit does not help, since every spoofed packet comes from a new address.
+
+What the other engines do:
+
+| Engine | Challenges |
+| --- | --- |
+| ioq3, JK2MV | Table of 2048 slots, and one address cannot take more than half of them (`MAX_CHALLENGES_MULTI`). Harder to flood, still possible. |
+| OpenJK, TaystJK | Stateless: the challenge is an HMAC-MD5 of the address and of a timestamp that changes every 16.384 s, with a secret key from the OS random generator. Nothing is stored, so nothing can be evicted ([`codemp/server/sv_challenge.cpp`](https://github.com/JACoders/OpenJK/blob/260c59c2907187af555a676fe0cc798893bf7757/codemp/server/sv_challenge.cpp), PR [#832](https://github.com/JACoders/OpenJK/pull/832)). |
+| Quake3e | Stateless, backported from OpenJK ([`code/server/sv_client.c:30-80`](https://github.com/ec-/Quake3e/blob/3173cef096dd0cb2fea26d91bce71049061f5a13/code/server/sv_client.c#L30-L80)). |
+
+Sketch for the proxy, in the F1 filter, without rewriting `SV_DirectConnect`:
+
+1. `getchallenge`: the filter answers `challengeResponse <HMAC challenge>` itself, then drops the packet. The retail client sends no argument and only reads the challenge number.
+2. `connect`: the filter decompresses a **copy** of the packet (the original decompresses it in place, see the F1 pitfalls), reads `challenge` from the userinfo, and checks the HMAC for the current and the previous timestamp. When it is valid, it writes the entry into `svs.challenges` (address, challenge, `connected = qfalse`, times) just before the original `SV_DirectConnect` runs and looks it up.
+3. Things to keep: the ping measured between the challenge and the connect (`challenge->pingTime`), which `SV_DirectConnect` uses for `sv_minPing` / `sv_maxPing`. A stateless challenge loses it, so the time must travel in the timestamp or be measured another way.
+4. Needs an MD5/HMAC implementation (OpenJK's `qcommon/md5.cpp`) and a random secret per server start.
+5. LAN addresses: the retail `SV_GetChallenge` answers them at once, keep that.
+
+Cost: no new hook, but a non-trivial change on the connection path, to test with the retail client on both platforms.
