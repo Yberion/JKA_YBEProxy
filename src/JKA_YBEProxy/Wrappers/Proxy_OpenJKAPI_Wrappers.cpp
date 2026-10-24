@@ -43,7 +43,12 @@ static void Proxy_OpenJKAPI_ClientCommand(int clientNum)
 
 static char* Proxy_OpenJKAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
 {
-	Proxy_SharedAPI_ClientConnect(clientNum, firstTime, isBot);
+	const char* reason = Proxy_SharedAPI_ClientConnect(clientNum, firstTime, isBot);
+
+	if (reason)
+	{
+		return (char*)reason;
+	}
 
 	return proxy.originalOpenJKAPIGameExportTable->ClientConnect(clientNum, firstTime, isBot);
 }
@@ -66,7 +71,11 @@ static void Proxy_OpenJKAPI_ClientThink(int clientNum, usercmd_t* ucmd)
 
 static qboolean Proxy_OpenJKAPI_ClientUserinfoChanged(int clientNum)
 {
-	Proxy_SharedAPI_ClientUserinfoChanged(clientNum);
+	// The client got dropped: don't forward, the game would set CS_PLAYERS again for a gone client (ghost player)
+	if (!Proxy_SharedAPI_ClientUserinfoChanged(clientNum))
+	{
+		return qfalse;
+	}
 
 	return proxy.originalOpenJKAPIGameExportTable->ClientUserinfoChanged(clientNum);
 }

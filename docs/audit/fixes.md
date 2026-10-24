@@ -257,9 +257,9 @@ Corrected:
 
 A pinned loader that holds the hooks and trampolines, plus a reloadable logic DLL. This matches the todo item "Create a plugin system", but it is more work. See A6 in [improvements.md](improvements.md).
 
-## F2. Userinfo not sanitised on connect (Critical)
+## F2. Userinfo not sanitised on connect (High)
 
-Status: **source only**, every point checked in the jediacademy source.
+Status: **source only**, every point checked in the jediacademy source. The forcepowers crash was never reproduced on a server.
 
 - `SV_DirectConnect` saves the userinfo ([`server/sv_client.cpp:517`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L517)), calls `GAME_CLIENT_CONNECT` (line 520), and only then calls `SV_UserinfoChanged` (line 530).
 - The game's `ClientConnect` calls `ClientUserinfoChanged` directly, without going through `vmMain` ([`game/g_client.c:2347`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_client.c#L2347)).
@@ -277,7 +277,7 @@ ioq3 and OpenJK keep the original order.
 
 Consequence: the game module receives the raw userinfo from the connect packet, and a malicious client never has to send a `userinfo` command afterwards. These proxy fixes are bypassed by setting the bad value before connecting:
 
-- the forcepowers crash fix. **Any client can crash the server without rcon**, which makes this the most serious item of the audit;
+- the forcepowers crash fix. In the source, a bad `forcepowers` set before connecting reaches `BG_LegalizedForcePowers`. No crash was reproduced: the bug is an out-of-bounds read, which only crashes when it reaches unmapped memory;
 - the model length fix. `Proxy_SV_UserinfoChanged` runs after `GAME_CLIENT_CONNECT`, and its comment ([Proxy_sv_client.cpp:464-466](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L464-L466)) describes the connection order backwards;
 - name cleaning. Anti-cheat messages print an empty name.
 

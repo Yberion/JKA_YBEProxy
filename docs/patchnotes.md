@@ -3,6 +3,12 @@
 > [!WARNING]
 > The proxy is a work in progress.
 
+## Unreleased
+
+- The userinfo sent on connect is now checked before the game reads it. The name, model and `forcepowers` fixes were skipped until the client's first userinfo change, and now also apply on connect and on the reconnect after each map change.
+- The anti-cheat now refuses a client on connect, with its reason, instead of kicking it later.
+- Fixed a ghost player entry left after an anti-cheat kick.
+
 ## 0.19.0 Beta
 
 - Added [`proxy_sv_disableKillCmd`](features.md#proxy_sv_disablekillcmd) (default `0`).

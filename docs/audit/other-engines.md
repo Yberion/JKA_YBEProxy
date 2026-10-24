@@ -47,7 +47,7 @@ These proxy fixes match another engine.
 | --- | --- | --- |
 | [O1](#o1-the-ip-userinfo-key-is-not-maintained-high) | High | `ip` userinfo key not maintained: IP bans can be avoided |
 | [O2](#o2-rate-limiting-of-out-of-band-packets-high) | High | Rate limiting, see F6 |
-| [O3](#o3-userinfo-sanitised-before-the-game-sees-it-on-connect-critical) | Critical | Userinfo on connect, see F2 |
+| [O3](#o3-userinfo-sanitised-before-the-game-sees-it-on-connect-high) | High | Userinfo on connect, see F2 |
 | [O4](#o4-writeconfig-medium) | Medium | `writeconfig`, see F7 |
 | [O5](#o5-connections-per-ip-address-medium-optional) | Medium, optional | Connections per IP address |
 | [O6](#o6-server-commands-longer-than-1022-characters-do-not-port-corrected) | Do not port | Server commands longer than 1022 characters |
@@ -104,7 +104,7 @@ Info_SetValueForKey(cl->userinfo, "ip", ip);
 
 Same as F6 in [fixes.md](fixes.md), which compares the engines. Quake3e also limits `getchallenge` and `connect` per address ([`code/server/sv_client.c:130, 502`](https://github.com/ec-/Quake3e/blob/3173cef096dd0cb2fea26d91bce71049061f5a13/code/server/sv_client.c#L130)). JK2MV [`ee07c4b`](https://github.com/mvdevs/jk2mv/commit/ee07c4b) and OpenJK also expire buckets when the time wraps (`interval < 0`): keep that test when porting.
 
-### O3. Userinfo sanitised before the game sees it on connect (Critical)
+### O3. Userinfo sanitised before the game sees it on connect (High)
 
 Same as F2 in [fixes.md](fixes.md). JK2MV and Quake3e call `SV_UserinfoChanged` before `GAME_CLIENT_CONNECT`.
 

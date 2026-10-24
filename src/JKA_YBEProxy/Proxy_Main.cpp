@@ -156,7 +156,13 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CLIENT_CONNECT: // (int clientNum, qboolean firstTime, qboolean isBot)
 		//==================================================
 		{
-			Proxy_SharedAPI_ClientConnect((int)arg0, (qboolean)arg1, (qboolean)arg2);
+			const char* reason = Proxy_SharedAPI_ClientConnect((int)arg0, (qboolean)arg1, (qboolean)arg2);
+
+			// The engine refuses the client with this reason, as with the game's "Banned."
+			if (reason)
+			{
+				return (intptr_t)reason;
+			}
 
 			break;
 		}
@@ -203,7 +209,11 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CLIENT_USERINFO_CHANGED: // (int clientNum)
 		//==================================================
 		{
-			Proxy_SharedAPI_ClientUserinfoChanged((int)arg0);
+			// The client got dropped: don't forward, the game would set CS_PLAYERS again for a gone client (ghost player)
+			if (!Proxy_SharedAPI_ClientUserinfoChanged((int)arg0))
+			{
+				return 0;
+			}
 
 			break;
 		}

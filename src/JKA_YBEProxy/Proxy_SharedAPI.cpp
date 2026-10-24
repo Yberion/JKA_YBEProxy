@@ -34,13 +34,28 @@ void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* ucmd)
 // EXPORT TABLE
 // ==================================================
 
-void Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
+const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
 {
+	// The game reads the userinfo here, before SV_UserinfoChanged and GAME_CLIENT_USERINFO_CHANGED
+	// Bots are skipped: their userinfo comes from the bot files
+	if (!isBot)
+	{
+		const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum);
+
+		// Returning the reason refuses the client, never DropClient here (the slot is still CS_FREE)
+		if (reason)
+		{
+			return reason;
+		}
+	}
+
 	// Doesn't work on the new API
 	if (firstTime && !isBot)
 	{
 		proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
 	}
+
+	return nullptr;
 }
 
 void Proxy_SharedAPI_ClientDisconnect(int clientNum)
@@ -229,15 +244,30 @@ void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd)
 {}
 */
 
-void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
+qboolean Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
+{
+	const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum);
+
+	if (reason)
+	{
+		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData[clientNum].cleanName));
+		proxy.trap->DropClient(clientNum, reason);
+
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum)
 {
 	char userinfo[MAX_INFO_STRING];
-	
+
 	proxy.trap->GetUserinfo(clientNum, userinfo, sizeof(userinfo));
 
 	if (std::strlen(userinfo) == 0)
 	{
-		return;
+		return nullptr;
 	}
 
 	std::size_t len = 0;
@@ -262,8 +292,7 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 
 		if (!Q_stricmpn(val, "darksidetools", len))
 		{
-			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", currentClientData->cleanName));
-			proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
+			return "(Anti-Cheat system) you got kicked cause of cheating";
 		}
 
 		if ((!Q_stricmpn(val, "jedi_", 5) && (!Q_stricmpn(val, "jedi_/red", len) ||
@@ -335,5 +364,5 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 
 	proxy.trap->SetUserinfo(clientNum, userinfo);
 
-	return;
+	return nullptr;
 }

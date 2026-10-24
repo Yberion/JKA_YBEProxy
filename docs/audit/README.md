@@ -75,11 +75,11 @@ The approach is the right one. Going through `vmMain` and the syscalls keeps the
 The risk sits in two places:
 
 - the engine-patching layer (hooks and rewritten engine functions), which causes the `rcon map` crash;
-- the connection path, where the game sees the client's userinfo before any proxy check. Any client can crash the server through it (F2).
+- the connection path, where the game sees the client's userinfo before any proxy check, which bypasses the name, model and `forcepowers` fixes (F2).
 
 ## Suggested order
 
-1. F2, then F3: userinfo sanitised on connect, and the anti-cheat fixed in the same function. Small changes. F2 closes a server crash that any client can trigger. Add the checks of O8 (duplicate keys, failed `Info_SetValueForKey`) and O1 (`ip`) at the same time: without O8, a long userinfo still gets through.
+1. F2, then F3: userinfo sanitised on connect, and the anti-cheat fixed in the same function. Small changes. F2 closes the bypass of the name, model and `forcepowers` fixes on connect. Add the checks of O8 (duplicate keys, failed `Info_SetValueForKey`) and O1 (`ip`) at the same time: without O8, a long userinfo still gets through.
 2. F9: a local variable in `netStatus`, and one test deleted in `Proxy_SV_UserMove`. Today a display command changes the snapshot rate of real players.
 3. F1: `rcon map` crash. Both checks on the binaries are done: the design works as is.
 4. F6, with F7: rcon and getstatus/getinfo rate limiting in the F1 filter, and `writeconfig`.
