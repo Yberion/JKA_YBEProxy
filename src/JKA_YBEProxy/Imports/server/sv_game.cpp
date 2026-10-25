@@ -1,5 +1,5 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
-#include "sv_game.hpp"
+#include "JKA_YBEProxy/Imports/server/sv_game.hpp"
 
 // playerState_t *SV_GameClientNum( int num )
 playerState_t* Proxy_GetPlayerStateByClientNum(int clientNum)

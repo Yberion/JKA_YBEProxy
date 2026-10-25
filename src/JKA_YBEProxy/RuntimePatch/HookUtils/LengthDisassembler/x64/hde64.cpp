@@ -8,8 +8,8 @@
 #if defined(_M_X64) || defined(__x86_64__)
 
 #include <cstring>
-#include "hde64.hpp"
-#include "table64.hpp"
+#include "JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x64/hde64.hpp"
+#include "JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x64/table64.hpp"
 
 unsigned int hde64_disasm(const void *code, hde64s *hs)
 {

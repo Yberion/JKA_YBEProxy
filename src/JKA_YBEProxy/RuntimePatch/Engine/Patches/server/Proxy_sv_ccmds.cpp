@@ -3,7 +3,7 @@
 #include "sdk/qcommon/game_version.hpp"
 #include "JKA_YBEProxy/Imports/server/sv_game.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_files.hpp"
-#include "Proxy_sv_ccmds.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.hpp"
 
 /*
 ================

@@ -1,5 +1,5 @@
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
-#include "Proxy_common.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_common.hpp"
 
 void Proxy_Windows_Com_EndRedirect(void)
 {

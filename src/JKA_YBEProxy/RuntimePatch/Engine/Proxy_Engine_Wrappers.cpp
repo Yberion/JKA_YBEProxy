@@ -1,6 +1,6 @@
-#include "Proxy_Engine_Wrappers.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Utils.hpp"
-#include "Patches/qcommon/Proxy_common.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_common.hpp"
 
 ProxyServer_t server = {};
 

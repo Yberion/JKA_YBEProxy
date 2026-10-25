@@ -1,5 +1,5 @@
-#include "Proxy_Header.hpp"
-#include "Proxy_CVars.hpp"
+#include "JKA_YBEProxy/Proxy_Header.hpp"
+#include "JKA_YBEProxy/Proxy_CVars.hpp"
 
 static cvarTable_t proxyOriginalEngineCVarTable[] =
 {

@@ -1,5 +1,5 @@
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
-#include "Proxy_sv_game.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_game.hpp"
 
 // these functions must be used instead of pointer arithmetic, because
 // the game allocates gentities with private information after the server shared part

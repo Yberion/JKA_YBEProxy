@@ -1,5 +1,5 @@
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
-#include "Proxy_cmd.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.hpp"
 
 static char cmd_cmd[BIG_INFO_STRING]; // the original command we received (no token processing)
 

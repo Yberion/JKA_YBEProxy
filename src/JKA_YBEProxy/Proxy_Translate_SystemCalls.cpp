@@ -22,8 +22,8 @@ along with this program; if not, see <http://www.gnu.org/licenses/>.
 ===========================================================================
 */
 
-#include "Proxy_Header.hpp"
-#include "Proxy_Translate_SystemCalls.hpp"
+#include "JKA_YBEProxy/Proxy_Header.hpp"
+#include "JKA_YBEProxy/Proxy_Translate_SystemCalls.hpp"
 
 NORETURN_PTR void (*Com_Error)(int level, const char* fmt, ...);
 void (*Com_Printf)(const char* fmt, ...);

@@ -1,6 +1,6 @@
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 #include "JKA_YBEProxy/Proxy_Header.hpp"
-#include "Proxy_sv_snapshot.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_snapshot.hpp"
 
 /*
 ====================

@@ -1,6 +1,6 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
-#include "Proxy_Engine_Client.hpp"
-#include "Proxy_Engine_Utils.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Utils.hpp"
 
 void Proxy_Engine_Client_UpdateUcmdStats(std::size_t clientNum, usercmd_t* cmd, std::size_t packetIndex)
 {

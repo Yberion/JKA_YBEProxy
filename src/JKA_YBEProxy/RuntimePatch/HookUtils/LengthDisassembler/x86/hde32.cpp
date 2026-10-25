@@ -8,8 +8,8 @@
 #if defined(_M_IX86) || defined(__i386__)
 
 #include <cstring>
-#include "hde32.hpp"
-#include "table32.hpp"
+#include "JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86/hde32.hpp"
+#include "JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86/table32.hpp"
 
 unsigned int hde32_disasm(const void *code, hde32s *hs)
 {

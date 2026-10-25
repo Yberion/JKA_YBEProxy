@@ -149,8 +149,8 @@ Applied (CMake rewrite), based on [cpp-best-practices/cmake_template](https://gi
 
 Left to do:
 
-- Uniform includes: today three styles are mixed (`"sdk/qcommon/q_shared.hpp"`, `"JKA_YBEProxy/Proxy_Header.hpp"` and bare `"Proxy_Engine_Wrappers.hpp"`). Use one, rooted at `src/` (the include directory of the target).
-- Keep the folder name `sdk`. Check its content against the original headers (retail source and OpenJK): the engine structures must stay retail-compatible, and the OpenJK copies that carry fixes must keep working. `files.cpp`, `q_shared.cpp`, `q_string.cpp` and `sv_client.cpp` in `sdk` are code, not headers.
+- Includes of the proxy code (`src/JKA_YBEProxy/`) are now all rooted at `src/` (`"JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"`, `"sdk/qcommon/q_shared.hpp"`). The files in `src/sdk/` keep the includes of their original (OpenJK and retail: bare names of the same folder, `.h` renamed `.hpp`), so a new diff against the original stays small. In `sdk/game/g_public.hpp` the `icarus/*.hpp` includes do not resolve, but they are inside `#if !defined(_GAME)`, never compiled.
+- Keep the folder name `sdk`. Not done yet: check its content against the original headers (retail source and OpenJK). The engine structures must stay retail-compatible, and the OpenJK copies that carry fixes must keep working. `files.cpp`, `q_shared.cpp`, `q_string.cpp` and `sv_client.cpp` in `sdk` are code, not headers.
 - Add `.clang-format` / `.clang-tidy` once a style is chosen (the template has both).
 
 ## A6. Pinned loader and reloadable plugin

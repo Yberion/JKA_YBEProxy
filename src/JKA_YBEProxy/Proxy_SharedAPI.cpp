@@ -1,9 +1,9 @@
-#include "Proxy_Header.hpp"
+#include "JKA_YBEProxy/Proxy_Header.hpp"
 #include "sdk/server/server.hpp"
-#include "Proxy_ClientCommand.hpp"
+#include "JKA_YBEProxy/Proxy_ClientCommand.hpp"
 #include "sdk/server/sv_client.hpp"
-#include "Proxy_SharedAPI.hpp"
-#include "Imports/game/g_cmds.hpp"
+#include "JKA_YBEProxy/Proxy_SharedAPI.hpp"
+#include "JKA_YBEProxy/Imports/game/g_cmds.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.hpp"
 
 // ==================================================

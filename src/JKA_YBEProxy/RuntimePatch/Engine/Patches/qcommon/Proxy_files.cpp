@@ -1,7 +1,7 @@
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 #include "sdk/sys/sys_public.hpp"
 #include "JKA_YBEProxy/Imports/qcommon/cvar.hpp"
-#include "Proxy_files.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_files.hpp"
 
 const char* Proxy_FS_GetCurrentGameDir(bool emptybase)
 {

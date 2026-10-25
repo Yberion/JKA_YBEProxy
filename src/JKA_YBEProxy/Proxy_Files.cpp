@@ -1,5 +1,5 @@
-#include "Proxy_Header.hpp"
-#include "Proxy_Files.hpp"
+#include "JKA_YBEProxy/Proxy_Header.hpp"
+#include "JKA_YBEProxy/Proxy_Files.hpp"
 
 void Proxy_LoadGameLibrary(void)
 {

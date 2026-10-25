@@ -17,8 +17,8 @@
 
 #include		<cstdlib>
 #include		<cstdio>
-#include		"HookUtils.hpp"
-#include		"LengthDisassembler/hde.hpp"
+#include		"JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp"
+#include		"JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/hde.hpp"
 
 namespace HookUtils {
 	// ==================================================

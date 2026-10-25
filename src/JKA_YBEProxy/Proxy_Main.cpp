@@ -3,15 +3,15 @@
 // Inspired by JMPProxy from DeathSpike (https://github.com/Deathspike/JMPProxy)
 // ==================================================
 
-#include "Proxy_Main.hpp"
-#include "Proxy_Header.hpp"
-#include "Proxy_CVars.hpp"
-#include "Proxy_Files.hpp"
-#include "RuntimePatch/Engine/Proxy_Engine_Patch.hpp"
-#include "RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
-#include "Proxy_SharedAPI.hpp"
-#include "Proxy_Translate_SystemCalls.hpp"
-#include "Wrappers/Proxy_OriginalAPI_Wrappers.hpp"
+#include "JKA_YBEProxy/Proxy_Main.hpp"
+#include "JKA_YBEProxy/Proxy_Header.hpp"
+#include "JKA_YBEProxy/Proxy_CVars.hpp"
+#include "JKA_YBEProxy/Proxy_Files.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
+#include "JKA_YBEProxy/Proxy_SharedAPI.hpp"
+#include "JKA_YBEProxy/Proxy_Translate_SystemCalls.hpp"
+#include "JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.hpp"
 
 Proxy_t proxy = {};
 

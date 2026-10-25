@@ -1,5 +1,5 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
-#include "cvar.hpp"
+#include "JKA_YBEProxy/Imports/qcommon/cvar.hpp"
 
 /*
 ============
