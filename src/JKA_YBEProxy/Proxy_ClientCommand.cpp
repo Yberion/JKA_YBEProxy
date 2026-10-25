@@ -1,7 +1,7 @@
-#include "Proxy_Header.hpp"
-#include "Proxy_ClientCommand.hpp"
-#include "Imports/server/sv_game.hpp"
-#include "RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
+#include "JKA_YBEProxy/Proxy_Header.hpp"
+#include "JKA_YBEProxy/Proxy_ClientCommand.hpp"
+#include "JKA_YBEProxy/Imports/server/sv_game.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 
 /*
 ==================
@@ -72,5 +72,5 @@ void Proxy_ClientCommand_MyRatio(int clientNum)
 		S_COLOR_WHITE "Ratio" S_COLOR_BLUE ": " S_COLOR_WHITE "%.2f %s\n\"",
 		ps->persistant[PERS_SCORE], ps->persistant[PERS_KILLED],
 		ps->fd.suicides,
-		ratio, ratioStringBuffer));
+		(double)ratio, ratioStringBuffer));
 }

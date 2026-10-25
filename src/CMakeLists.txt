@@ -1,303 +1,73 @@
-#============================================================================
-# Copyright (C) 2013 - 2018, OpenJK contributors
-#
-# This file is part of the OpenJK source code.
-#
-# OpenJK is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License version 2 as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, see <http://www.gnu.org/licenses/>.
-#============================================================================
+file(GLOB_RECURSE YBEPROXY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 
-# Make sure the user is not executing this script directly
-if(NOT InJKA_YBEProxy)
-	message(FATAL_ERROR "Use the top-level cmake script!")
-endif(NOT InJKA_YBEProxy)
-
-set(MPSharedDefines ${SharedDefines})
-
-set(JKA_YBEProxyIncludeDirectories "${JKA_YBEProxyDir}")
-
-if(WIN32)
-	set(JKA_YBEProxyLibraries "winmm")
-endif(WIN32)
-
-#============================================================================
-# src/JKA_YBEProxy
-#============================================================================
-
-set(JKA_YBEProxyDefines ${MPSharedDefines} "_GAME" )
-set(JKA_YBEProxyMainFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_ClientCommand.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_ClientCommand.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_CVars.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_CVars.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Files.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Files.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Header.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Main.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Main.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SharedAPI.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_SharedAPI.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Shell.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Translate_SystemCalls.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Proxy_Translate_SystemCalls.hpp"
-	)
-source_group("src/JKA_YBEProxy" FILES ${JKA_YBEProxyMainFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyMainFiles})
-
-#============================================================================
-# src/JKA_YBEProxy/Imports/game
-#============================================================================
-
-set(JKA_YBEProxyImportsGameFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Imports/game/g_cmds.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Imports/game/g_cmds.hpp"
-	)
-source_group("src/JKA_YBEProxy/Imports/game" FILES ${JKA_YBEProxyImportsGameFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyImportsGameFiles})
-
-#============================================================================
-# src/JKA_YBEProxy/Imports/qcommon
-#============================================================================
-
-set(JKA_YBEProxyImportsQcommonFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Imports/qcommon/cvar.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Imports/qcommon/cvar.hpp"
-	)
-source_group("src/JKA_YBEProxy/Imports/qcommon" FILES ${JKA_YBEProxyImportsQcommonFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyImportsQcommonFiles})
-
-#============================================================================
-# src/JKA_YBEProxy/Imports/server
-#============================================================================
-
-set(JKA_YBEProxyImportsServerFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Imports/server/sv_game.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Imports/server/sv_game.hpp"
-	)
-source_group("src/JKA_YBEProxy/Imports/server" FILES ${JKA_YBEProxyImportsServerFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyImportsServerFiles})
-
-#============================================================================
-# src/JKA_YBEProxy/RuntimePatch/Engine
-#============================================================================
-
-set(JKA_YBEProxyRuntimePatchEngineFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_RateLimit.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_RateLimit.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Utils.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
-	)
-source_group("src/JKA_YBEProxy/RuntimePatch/Engine" FILES ${JKA_YBEProxyRuntimePatchEngineFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyRuntimePatchEngineFiles})
-
-#============================================================================
-# src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon
-#============================================================================
-
-set(JKA_YBEProxyRuntimePatchEnginePatchesQcommonFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_common.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_common.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_files.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_files.hpp"
-	)
-source_group("src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon" FILES ${JKA_YBEProxyRuntimePatchEnginePatchesQcommonFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyRuntimePatchEnginePatchesQcommonFiles})
-
-#============================================================================
-# src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server
-#============================================================================
-
-set(JKA_YBEProxyRuntimePatchEnginePatchesServerFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_game.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_game.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.hpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_snapshot.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_snapshot.hpp"
-	)
-source_group("src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server" FILES ${JKA_YBEProxyRuntimePatchEnginePatchesServerFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyRuntimePatchEnginePatchesServerFiles})
-
-#============================================================================
-# src/JKA_YBEProxy/RuntimePatch/HookUtils
-#============================================================================
-
-set(JKA_YBEProxyHookUtilsFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp"
-	)
-source_group("src/JKA_YBEProxy/RuntimePatch/HookUtils" FILES ${JKA_YBEProxyHookUtilsFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyHookUtilsFiles})
-
-#============================================================================
-# src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/
-#============================================================================
-
-set(JKA_YBEProxyLengthDisassemblerFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/hde.hpp"
-	)
-source_group("src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler" FILES ${JKA_YBEProxyLengthDisassemblerFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyLengthDisassemblerFiles})
-
-if (CMAKE_SIZEOF_VOID_P EQUAL 4 OR "${TARGET_ARCH}" MATCHES "x86")
-	#============================================================================
-	# src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86
-	#============================================================================
-
-	set(JKA_YBEProxyLengthDisassemblerX86Files
-		"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86/hde32.cpp"
-		"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86/hde32.hpp"
-		"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86/table32.hpp"
-		)
-	source_group("src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86" FILES ${JKA_YBEProxyLengthDisassemblerX86Files})
-	set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyLengthDisassemblerX86Files})
-else ()
-	#============================================================================
-	# src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x64
-	#============================================================================
-
-	set(JKA_YBEProxyLengthDisassemblerX64Files
-		"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x64/hde64.cpp"
-		"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x64/hde64.hpp"
-		"${JKA_YBEProxyDir}/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x64/table64.hpp"
-		)
-	source_group("src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x64" FILES ${JKA_YBEProxyLengthDisassemblerX64Files})
-	set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyLengthDisassemblerX64Files})
-endif ()
-
-#============================================================================
-# src/JKA_YBEProxy/Wrappers
-#============================================================================
-
-set(JKA_YBEProxyWrapperFiles
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.cpp"
-	"${JKA_YBEProxyDir}/JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.hpp"
-	)
-source_group("src/JKA_YBEProxy/Wrapper" FILES ${JKA_YBEProxyWrapperFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyWrapperFiles})
-
-#============================================================================
-# src/sdk/server
-#============================================================================
-
-set(JKA_YBEProxyServerFiles
-	"${JKA_YBEProxyDir}/sdk/server/server.hpp"
-	"${JKA_YBEProxyDir}/sdk/server/sv_client.cpp"
-	"${JKA_YBEProxyDir}/sdk/server/sv_client.hpp"
-	)
-source_group("src/sdk/server" FILES ${JKA_YBEProxyServerFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyServerFiles})
-
-#============================================================================
-# src/sdk/sys
-#============================================================================
-
-set(JKA_YBEProxySysFiles
-	"${JKA_YBEProxyDir}/sdk/sys/sys_public.hpp"
-	)
-source_group("src/sdk/sys" FILES ${JKA_YBEProxySysFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxySysFiles})
-
-#============================================================================
-# src/sdk/qcommon
-#============================================================================
-
-set(JKA_YBEProxyDSKCommonFiles
-	"${JKA_YBEProxyDir}/sdk/qcommon/disablewarnings.hpp"
-	"${JKA_YBEProxyDir}/sdk/qcommon/files.cpp"
-	"${JKA_YBEProxyDir}/sdk/qcommon/game_version.hpp"
-	"${JKA_YBEProxyDir}/sdk/qcommon/q_color.hpp"
-	"${JKA_YBEProxyDir}/sdk/qcommon/q_math.hpp"
-	"${JKA_YBEProxyDir}/sdk/qcommon/q_platform.hpp"
-	"${JKA_YBEProxyDir}/sdk/qcommon/q_shared.cpp"
-	"${JKA_YBEProxyDir}/sdk/qcommon/q_shared.hpp"
-	"${JKA_YBEProxyDir}/sdk/qcommon/q_string.cpp"
-	"${JKA_YBEProxyDir}/sdk/qcommon/q_string.hpp"
-	"${JKA_YBEProxyDir}/sdk/qcommon/qcommon.hpp"
-	"${JKA_YBEProxyDir}/sdk/qcommon/tags.hpp"
-	)
-source_group("src/sdk/qcommon" FILES ${JKA_YBEProxyDSKCommonFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxyDSKCommonFiles})
-
-#============================================================================
-# src/sdk/game
-#============================================================================
-
-set(JKA_YBEProxySDKGameFiles
-	"${JKA_YBEProxyDir}/sdk/game/ai.hpp"
-	"${JKA_YBEProxyDir}/sdk/game/anims.hpp"
-	"${JKA_YBEProxyDir}/sdk/game/b_public.hpp"
-	"${JKA_YBEProxyDir}/sdk/game/bg_public.hpp"
-	"${JKA_YBEProxyDir}/sdk/game/bg_vehicles.hpp"
-	"${JKA_YBEProxyDir}/sdk/game/bg_weapons.hpp"
-	"${JKA_YBEProxyDir}/sdk/game/g_local.hpp"
-	"${JKA_YBEProxyDir}/sdk/game/g_public.hpp"
-	"${JKA_YBEProxyDir}/sdk/game/g_team.hpp"
-	"${JKA_YBEProxyDir}/sdk/game/g_xcvar.hpp"
-	"${JKA_YBEProxyDir}/sdk/game/surfaceflags.hpp"
-	"${JKA_YBEProxyDir}/sdk/game/teams.hpp"
-	)
-source_group("src/sdk/game" FILES ${JKA_YBEProxySDKGameFiles})
-set(JKA_YBEProxyFiles ${JKA_YBEProxyFiles} ${JKA_YBEProxySDKGameFiles})
-
-add_library(${JKA_YBEProxy} SHARED ${JKA_YBEProxyFiles})
-
-if(NOT MSVC)
-	# remove "lib" prefix for .so/.dylib files
-	set_target_properties(${JKA_YBEProxy} PROPERTIES PREFIX "")
-endif()
-set_target_properties(${JKA_YBEProxy} PROPERTIES COMPILE_DEFINITIONS "${JKA_YBEProxyDefines}")
-
-# Hide symbols not explicitly marked public.
-set_property(TARGET ${JKA_YBEProxy} APPEND PROPERTY COMPILE_OPTIONS ${JKA_YBEProxy_VISIBILITY_FLAGS})
-
-set_target_properties(${JKA_YBEProxy} PROPERTIES INCLUDE_DIRECTORIES "${JKA_YBEProxyIncludeDirectories}")
-set_target_properties(${JKA_YBEProxy} PROPERTIES PROJECT_LABEL "JKA_YBEProxy Library")
-# no libraries used
-if(JKA_YBEProxyLibraries)
-	target_link_libraries(${JKA_YBEProxy} ${JKA_YBEProxyLibraries})
-endif(JKA_YBEProxyLibraries)
-
-set(JKA_YBEProxyLibsBuilt)
-if(BuildJKA_YBEProxy)
-	set(JKA_YBEProxyLibsBuilt ${JKA_YBEProxyLibsBuilt} ${JKA_YBEProxy})
+# One length disassembler per architecture
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  list(FILTER YBEPROXY_SOURCES EXCLUDE REGEX "/LengthDisassembler/x86/")
+else()
+  list(FILTER YBEPROXY_SOURCES EXCLUDE REGEX "/LengthDisassembler/x64/")
 endif()
 
-if(WIN32)
-	set(JKA_YBEProxyLibFullPaths)
-	if(MSVC)
-		foreach(JKA_YBEProxyLib ${JKA_YBEProxyLibsBuilt})
-			set(JKA_YBEProxyLibFullPaths
-				${JKA_YBEProxyLibFullPaths}
-				${CMAKE_BINARY_DIR}/${CMAKE_CFG_INTDIR}/${JKA_YBEProxyLib}${CMAKE_SHARED_LIBRARY_SUFFIX})
-		endforeach(JKA_YBEProxyLib)
-	else()
-		foreach(JKA_YBEProxyLib ${JKA_YBEProxyLibsBuilt})
-			set(JKA_YBEProxyLibFullPaths
-				${JKA_YBEProxyLibFullPaths}
-				${CMAKE_BINARY_DIR}/${JKA_YBEProxyLib}${CMAKE_SHARED_LIBRARY_SUFFIX})
-		endforeach(JKA_YBEProxyLib)
-	endif()
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${YBEPROXY_SOURCES})
+
+add_library(${PROJECT_NAME} SHARED ${YBEPROXY_SOURCES})
+
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+
+target_link_libraries(${PROJECT_NAME} PRIVATE ybeproxy_options ybeproxy_warnings)
+
+set_target_properties(
+  ${PROJECT_NAME}
+  PROPERTIES OUTPUT_NAME "jampgame${YBEPROXY_ARCH}"
+             # no "lib" prefix on Linux
+             PREFIX ""
+             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE _GAME $<$<NOT:$<CONFIG:Debug>>:FINAL_BUILD>)
+
+if(MSVC)
+  # The DLL is extracted from a pk3 and loaded by the game: it cannot rely on a Visual C++ redistributable
+  set_target_properties(${PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  target_compile_definitions(
+    ${PROJECT_NAME}
+    PRIVATE NOMINMAX
+            _CRT_SECURE_NO_WARNINGS
+            _SCL_SECURE_NO_WARNINGS
+            _CRT_NONSTDC_NO_DEPRECATE)
+  target_compile_options(${PROJECT_NAME} PRIVATE /MP)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    target_compile_options(${PROJECT_NAME} PRIVATE /arch:SSE2)
+  endif()
+else()
+  target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:_DEBUG>)
+  # The hooks use Intel syntax in their inline assembly (Proxy_Shell.hpp)
+  target_compile_options(${PROJECT_NAME} PRIVATE -fsigned-char -masm=intel $<$<CONFIG:Debug>:-ggdb>)
+
+  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    target_compile_options(${PROJECT_NAME} PRIVATE -msse2)
+  endif()
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # "x86 vm will crash without -mstackrealign since MMX instructions will be used no matter what and they corrupt
+    # the frame pointer in VM calls" -ioquake3 Makefile
+    target_compile_options(${PROJECT_NAME} PRIVATE -mstackrealign -mfpmath=sse)
+    # The server may not have the C++ runtime (linuxjampded does not use it)
+    target_link_options(${PROJECT_NAME} PRIVATE -static-libgcc -static-libstdc++)
+  endif()
+
+  # Removes -rdynamic at link, which caused crashes
+  set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
+  # Keep the symbols of the statically linked libstdc++ inside the .so: another libstdc++ already loaded in the
+  # process (OpenJK) must not replace them
+  target_link_options(${PROJECT_NAME} PRIVATE -Wl,--exclude-libs,ALL)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE "ARCH_STRING=\"${YBEPROXY_ARCH}\"")
+endif()
+
+# https://reproducible-builds.org/specs/source-date-epoch/
+if(NOT "$ENV{SOURCE_DATE_EPOCH}" STREQUAL "")
+  execute_process(
+    COMMAND "date" "--date=@$ENV{SOURCE_DATE_EPOCH}" "+%b %_d %Y"
+    OUTPUT_VARIABLE source_date
+    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE "SOURCE_DATE=\"${source_date}\"")
 endif()

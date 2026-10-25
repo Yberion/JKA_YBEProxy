@@ -1,7 +1,7 @@
 #pragma once
 
 #include "JKA_YBEProxy/Proxy_Header.hpp"
-#include "Proxy_Engine_Wrappers.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 #include "sdk/server/server.hpp"
 
 #include <cstddef>

@@ -3,7 +3,7 @@
 #include "sdk/qcommon/game_version.hpp"
 #include "JKA_YBEProxy/Imports/server/sv_game.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_files.hpp"
-#include "Proxy_sv_ccmds.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.hpp"
 
 /*
 ================
@@ -112,7 +112,7 @@ These commands can only be entered from stdin or by a remote operator datagram
 ===============================================================================
 */
 
-const char* Proxy_SV_GetStringEdString(const char* refSection, const char* refName)
+const char* Proxy_SV_GetStringEdString(const char* /*refSection*/, const char* refName)
 {
 	//Well, it would've been lovely doing it the above way, but it would mean mixing
 	//languages for the client depending on what the server is. So we'll mark this as

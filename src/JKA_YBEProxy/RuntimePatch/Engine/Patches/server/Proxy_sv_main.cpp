@@ -2,7 +2,7 @@
 #include "JKA_YBEProxy/Imports/server/sv_game.hpp"
 #include "JKA_YBEProxy/Proxy_Header.hpp"
 #include "sdk/game/g_public.hpp"
-#include "Proxy_sv_main.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_RateLimit.hpp"
 
 /*

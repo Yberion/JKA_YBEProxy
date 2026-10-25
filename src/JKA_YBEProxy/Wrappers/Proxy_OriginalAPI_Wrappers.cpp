@@ -1,6 +1,6 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
 #include "sdk/game/g_public.hpp"
-#include "Proxy_OriginalAPI_Wrappers.hpp"
+#include "JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.hpp"
 #include "JKA_YBEProxy/Proxy_SharedAPI.hpp"
 #include "JKA_YBEProxy/Proxy_Main.hpp"
 

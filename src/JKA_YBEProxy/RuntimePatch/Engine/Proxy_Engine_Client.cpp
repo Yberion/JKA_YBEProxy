@@ -1,6 +1,6 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
-#include "Proxy_Engine_Client.hpp"
-#include "Proxy_Engine_Utils.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Utils.hpp"
 
 void Proxy_Engine_Client_UpdateUcmdStats(std::size_t clientNum, usercmd_t* cmd, std::size_t packetIndex)
 {
@@ -111,13 +111,13 @@ void Proxy_Engine_Client_UpdateTimenudge(client_t* client, usercmd_t* cmd, int _
 	const int magicOffset = Proxy_GetTimenudgeMagicOffset(svFps);
 
 	// ((serverTime - sv.time) + ping -magicOffset + (1000/sv_fps)) * -1
-	currentClientData->timenudge =
+	currentClientData->timenudge = (int)(
 		(
-			(currentClientData->timenudgeData.delaySum / (float)currentClientData->timenudgeData.delayCount)
-			+ (currentClientData->timenudgeData.pingSum / (float)currentClientData->timenudgeData.delayCount)
-			- magicOffset
-			+ (1000 / svFps)
-		) * -1;
+			((float)currentClientData->timenudgeData.delaySum / (float)currentClientData->timenudgeData.delayCount)
+			+ ((float)currentClientData->timenudgeData.pingSum / (float)currentClientData->timenudgeData.delayCount)
+			- (float)magicOffset
+			+ (float)(1000 / svFps)
+		) * -1);
 
 	currentClientData->timenudgeData.delayCount = 0;
 	currentClientData->timenudgeData.delaySum = 0;

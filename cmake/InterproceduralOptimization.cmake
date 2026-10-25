@@ -1,0 +1,10 @@
+macro(ybeproxy_enable_ipo)
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT result OUTPUT output)
+  if(result)
+    # Release only: LTO makes Debug builds slow to link and hard to step through
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+  else()
+    message(SEND_ERROR "IPO is not supported: ${output}")
+  endif()
+endmacro()

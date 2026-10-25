@@ -1,8 +1,8 @@
-#include "Proxy_Engine_ClientCommand.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.hpp"
 #include "JKA_YBEProxy/Proxy_Header.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 #include "JKA_YBEProxy/Imports/server/sv_game.hpp"
-#include "Proxy_Engine_Client.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.hpp"
 
 /*
 ==================

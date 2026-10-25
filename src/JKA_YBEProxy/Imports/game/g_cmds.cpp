@@ -1,6 +1,6 @@
 #include "sdk/qcommon/q_shared.hpp"
 #include "JKA_YBEProxy/Proxy_Header.hpp"
-#include "g_cmds.hpp"
+#include "JKA_YBEProxy/Imports/game/g_cmds.hpp"
 
 char* ConcatArgs(int start) {
 	int		i;

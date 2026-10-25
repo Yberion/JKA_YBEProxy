@@ -1,9 +1,9 @@
-#include "Proxy_Header.hpp"
+#include "JKA_YBEProxy/Proxy_Header.hpp"
 #include "sdk/server/server.hpp"
-#include "Proxy_ClientCommand.hpp"
+#include "JKA_YBEProxy/Proxy_ClientCommand.hpp"
 #include "sdk/server/sv_client.hpp"
-#include "Proxy_SharedAPI.hpp"
-#include "Imports/game/g_cmds.hpp"
+#include "JKA_YBEProxy/Proxy_SharedAPI.hpp"
+#include "JKA_YBEProxy/Imports/game/g_cmds.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.hpp"
 
 // ==================================================
@@ -20,7 +20,7 @@ void Proxy_SharedAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int
 	proxy.locatedGameData.g_clientSize = sizeofGameClient;
 }
 
-void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* ucmd)
+void Proxy_SharedAPI_GetUsercmd(int /*clientNum*/, usercmd_t* ucmd)
 {
 	if (ucmd->forcesel == FP_LEVITATION || ucmd->forcesel >= NUM_FORCE_POWERS)
 	{
@@ -65,7 +65,7 @@ void Proxy_SharedAPI_ClientDisconnect(int clientNum)
 	}
 }
 
-void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset)
+void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean /*allowTeamReset*/)
 {
 	if (clientNum >= 0 && clientNum < MAX_CLIENTS)
 	{

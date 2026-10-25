@@ -3,8 +3,8 @@
 #include "JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Utils.hpp"
-#include "Proxy_sv_ccmds.hpp"
-#include "Proxy_sv_client.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.hpp"
 
 /*
 ===============

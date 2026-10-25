@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- Build: CMake rewritten (CMake 3.25 or later) with `CMakePresets.json`. The `CreateVisualStudio*.bat` scripts are removed: use `cmake --preset windows-x86` or `linux-x86-release` (see the README). The module is now in `build/<preset>/bin/`. MinGW and Apple builds are no longer supported.
 - The userinfo sent on connect is now checked before the game reads it. The name, model and `forcepowers` fixes were skipped until the client's first userinfo change, and now also apply on connect and on the reconnect after each map change.
 - The anti-cheat now refuses a client on connect, with its reason, instead of kicking it later.
 - Fixed a ghost player entry left after an anti-cheat kick.

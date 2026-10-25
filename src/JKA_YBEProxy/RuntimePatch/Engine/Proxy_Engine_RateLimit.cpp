@@ -1,6 +1,6 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
-#include "Proxy_Engine_RateLimit.hpp"
-#include "Proxy_Engine_Wrappers.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_RateLimit.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 
 #include <cstring>
 #include <map>

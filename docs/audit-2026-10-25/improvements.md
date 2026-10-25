@@ -128,17 +128,41 @@ Side effect: a text longer than `BIG_INFO_STRING - 1` characters is truncated in
 
 ## A5. Build
 
-Status: **corrected**. From CMake's documented behaviour, not observed in a generated project.
+Status: **applied** (CMake rewrite, includes, comparison of the SDK). Two optional items are left, at the end.
 
-- [CMakeLists.txt:141](../../CMakeLists.txt#L141): the MSVC flags `/EHsc /sdl /Ot /Gy /TP /W4` are added to `CMAKE_C_FLAGS` only, and the project has no `.c` file. Smaller impact than first written:
-  - CMake's default C++ flags already contain `/EHsc` (`/DWIN32 /D_WINDOWS /W3 /GR /EHsc`);
-  - `/O2`, CMake's default in Release, already implies `/Ot` and `/Gy`;
-  - `/TP` means nothing for C++ files.
+Problems found in the old build:
 
-  Only `/W4` and `/sdl` are really missing for C++. Moving them may raise new warnings, and `/sdl` turns some of them into errors: test a build before committing.
-- [CMakeLists.txt:186](../../CMakeLists.txt#L186): `-std=c++11` contradicts `CMAKE_CXX_STANDARD 20`. In practice CMake adds its own `-std=gnu++20` after `CMAKE_CXX_FLAGS`, which is why `std::variant` compiles. Remove `-std=c++11` for clarity.
-- The GCC C++ flags are fine: `-mstackrealign` and `-mfpmath=sse` are set for C++ as well ([CMakeLists.txt:226-229](../../CMakeLists.txt#L226-L229)).
-- Related todo item: "Redo the CMake project".
+- the MSVC flags `/EHsc /sdl /Ot /Gy /TP /W4` were added to `CMAKE_C_FLAGS` only, and the project has no `.c` file, so only `/W4` and `/sdl` were really missing for C++ (CMake's default C++ flags already contain `/EHsc`, `/O2` implies `/Ot` and `/Gy`, `/TP` means nothing for C++ files);
+- `-std=c++11` contradicted `CMAKE_CXX_STANDARD 20`;
+- dead weight: `winmm`, `GetGitRevisionDescription` (the SHA was never used), Apple/Intel/PowerPC/BSD branches, MinGW and `linux-i686` toolchains, the `MSVCRuntime` macro.
+
+Applied (CMake rewrite), based on [cpp-best-practices/cmake_template](https://github.com/cpp-best-practices/cmake_template) without tests, dependencies, WebAssembly, sanitizers, packaging and fuzzing:
+
+- Layout: `CMakeLists.txt`, `ProjectOptions.cmake`, `cmake/*.cmake` (warnings, hardening, IPO, ccache, static analyzers, in-source build guard), `cmake/toolchains/linux-x86.cmake`, `CMakePresets.json` (replaces the `CreateVisualStudio*.bat` and `-DTARGET_ARCH=x86`), `src/CMakeLists.txt`. `CMakeModules/` is gone.
+- One target, sources by `file(GLOB_RECURSE ... CONFIGURE_DEPENDS)`. The length disassembler is chosen with `CMAKE_SIZEOF_VOID_P`.
+- Project flags are on the target (`target_compile_options`, `target_compile_definitions`), not in `CMAKE_*_FLAGS`. Same flags as before otherwise: `-fsigned-char`, `-masm=intel`, `-msse2` (32-bit), `-mstackrealign -mfpmath=sse` (GCC), static libgcc/libstdc++ and `--exclude-libs,ALL`, `-fvisibility=hidden`, static MSVC runtime (`MSVC_RUNTIME_LIBRARY`), `/arch:SSE2` (32-bit), same defines (`WIN64` dropped: `_WIN64` already does it).
+- Warnings follow the template (`/W4` + its list, `-Wall -Wextra -Wshadow -Wconversion`...), as warnings only. `-Wno-invalid-offsetof -Wno-write-strings -Wno-comment` are kept, and `-Wold-style-cast` and `-Wuseless-cast` (GCC) are turned off: the engine code is written with C casts, and the `intptr_t` casts are useless on 32-bit only. `/permissive-` is not set: it would turn the `char*` from string literal conversions into errors.
+- Warnings fixed after the first builds: the `disablewarnings.hpp` pragmas for the MSVC warnings 4136, 4284 and 4663 (they no longer exist), `= { 0 }` on structures (now `= {}`), unused parameters, `float` to `double` in `printf`, int/float conversions in the timenudge computation, and the `HookEntry` constructor parameters that shadowed members. No warning left on MSVC 19.51, GCC 12 (Debian 12) and GCC 16 (Fedora 44).
+- Hardening and IPO (on by default in the template) are options, off. Hardening changes function bodies and the hooks patch those at runtime: not tested. IPO/LTO (Release builds only) was tested with the hooks on Windows and Linux and works, but the GCC build is about 40% bigger and no gain was measured.
+- `CMAKE_CXX_EXTENSIONS` stays `ON` (the template turns it off): the copied engine code may use GNU extensions. Try `OFF` later.
+- Built and tested on Windows (VS 2026), Debian 12 (GCC 12) and Fedora 44 in a container (GCC 16).
+
+Includes and SDK:
+
+- Includes of the proxy code (`src/JKA_YBEProxy/`) are now all rooted at `src/` (`"JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"`, `"sdk/qcommon/q_shared.hpp"`). The files in `src/sdk/` keep the includes of their original (OpenJK and retail: bare names of the same folder, `.h` renamed `.hpp`), so a new diff against the original stays small. In `sdk/game/g_public.hpp` the `icarus/*.hpp` includes do not resolve, but they are inside `#if !defined(_GAME)`, never compiled.
+- The folder keeps the name `sdk`. Compared on 2026-10-25 with OpenJK ([`260c59c`](https://github.com/JACoders/OpenJK/commit/260c59c2907187af555a676fe0cc798893bf7757)), ignoring `.h` to `.hpp` and CRLF (read only, nothing changed):
+  - Identical to OpenJK: `ai`, `anims`, `bg_weapons`, `b_public`, `g_team`, `surfaceflags`, `tags`; `bg_vehicles` too, except for an include path.
+  - Small, deliberate differences: `g_public.hpp` has the `Vehicle_t` typedef commented out; `teams.hpp` gives the enums a fixed type (`int32_t`) and includes `q_shared`; `g_local.hpp` has the `ClientConnect`/`ClientUserinfoChanged`/`ClientDisconnect`/`ClientBegin` declarations commented out (the proxy defines its own), and defines `GAMEVERSION`; `q_shared.hpp` uses `<cxxx>` headers and C++ aliases for `byte`, `qboolean`..., defines `cvar_t` (OpenJK's is commented out) and `BASE_COMPAT`; `disablewarnings.hpp` no longer disables the warnings 4136, 4284 and 4663 that OpenJK still lists.
+  - `bg_public.hpp` lacks OpenJK's legacy fixes block (`CS_LEGACY_FIXES`, `legacyFixes_t`, `BG_FixSaberMoveData`, `BG_FixWeaponAttackAnim`) and the final `EV_NUM_ENTITY_EVENTS`. Nothing in the proxy uses them. The `BASE_COMPAT` guards around `PW_QUAD`, `PW_BATTLESUIT`, `EV_POWERUP_QUAD` and `EV_POWERUP_BATTLESUIT` are active because `q_shared.hpp` defines `BASE_COMPAT`, so the enum values are the same as the retail ones.
+  - Not comparable: `qcommon.hpp`, `server.hpp` and `sys_public.hpp` are cut down to the structures the proxy needs, with the retail layout; `files.cpp`, `sv_client.cpp` (`ClientCleanName`) and `q_string.cpp` are short extracts.
+  - Up to date on 2026-10-25: the local clones of OpenJK, JK2MV, ioq3 and Quake3e are at the head of their upstream. TaystJK has one newer commit, a cgame-only change ([`21044fb`](https://github.com/taysta/TaystJK/commit/21044fb2)).
+  - Functions copied into `sdk` (`va`, `COM_CompareExtension`, `COM_DefaultExtension`, `Info_ValueForKey`, `Q_CleanStr`, `Q_strcat`, `Q_stricmpn`, `Q_StripColor`, `FS_CheckDirTraversal`) and `q_color.hpp`, `q_math.hpp`: same logic as OpenJK and ioq3 (only `std::size_t` instead of `int`/`size_t`). `Proxy_ClientCleanName` matches OpenJK's `ClientCleanName` and TaystJK's `SV_ClientCleanName`; TaystJK only strips the leading `*` on a retail game module. OpenJK has two things the SDK lacks and the proxy does not use: the `arm64` macOS branch of `q_platform.h` and `Q_PrintStrLenTo`.
+
+Optional, left open:
+
+- Add `.clang-format` / `.clang-tidy` once a style is chosen (the template has both).
+- Check the sizes of `playerState_t`, `entityState_t` and `usercmd_t` with a `static_assert` (see the engine structures item above).
+- Try `CMAKE_CXX_EXTENSIONS OFF`, `/permissive-` and the hardening option.
 
 ## A6. Pinned loader and reloadable plugin
 
