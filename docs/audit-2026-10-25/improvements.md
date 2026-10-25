@@ -175,6 +175,10 @@ Comes out of the F1 discussion: a pinned loader that holds the hooks and trampol
   - The tokenizer ends a token at `"` ([Proxy_cmd.cpp:73-99](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp#L73-L99)). Neither the connect packet nor the `userinfo` command can put a `"` in the userinfo, and `cl->name` comes from the userinfo.
   - A quoted token can contain a newline. A name with a newline only breaks the layout of the `netStatus` table. Cosmetic.
 
+#### Applied
+
+Status: **partly applied**. Only the "lost %i clientCommands" count was changed: it prints `seq - lastClientCommand - 1`, as Quake3e does. The retail source, ioq3, OpenJK, JK2MV, TaystJK, CleanJK and Quake III Arena all keep the `+ 1`. The other items need nothing: the `currentVM` case only matters with a second VM (a listen server, which the proxy does not support), and the `Proxy_SV_VerifyPaks_f` loop is bounded by the server's pak count. Not compiled when written.
+
 ## A8. Cvar to disable the welcome message
 
 Request of the author. Today every human player gets the proxy name and version on their first connection, with no way to turn it off.

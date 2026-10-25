@@ -29,7 +29,7 @@ static qboolean Proxy_SV_ClientCommand(client_t* cl, msg_t* msg) {
 	// drop the connection if we have somehow lost commands
 	if (seq > cl->lastClientCommand + 1) {
 		server.common.functions.Com_Printf("Client %s lost %i clientCommands\n", cl->name,
-			seq - cl->lastClientCommand + 1);
+			seq - cl->lastClientCommand - 1);
 		server.functions.SV_DropClient(cl, "Lost reliable commands");
 		return qfalse;
 	}
