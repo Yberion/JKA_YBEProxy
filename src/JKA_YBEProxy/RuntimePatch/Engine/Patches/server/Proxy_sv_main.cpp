@@ -48,7 +48,9 @@ void Proxy_SV_CalcPings(void)
 		{
 			// Proxy -------------->
 			// if (cl->frames[j].messageAcked <= 0)
-			if (cl->frames[j].messageAcked == -1)
+			// Not "<= 0": with proxy_sv_pingFix the times come from Sys_Milliseconds, negative after about 24.8 days of uptime
+			// -1: sent, not acknowledged yet. Both 0: never sent since the client slot was cleared on connect
+			if (cl->frames[j].messageAcked == -1 || (cl->frames[j].messageSent == 0 && cl->frames[j].messageAcked == 0))
 			// Proxy <--------------
 			{
 				continue;

@@ -711,7 +711,7 @@ The alignment test (`offset % gentitySize`) is an addition: JK2MV does not have 
 
 ## F9. `netStatus` modifies engine state (Medium)
 
-Status: **source only**, checked. The impact is **corrected**: it is a netcode change for a real player. The fix is **corrected** too: the first version left `Proxy_SV_UserMove` unchanged, and a human with a ping of 0 would then show wrong `fps` and `packets` values (found while writing [tests/tests.md](tests/tests.md)).
+Status: **source only**, checked. The impact is **corrected**: it is a netcode change for a real player. The fix is **corrected** too: the first version left `Proxy_SV_UserMove` unchanged, and a human with a ping of 0 would then show wrong `fps` and `packets` values.
 
 - Without `proxy_sv_pingFix`, `messageSent` and `messageAcked` both use `svs.time` ([`server/sv_snapshot.cpp:667`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_snapshot.cpp#L667), [`server/sv_client.cpp:1715`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L1715)), which only changes once per server frame. A client whose round trip is shorter than one frame (50 ms at `sv_fps 20`) shows a ping of 0.
 - [Proxy_Engine_ClientCommand.cpp:57-64](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp#L57-L64) treats any client with a ping below 1 as a bot, and sets `cl->snapshotMsec = 1`.
@@ -807,7 +807,7 @@ Status per point:
 
 ## F11. `dumpuser` crashes on a long userinfo value (Medium)
 
-Status: **confirmed**, observed on the retail server on 2026-10-24 while testing O8 (see [tests/tests.md](tests/tests.md#o8-userinfo-validation)).
+Status: **confirmed**, observed on the retail server on 2026-10-24 while testing O8.
 
 - `Info_Print` copies each userinfo value into `char value[512]` with no bound, and each key into `char key[512]` ([`qcommon/common.cpp:509-543`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/common.cpp#L509-L543)). A value of 512 characters or more overflows the stack buffer.
 - `SV_DumpUser_f` is its only server-side caller ([`server/sv_ccmds.cpp:938`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_ccmds.cpp#L938)). On the client side it reads `Cvar_InfoString`, bounded by the cvar system, so only the server path is exposed.
