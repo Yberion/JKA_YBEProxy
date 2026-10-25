@@ -71,23 +71,50 @@ The engine reloads the game module on every map change.
 
 ## Building
 
-Requirements: CMake 3.12 or later and a C++20 compiler (Visual Studio 2022, GCC or Clang). Without an explicit build type, CMake builds in Release.
+Requirements: CMake 3.12 or later and a C++20 compiler (Visual Studio 2026, GCC or Clang). Without an explicit build type, CMake builds in Release.
 
 ### Windows
 
-Run `CreateVisualStudio2022Projects_x86.bat`. It generates a Visual Studio 2022 solution in `build/` (Win32, static runtime):
+Requirements: Visual Studio 2026 and CMake 4.2 or later, the first version with the Visual Studio 2026 generator.
+
+Run `CreateVisualStudio2026Projects_x86.bat`. It generates a Visual Studio 2026 solution in `build/` (Win32, static runtime):
 
 ```
-cmake -G "Visual Studio 17" -A Win32 -T host=x86 -D MSVC_RUNTIME=static ..
+cmake -G "Visual Studio 18 2026" -A Win32 -T host=x86 -D MSVC_RUNTIME=static ..
 ```
 
-Open `build/JKA_YBEProxy.sln` and build the Release configuration. The output is `build/Release/jampgamex86.dll`.
+If `build/` was generated for another Visual Studio version, delete it first: CMake does not change the generator of an existing build folder.
 
-`CreateVisualStudio2022Projects_x64.bat` produces a 64-bit build. It is only useful with a 64-bit OpenJK server, not with the original engine.
+Open the `JKA_YBEProxy` solution in `build/` and build the Release configuration. The output is `build/Release/jampgamex86.dll`.
+
+`CreateVisualStudio2026Projects_x64.bat` produces a 64-bit build. It is only useful with a 64-bit OpenJK server, not with the original engine.
 
 ### Linux
 
-To build the 32-bit version on a 64-bit distribution, pass `-DTARGET_ARCH=x86` (this needs 32-bit compiler support, for example `gcc-multilib` and `g++-multilib`):
+The original engine is 32-bit, so on a 64-bit distribution the proxy is built in 32-bit (`-DTARGET_ARCH=x86`). This needs the 32-bit C library and the 32-bit C++ library for GCC.
+
+Debian, Ubuntu (`apt`):
+
+```
+sudo apt install build-essential cmake git gcc-multilib g++-multilib
+```
+
+- `build-essential`: `gcc`, `g++`, `make` and the C library headers.
+- `gcc-multilib`, `g++-multilib`: the 32-bit C and C++ libraries for `-m32`, static C++ library included.
+
+Fedora, RHEL, Rocky Linux, AlmaLinux (`dnf`):
+
+```
+sudo dnf install gcc gcc-c++ make cmake git glibc-devel.i686 libstdc++-devel.x86_64 libstdc++-devel.i686 libstdc++-static.i686 libatomic.i686
+```
+
+- `glibc-devel.i686`: the 32-bit C library.
+- `libstdc++-devel.x86_64`: the C++ headers, including the 32-bit `bits/c++config.h` that `g++ -m32` uses (`x86_64-redhat-linux/32`). Name it explicitly: `libstdc++-devel.i686` alone satisfies the dependency of `gcc-c++`, and then `-m32` fails with `bits/c++config.h: No such file or directory`.
+- `libstdc++-devel.i686`: the 32-bit C++ library.
+- `libstdc++-static.i686`: the 32-bit static C++ library, linked into the `.so`.
+- `libatomic.i686`: since GCC 16, `g++` always passes `-latomic` to the linker (`--as-needed`), so the 32-bit one must exist. Without it: `cannot find /usr/lib/libatomic.so.1.2.0`.
+
+Build:
 
 ```
 mkdir build && cd build
@@ -95,7 +122,9 @@ cmake .. -DTARGET_ARCH=x86
 make
 ```
 
-The output is `jampgamei386.so`.
+The output is `build/src/jampgamei386.so`. `file src/jampgamei386.so` must show `ELF 32-bit LSB shared object, Intel 80386`.
+
+`libstdc++` and `libgcc` are linked into the `.so`, so the server needs no C++ library. It still needs a glibc at least as recent as the one the `.so` was built with, otherwise the server cannot load it (`version 'GLIBC_2.xx' not found`). Build on the server itself, or on a distribution that is not newer than the server's.
 
 ## Documentation
 
