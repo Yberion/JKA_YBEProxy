@@ -178,6 +178,7 @@ Engine: Original.
 
 - `Com_Printf` formats into a bounded buffer. The original `vsprintf` could overflow.
 - `Cmd_TokenizeString` is replaced by the Quake 3 1.32 version (`Cmd_TokenizeString2`).
+- `Info_Print`, used by `serverinfo`, `systeminfo` and `dumpuser`, gets the ioq3/OpenJK buffer sizes. A key or value of 512 characters or more, such as one a client puts in its userinfo, no longer crashes the server.
 - Client packet processing (`SV_ExecuteClientMessage`, `SV_UserMove`) is rewritten with ioquake3 fixes:
   - the gamestate is only resent when the client really dropped it;
   - a client that floods text commands has those commands ignored, but its movement is still processed;

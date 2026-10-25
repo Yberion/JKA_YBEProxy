@@ -36,6 +36,7 @@ constexpr intptr_t func_SVC_RemoteCommand_Com_BeginRedirect_SV_OUTPUTBUF_LENGTH_
 
 constexpr intptr_t func_Com_Printf_addr[] = 				{ 0x40fbe0, 0x8072ca4 };
 constexpr intptr_t func_Com_WriteConfig_f_addr[] = 			{ 0x410680, 0x8074d64 };
+constexpr intptr_t func_Info_Print_addr[] = 				{ 0x410ce0, 0x8073504 };
 constexpr intptr_t func_SV_CalcPings_addr[] = 				{ 0x444220, 0x8057204 };
 constexpr intptr_t func_SV_SendMessageToClient_addr[] = 	{ 0x444dc0, 0x8058c84 };
 constexpr intptr_t func_SV_SendClientGameState_addr[] = 	{ 0x43ae70, 0x804cee4 };

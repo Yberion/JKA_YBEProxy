@@ -96,6 +96,7 @@ The risk sits in two places:
 - F5: the proxy only reads `g_gametype` and `sv_fps`: register them with flags 0.
 - F3: the wider rule for `rancor`, `wampa` and `jedi_` is accepted.
 - F10.7 `/myratio`: show `kill - death` in both colors. This replaces the first decision (keep `kill - (death - suicides)` in red, clamped to 0): Kills 2, Deaths 3, Suicides 2 must show `-1` in red.
+- F11: option 2 only, hook `Info_Print` with the ioq3/OpenJK buffer sizes (original engine). It also covers `serverinfo` and `systeminfo`, and drops no client. Option 1 is not applied.
 - O9: fix it. The author knows the bug and has reproduced it.
 - O5: add a `proxy_sv_maxClientsPerIP` cvar (default 3, 0 disables).
 - O8: port OpenJK's whole userinfo validation, compatible with the retail client (checked against its userinfo cvars).
