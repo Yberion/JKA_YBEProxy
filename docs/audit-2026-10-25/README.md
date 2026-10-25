@@ -4,7 +4,7 @@ Audit done on 2026-10-24 against version `0.19.0 Beta` (commit [`57d9a59`](https
 
 ## Files
 
-- [fixes.md](fixes.md): bugs and security issues to fix, ranked by severity (F1 to F11).
+- [fixes.md](fixes.md): bugs and security issues to fix, ranked by severity (F1 to F11). All applied: each section ends with what was applied and the choices made.
 - [improvements.md](improvements.md): robustness, simplification, full OpenJK support, build (A1 to A9).
 - [other-engines.md](other-engines.md): comparison with Quake 3, ioquake3, Quake3e, OpenJK, JK2MV and TaystJK (EternalJK). Fixes missing from the proxy (O1 to O11), and differences that need nothing.
 - [feeling.md](feeling.md): why a recompiled engine (`linuxjampded`) or game module (`jampgame`) changes the combat "feeling", leads and a method to find the cause.
@@ -77,6 +77,12 @@ The risk sits in two places:
 - the engine-patching layer (hooks and rewritten engine functions), which causes the `rcon map` crash;
 - the connection path, where the game sees the client's userinfo before any proxy check, which bypasses the name, model and `forcepowers` fixes (F2).
 
+## Progress
+
+- [fixes.md](fixes.md): F1 to F11 are applied. F10.1 is refuted, so there was nothing to do.
+- [other-engines.md](other-engines.md): O2, O3 and O4 are done through F6, F2 and F7. O6 must not be ported. Left: O1, O5, O7 (with A4), O8, O9, O10 and O11.
+- [improvements.md](improvements.md): A2 is no longer needed, because of F4 option A. Left: A1, A3 to A5, A8, and A9 (optional). A6 is a larger redesign, and A7 lists minor observations.
+
 ## Suggested order
 
 1. F2, then F3: userinfo sanitised on connect, and the anti-cheat fixed in the same function. Small changes. F2 closes the bypass of the name, model and `forcepowers` fixes on connect. Add the checks of O8 (duplicate keys, failed `Info_SetValueForKey`) and O1 (`ip`) at the same time: without O8, a long userinfo still gets through.
@@ -95,6 +101,7 @@ The risk sits in two places:
 - F4: OpenJK must keep working, including an OpenJK jampgame on an OpenJK server. Option A covers it.
 - F5: the proxy only reads `g_gametype` and `sv_fps`: register them with flags 0.
 - F3: the wider rule for `rancor`, `wampa` and `jedi_` is accepted.
+- F10.6: keep `exit()` when the original game module cannot be loaded, as the engine stops on a game module it cannot load. An `ERR_DROP` version left the server up with no map and no working rcon.
 - F10.7 `/myratio`: show `kill - death` in both colors. This replaces the first decision (keep `kill - (death - suicides)` in red, clamped to 0): Kills 2, Deaths 3, Suicides 2 must show `-1` in red.
 - F11: option 2 only, hook `Info_Print` with the ioq3/OpenJK buffer sizes (original engine). It also covers `serverinfo` and `systeminfo`, and drops no client. Option 1 is not applied.
 - O9: fix it. The author knows the bug and has reproduced it.
