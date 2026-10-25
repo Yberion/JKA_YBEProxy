@@ -33,6 +33,7 @@
 - Client command fixes now compare command names and arguments whole, as the game does, instead of by prefix. `npc spawn` is now only refused for `ragnos` and `saber_droid`, not for every NPC type that starts with `saber_`, and commands such as `teamvote` or `gcX` are no longer caught by the `team` and `gc` checks. The `jkaDST_` anti-cheat check stays a prefix.
 - `rcon status` checks that the gametype is in range before printing its name. The game already keeps it in range, so this changes nothing in practice.
 - The original game module is now loaded from `fs_basepath` instead of the current working directory. With the default `fs_basepath`, which is the current directory, nothing changes. The path is built with a bounded copy, and the error printed before the server exits now shows the full path that was tried.
+- `/myratio`: the number in parentheses is now always Kills minus Deaths, as shown. In red, it added the suicides back, so it could even be positive: Kills 2, Deaths 3, Suicides 2 showed a red `1`, and now shows a red `-1`. A player whose only death is a suicide after one kill now sees a red `-1` instead of `0`.
 - Removed `proxy_sv_enableRconCmdCooldown`, replaced by the rcon rate limiting. When set to `1`, its 500 ms cooldown applied to every rcon packet, even with a wrong password, so a flood of rcon packets also blocked the admins' commands. With the default `0`, rcon had no limit at all.
 
 ## 0.19.0 Beta
