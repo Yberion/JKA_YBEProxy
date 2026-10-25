@@ -79,9 +79,52 @@ The risk sits in two places:
 
 ## Progress
 
-- [fixes.md](fixes.md): F1 to F11 are applied. F10.1 is refuted, so there was nothing to do.
-- [other-engines.md](other-engines.md): O2, O3 and O4 are done through F6, F2 and F7. O6 must not be ported. O9 is not fixed for now, by decision of the author. Left: O1, O5, O7 (with A4), O8, O10 and O11.
-- [improvements.md](improvements.md): A2 is no longer needed, because of F4 option A. A5 is applied (CMake rewrite, includes, comparison of the SDK with OpenJK). A1 is applied except the signature check and the struct layout (relative instructions, partial failure and memory protection are done, with Zydis). Left: A1 (those two), A3, A4, A8, and A9 (optional). A6 is a larger redesign, and A7 lists minor observations.
+✅ done, ❌ refused (not done, by decision of the author), ⏳ in progress or not done yet.
+
+### [fixes.md](fixes.md)
+
+- ✅ F1: crash on `rcon map` and `rcon map_restart`
+- ✅ F2: userinfo not sanitised on connect
+- ✅ F3: false positive and bypass in the darksidetools anti-cheat
+- ✅ F4: OpenJK API path is broken
+- ✅ F5: wrong cvars read
+- ✅ F6: rcon without rate limiting, `getstatus`/`getinfo` amplification
+- ✅ F7: `writeconfig` filter can be bypassed
+- ✅ F8: unbounded index in `SV_SvEntityForGentity`
+- ✅ F9: `netStatus` modifies engine state
+- ✅ F10: low-priority bugs (F10.1 is refuted, so there was nothing to do)
+- ✅ F11: `dumpuser` crashes on a long userinfo value
+
+### [other-engines.md](other-engines.md)
+
+- ⏳ O1: the `ip` userinfo key is not maintained
+- ✅ O2: rate limiting of out-of-band packets (through F6)
+- ✅ O3: userinfo sanitised before the game sees it on connect (through F2)
+- ✅ O4: `writeconfig` (through F7)
+- ⏳ O5: connections per IP address (`proxy_sv_maxClientsPerIP`, optional)
+- ❌ O6: server commands longer than 1022 characters (must not be ported)
+- ⏳ O7: tokenizer reads its bounded copy (with A4)
+- ⏳ O8: userinfo sanitisation bypassed by a long userinfo
+- ⏳ O9: movement events that lag every player around. Postponed: two designs were written then removed (see the section for them)
+- ⏳ O10: `forwardmove` of -128
+- ⏳ O11: `MSG_ReadBits` reads past the message
+
+### [improvements.md](improvements.md)
+
+- ✅ A1: hook robustness
+  - ✅ relative instructions (HDE replaced by Zydis, a `call`/`jmp rel32` is relocated, any other relative instruction is refused)
+  - ✅ partial failure (a hook that cannot be installed stops the server)
+  - ✅ memory protection
+  - ❌ signature check: the `version` check is enough
+  - ❌ struct layout: the `version` check is enough
+- ✅ A2: bridge for OpenJK with the retail jampgame (no longer needed, because of F4 option A)
+- ⏳ A3: simplification
+- ⏳ A4: tokenizer hardening
+- ✅ A5: build (CMake rewrite, includes, comparison of the SDK with OpenJK)
+- ⏳ A6: pinned loader and reloadable plugin (a larger redesign)
+- ⏳ A7: minor observations
+- ⏳ A8: cvar to disable the welcome message
+- ⏳ A9: stateless challenges (optional)
 
 ## Suggested order
 
@@ -92,7 +135,7 @@ The risk sits in two places:
 5. F5: wrong cvars.
 6. F4: option A (no `GetModuleAPI` export). It covers OpenJK with the retail jampgame and OpenJK with an OpenJK jampgame.
 7. O9: movement event lag (the todo's ffa3 exploit). Postponed.
-8. The rest: F8, F10, A1 (signature check, struct layout), A3, A4, O5, O7, O10, O11.
+8. The rest: A3, A4, O5, O7, O10, O11.
 
 ## Decisions of the author
 

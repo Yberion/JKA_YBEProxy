@@ -6,7 +6,7 @@ Not bugs as such: robustness, simplification, missing features and build hygiene
 
 ### Signature check
 
-Status: confirmed. The only check before patching is the `version` cvar string ([Proxy_Main.cpp:83](../../src/JKA_YBEProxy/Proxy_Main.cpp#L83)).
+Status: confirmed, **not done**: the author considers that the `version` check is enough (a signature check, a generated table of the first bytes of every address from the retail binaries, and a stop on a difference were written, then removed). The only check before patching is the `version` cvar string ([Proxy_Main.cpp:83](../../src/JKA_YBEProxy/Proxy_Main.cpp#L83)).
 
 Fix:
 
@@ -52,7 +52,7 @@ Left, optional:
 
 ### Struct layout
 
-Status: confirmed. There is no `static_assert` on the engine structures, although the addresses of the fields are written as comments, Windows then Linux ([server.hpp:186-195](../../src/sdk/server/server.hpp#L186-L195)).
+Status: confirmed, **not done**, by decision of the author (`sizeof(client_t)` is `0x51478` in both retail engines, if it is ever wanted). There is no `static_assert` on the engine structures, although the addresses of the fields are written as comments, Windows then Linux ([server.hpp:186-195](../../src/sdk/server/server.hpp#L186-L195)).
 
 Fix: turn them into offsets. For example, `serverStatic_t` starts at `0x606218` and `clients` is at `0x606224`, so:
 
