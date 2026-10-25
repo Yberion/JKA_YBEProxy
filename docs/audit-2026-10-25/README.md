@@ -80,7 +80,7 @@ The risk sits in two places:
 ## Progress
 
 - [fixes.md](fixes.md): F1 to F11 are applied. F10.1 is refuted, so there was nothing to do.
-- [other-engines.md](other-engines.md): O2, O3 and O4 are done through F6, F2 and F7. O6 must not be ported. Left: O1, O5, O7 (with A4), O8, O9, O10 and O11.
+- [other-engines.md](other-engines.md): O2, O3 and O4 are done through F6, F2 and F7. O6 must not be ported. O9 is not fixed for now, by decision of the author. Left: O1, O5, O7 (with A4), O8, O10 and O11.
 - [improvements.md](improvements.md): A2 is no longer needed, because of F4 option A. A5 is applied (CMake rewrite, includes, comparison of the SDK with OpenJK). A1 is applied except the signature check and the struct layout (relative instructions, partial failure and memory protection are done, with Zydis). Left: A1 (those two), A3, A4, A8, and A9 (optional). A6 is a larger redesign, and A7 lists minor observations.
 
 ## Suggested order
@@ -91,7 +91,7 @@ The risk sits in two places:
 4. F6, with F7: rcon and getstatus/getinfo rate limiting in the F1 filter, and `writeconfig`.
 5. F5: wrong cvars.
 6. F4: option A (no `GetModuleAPI` export). It covers OpenJK with the retail jampgame and OpenJK with an OpenJK jampgame.
-7. O9: movement event lag (the todo's ffa3 exploit).
+7. O9: movement event lag (the todo's ffa3 exploit). Postponed.
 8. The rest: F8, F10, A1 (signature check, struct layout), A3, A4, O5, O7, O10, O11.
 
 ## Decisions of the author
@@ -106,7 +106,7 @@ The risk sits in two places:
 - F11: option 2 only, hook `Info_Print` with the ioq3/OpenJK buffer sizes (original engine). It also covers `serverinfo` and `systeminfo`, and drops no client. Option 1 is not applied.
 - A1: HDE is replaced by Zydis (git submodule, static, decoder only). `Attach` relocates a `call`/`jmp rel32` in the trampoline, refuses any other relative instruction, and any hook failure stops the server.
 - A5: the CMake build is based on [cpp-best-practices/cmake_template](https://github.com/cpp-best-practices/cmake_template), without tests, dependencies, WebAssembly, sanitizers, packaging and fuzzing. No Apple, no MinGW. C++20. Warnings follow the template. The folder keeps the name `sdk`, and the includes of its files stay as in the original code. IPO and hardening are options, off.
-- O9: fix it. The author knows the bug and has reproduced it.
+- O9: not fixed for now, even though the author knows the bug and has reproduced it. A hook on `SV_AddEntToSnapshot` was designed (see O9 in [other-engines.md](other-engines.md)), then removed. It may come back later.
 - O5: add a `proxy_sv_maxClientsPerIP` cvar (default 3, 0 disables).
 - O8: port OpenJK's whole userinfo validation, compatible with the retail client (checked against its userinfo cvars).
 

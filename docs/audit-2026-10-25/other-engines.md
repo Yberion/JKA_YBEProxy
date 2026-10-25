@@ -173,7 +173,7 @@ Fix, in the F2 sanitiser:
 
 ### O9. Movement events that lag every player around (Medium)
 
-Status: **source only**. This is the todo item "ffa3 crash exploit with events (look at `SV_AddEntitiesVisibleFromPoint`)". The author knows the bug and has reproduced it. Decision: fix it.
+Status: **source only**. This is the todo item "ffa3 crash exploit with events (look at `SV_AddEntitiesVisibleFromPoint`)". The author knows the bug and has reproduced it. Decision: **not fixed for now**. The author did not keep the fix and may add it later, after a hook on `SV_AddEntToSnapshot` was designed (see "Design that was dropped" below).
 
 Only TaystJK (EternalJK) fixes it. OpenJK and JK2MV do not: their servers have no filter on event entities, and OpenJK's game sends the pending events exactly as the retail game does (`SendPendingPredictableEvents` is unchanged).
 
@@ -194,6 +194,13 @@ Things to know before porting it:
 - Skipping `EV_JUMP`/`EV_FALL`/`EV_FOOTSTEP` entities also drops the legitimate ones: the second movement event of a single usercmd, for example a landing and a footstep in the same 8 ms usercmd. Other players then miss that one sound. Almost never in normal play, systematic with the exploit.
 - The landing-effect cap only triggers beyond 16 per snapshot.
 - In the proxy it needs a hook on `SV_AddEntitiesVisibleFromPoint` (a rewrite of that function), or on the function that adds one entity to the snapshot.
+
+#### Design that was dropped
+
+Not applied, kept for when it is wanted. Two versions were written, then removed:
+
+- In the game's syscalls: do not forward `G_LINKENTITY` for the entities of `EV_JUMP`, `EV_FALL` and `EV_FOOTSTEP` (`G_TempEntity` sets the type before linking, and only `SendPendingPredictableEvents` creates them), and unlink the landing effects beyond 16 after each `GAME_RUN_FRAME` (the effect number is only written after `G_TempEntity` returns). It works on OpenJK too, but the landing effect cap is for the whole server and not per snapshot.
+- In the engine: a hook on `SV_AddEntToSnapshot(svEntity_t*, sharedEntity_t*, snapshotEntityNumbers_t*)`, at `0x444d30` in `jampDed.exe` and `0x80583b4` in `linuxjampded`. It is not inlined, called once per entity added to a snapshot, with 3 call sites on Windows and 4 on Linux. cdecl on Linux. On Windows `svEntity_t*` is in `ecx`, `snapshotEntityNumbers_t*` in `eax` and `sharedEntity_t*` on the stack (caller cleans), so it needs a stub of raw bytes that calls a cdecl filter and either returns or jumps to the trampoline. The first 6 bytes of the function have no relative instruction on either platform. The filter would skip the three movement events and count the landing effects with `sv.snapshotCounter`, per snapshot like TaystJK.
 
 ### O10. `forwardmove` of -128 (Low)
 

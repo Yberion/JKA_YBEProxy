@@ -47,12 +47,12 @@
 
     </details>
 - **Create a plugin system.** See A6 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
+- ffa3 exploit with movement events (a player with a high FPS lags every player in view). EternalJK fixes it in the engine. Postponed: two designs were written then removed, they are kept in O9 in [audit-2026-10-25/other-engines.md](audit-2026-10-25/other-engines.md).
 - Store player IPs, as OpenJK does.
 - Patch `NET_SendPacket` to log packets. Maybe only packets under about 300 bytes, because some packets, such as info responses, are large.
 - Add a mute system (look at `SV_SendServerCommand`).
 - Make `dumpuser` accept a client number.
 - Make `/rcon forceteam -1 spectator` move everyone to spectators (catch the call with `GAME_CONSOLE_COMMAND`).
-- ffa3 crash exploit with events (look at `SV_AddEntitiesVisibleFromPoint`). Needs a high FPS. EternalJK fixed it, see O9 in [audit-2026-10-25/other-engines.md](audit-2026-10-25/other-engines.md).
 - Rate policy.
 - Snaps policy.
 - Only apply hooks on x86 (check the defines).
