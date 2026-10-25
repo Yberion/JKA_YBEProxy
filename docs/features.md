@@ -144,6 +144,12 @@ Engine: Any. Server console or `rcon` only.
 
 The mute is kept in the proxy's data of the client slot. It ends when the player leaves, and also at a map change, because the game module (and the proxy with it) is loaded again.
 
+### `forceteam -1 <team>`
+
+Engine: Any. Server console or `rcon` only.
+
+The game's `forceteam <player> <team>` takes a client number or a name. `-1` now means every player in the game: `rcon forceteam -1 spectator` moves everyone to spectators. The team is anything the game accepts (`spectator`, `red`, `blue`, `free`…). The proxy runs the game's own `forceteam <number> <team>` for each player, so the usual rules apply (for example, the team is still refused where the game refuses it). A player who is still connecting is skipped.
+
 ## Automatic fixes
 
 These are always on and need no configuration.

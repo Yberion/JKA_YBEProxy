@@ -9,7 +9,6 @@
 
 - Persist bans across server restarts, in a file.
 - **Create a plugin system.** See A6 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
-- Make `/rcon forceteam -1 spectator` move everyone to spectators (catch the call with `GAME_CONSOLE_COMMAND`).
 - Rate policy.
 - Snaps policy.
 - Only apply hooks on x86 (check the defines).
@@ -43,6 +42,7 @@ Wanted behaviour: banning `152.0` bans `152.0.*.*` only, and player B can still 
 
 ### Features and fixes
 
+- `/rcon forceteam -1 <team>` moves everyone, caught with `GAME_CONSOLE_COMMAND`.
 - `dumpuser` accepts a client number, as in ioq3, OpenJK and Quake3e.
 - Mute system: `mute` and `unmute` commands, until the player leaves or the map changes. It blocks the chat commands in `Proxy_SharedAPI_ClientCommand`, not `SV_SendServerCommand`.
 - Store player IPs, as OpenJK does: the proxy keeps the address of each client (without the port) from the `ip` key of its userinfo, set by the engine and kept up to date by the proxy. It is used by `proxy_sv_maxClientsPerIP`. OpenJK also uses its stored IP in the game logs, which the proxy cannot add to.

@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- `forceteam -1 <team>` (server console and `rcon`) now applies the team to every player in the game, for example `rcon forceteam -1 spectator`. The game looked up `-1` as a name and did nothing. Any engine.
 - Original engine: `dumpuser` accepts a client number as well as a name, as in ioq3, OpenJK and Quake3e.
 - Added the [`mute` and `unmute`](features.md#mute-unmute) commands (server console and `rcon`): `mute <client number>` drops the `say`, `say_team`, `tell` and `voice_cmd` of a player until they leave, the map changes, or they are unmuted. Any engine.
 - Original engine: fixed a one-byte buffer overflow in `Info_SetValueForKey` and `Info_SetValueForKey_Big`. When the new key would bring the string to exactly 1024 (or 8192) characters, the engine accepted it and wrote the terminating `\0` past the buffer. A `connect` packet with a 1007-character userinfo reached it through the `ip` key that `SV_DirectConnect` adds (a valid challenge is enough). It is the `>=` of ioq3 and JK2MV. The client is refused with `Userinfo string length exceeded.` as before.
