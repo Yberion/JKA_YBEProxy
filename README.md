@@ -167,6 +167,7 @@ Set with `-D<name>=ON` on the configure command. All are off by default, except 
 - [jk2mv](https://github.com/mvdevs/jk2mv) and fau: packet and FPS statistics, ping fix.
 - Hacker Disassembler Engine (HDE32/HDE64) by Vyacheslav Patkov: instruction length disassembler.
 - Original game source code: [jediacademy](https://github.com/jedis/jediacademy) by Raven Software and Activision.
+- Build system: based on [cpp-best-practices/cmake_template](https://github.com/cpp-best-practices/cmake_template) (public domain, Unlicense), without its tests, dependencies, WebAssembly, sanitizers, packaging and fuzzing parts.
 
 ## License
 

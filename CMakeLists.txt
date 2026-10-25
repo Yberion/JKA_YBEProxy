@@ -1,3 +1,4 @@
+# Based on https://github.com/cpp-best-practices/cmake_template (see ProjectOptions.cmake and cmake/)
 cmake_minimum_required(VERSION 3.25)
 
 # gnu++20 and not c++20: the code copied from the engine uses GNU extensions
