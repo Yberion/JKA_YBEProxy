@@ -120,6 +120,8 @@ struct ClientData_t
 {
 	bool				isConnected;
 	bool				sendWelcomeMessage;
+	// Set by the "mute" console command, cleared when the client leaves
+	bool				muted;
 	char				cleanName[MAX_NETNAME];
 	// IP address of the connection, without the port. Empty until the game accepted the client, and for bots
 	char				address[32];

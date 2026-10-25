@@ -170,6 +170,52 @@ void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean /*allowTeamReset*/)
 	}
 }
 
+// "mute <client number>" and "unmute <client number>", from the server console or rcon
+// The game has no such command, so GAME_CONSOLE_COMMAND reaches the proxy for it
+qboolean Proxy_SharedAPI_ConsoleCommand(void)
+{
+	char cmd[MAX_TOKEN_CHARS];
+
+	proxy.trap->Argv(0, cmd, sizeof(cmd));
+
+	const bool mute = !Q_stricmp(cmd, "mute");
+
+	if (!mute && Q_stricmp(cmd, "unmute"))
+	{
+		return qfalse;
+	}
+
+	char arg[MAX_TOKEN_CHARS];
+
+	proxy.trap->Argv(1, arg, sizeof(arg));
+
+	// Digits only: atoi would read "1abc" as 1, and the empty argument as 0
+	bool isNumber = arg[0] != '\0';
+
+	for (const char* c = arg; *c; ++c)
+	{
+		isNumber = isNumber && *c >= '0' && *c <= '9';
+	}
+
+	const int clientNum = isNumber ? atoi(arg) : -1;
+
+	if (clientNum < 0 || clientNum >= MAX_CLIENTS || clientNum >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients") || !proxy.clientData[clientNum].isConnected)
+	{
+		proxy.trap->Print("Usage: %s <client number>, of a player in the game (see status)\n", mute ? "mute" : "unmute");
+
+		return qtrue;
+	}
+
+	ClientData_t* clientData = &proxy.clientData[clientNum];
+
+	clientData->muted = mute;
+
+	proxy.trap->Print("%s ^7%s\n", clientData->cleanName, mute ? "is muted" : "is no longer muted");
+	proxy.trap->SendServerCommand(clientNum, mute ? "print \"You have been muted.\n\"" : "print \"You are no longer muted.\n\"");
+
+	return qtrue;
+}
+
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 {
 	ClientData_t *currentClientData = &proxy.clientData[clientNum];
@@ -191,6 +237,14 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	{
 		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", currentClientData->cleanName));
 		proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
+
+		return qfalse;
+	}
+
+	// The muted client gets told, so it does not think the server lost its message
+	if (currentClientData->muted && (!Q_stricmp(cmd, "say") || !Q_stricmp(cmd, "say_team") || !Q_stricmp(cmd, "tell") || !Q_stricmp(cmd, "voice_cmd")))
+	{
+		proxy.trap->SendServerCommand(clientNum, "print \"You are muted.\n\"");
 
 		return qfalse;
 	}

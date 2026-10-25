@@ -136,6 +136,14 @@ Engine: Any.
 
 Prints your score (used as kills), deaths, suicides, kill/death ratio, and kills minus deaths. Only in Free For All, Duel and Team FFA. A player can run it at most once per second.
 
+### `mute` `unmute`
+
+Engine: Any. Server console or `rcon` only.
+
+`mute <client number>` stops the chat of a player in the game: their `say`, `say_team`, `tell` and `voice_cmd` are dropped, and they get `You are muted.` instead. `unmute <client number>` lifts it. The client number is the one shown by `status`. Both commands print the player name, and tell the player.
+
+The mute is kept in the proxy's data of the client slot. It ends when the player leaves, and also at a map change, because the game module (and the proxy with it) is loaded again.
+
 ## Automatic fixes
 
 These are always on and need no configuration.

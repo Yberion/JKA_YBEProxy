@@ -213,6 +213,17 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		}
 		*/
 		//==================================================
+		case GAME_CONSOLE_COMMAND: // (void)
+		//==================================================
+		{
+			if (Proxy_SharedAPI_ConsoleCommand())
+			{
+				return qtrue;
+			}
+
+			break;
+		}
+		//==================================================
 		case GAME_CLIENT_USERINFO_CHANGED: // (int clientNum)
 		//==================================================
 		{
