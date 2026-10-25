@@ -156,6 +156,8 @@ Status: **source only**.
 
 Same as A4 in [improvements.md](improvements.md). Quake3e does it.
 
+Status: **applied**. Checked again in ioq3, JK2MV, OpenJK and TaystJK: they all tokenize `text_in` after copying it into `cmd_cmd`, as JKA does. Only Quake3e reads from the copy (`text = cmd_cmd; // read from safe-length buffer`), and that is what [Proxy_cmd.cpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp) does now. Quake3e also empties `cmd_cmd` when the text is null; not done, it is unrelated to the overflow. Not compiled when written.
+
 ### O8. Userinfo sanitisation bypassed by a long userinfo (High)
 
 Status: **source only**. Found while comparing with OpenJK's `G_ValidateUserinfo`. The bug is in the proxy's SDK, which copies the original code.

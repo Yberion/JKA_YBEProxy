@@ -103,7 +103,7 @@ The risk sits in two places:
 - ✅ O4: `writeconfig` (through F7)
 - ✅ O5: connections per IP address (`proxy_sv_maxClientsPerIP`)
 - ❌ O6: server commands longer than 1022 characters (must not be ported)
-- ⏳ O7: tokenizer reads its bounded copy (with A4)
+- ✅ O7: tokenizer reads its bounded copy (with A4)
 - ⏳ O8: userinfo sanitisation bypassed by a long userinfo
 - ⏳ O9: movement events that lag every player around. Postponed: two designs were written then removed (see the section for them)
 - ⏳ O10: `forwardmove` of -128
@@ -119,7 +119,7 @@ The risk sits in two places:
   - ❌ struct layout: the `version` check is enough
 - ✅ A2: bridge for OpenJK with the retail jampgame (no longer needed, because of F4 option A)
 - ⏳ A3: simplification
-- ⏳ A4: tokenizer hardening
+- ✅ A4: tokenizer hardening
 - ✅ A5: build (CMake rewrite, includes, comparison of the SDK with OpenJK)
 - ⏳ A6: pinned loader and reloadable plugin (a larger redesign)
 - ⏳ A7: minor observations
@@ -135,7 +135,7 @@ The risk sits in two places:
 5. F5: wrong cvars.
 6. F4: option A (no `GetModuleAPI` export). It covers OpenJK with the retail jampgame and OpenJK with an OpenJK jampgame.
 7. O9: movement event lag (the todo's ffa3 exploit). Postponed.
-8. The rest: A3, A4, O7, O8, O10, O11.
+8. The rest: A3, O8, O10, O11.
 
 ## Decisions of the author
 

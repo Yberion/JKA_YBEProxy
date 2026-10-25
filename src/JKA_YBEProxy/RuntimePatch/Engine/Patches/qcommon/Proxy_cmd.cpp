@@ -33,7 +33,9 @@ static void Cmd_TokenizeString2(const char* text_in, qboolean ignoreQuotes) {
 
 	Q_strncpyz(cmd_cmd, text_in, sizeof(cmd_cmd));
 
-	text = text_in;
+	// Read from the bounded copy, as Quake3e does: the output buffer holds BIG_INFO_STRING + MAX_STRING_TOKENS bytes, so
+	// a text_in longer than BIG_INFO_STRING - 1 characters is cut instead of overflowing it
+	text = cmd_cmd;
 	textOut = *server.common.vars.cmd_tokenized;
 
 	while (1) {

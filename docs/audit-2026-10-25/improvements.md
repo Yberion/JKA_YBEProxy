@@ -101,7 +101,7 @@ Status: confirmed.
 
 ## A4. Tokenizer hardening
 
-Status: confirmed.
+Status: **applied**, see O7 in [other-engines.md](other-engines.md).
 
 [Proxy_cmd.cpp:34-36](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp#L34-L36) copies `text_in` into `cmd_cmd`, then tokenizes `text_in`, which is unbounded, instead of the bounded copy. The output buffer `cmd_tokenized` is `BIG_INFO_STRING + MAX_STRING_TOKENS` bytes ([`qcommon/cmd_common.cpp:292`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/cmd_common.cpp#L292)). Tokenizing `cmd_cmd` guarantees no overflow.
 
