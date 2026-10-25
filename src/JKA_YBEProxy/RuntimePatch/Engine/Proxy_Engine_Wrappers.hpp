@@ -33,8 +33,8 @@ constexpr intptr_t func_SVC_RemoteCommand_Com_BeginRedirect_SV_OUTPUTBUF_LENGTH_
 // Info_SetValueForKey and Info_SetValueForKey_Big of the engine test "length > MAX" (cmp, jbe), so a result of exactly
 // MAX_INFO_STRING / BIG_INFO_STRING passes and its terminating NUL is written one byte past the buffer. The jbe (0x76)
 // becomes jb (0x72), which is ">=" as in ioq3 and JK2MV
-constexpr intptr_t func_Info_SetValueForKey_length_jbe_addr[] = { 0x41beb2, 0x807fe24 };
-constexpr intptr_t func_Info_SetValueForKey_Big_length_jbe_addr[] = { 0x41c091, 0x8080024 };
+constexpr intptr_t func_Info_SetValueForKey_length_jbe_addr[] =		{ 0x41beb2, 0x807fe24 };
+constexpr intptr_t func_Info_SetValueForKey_Big_length_jbe_addr[] =	{ 0x41c091, 0x8080024 };
 
 // --------------------------------
 // Function address to hook
@@ -46,6 +46,7 @@ constexpr intptr_t func_Info_Print_addr[] = 				{ 0x410ce0, 0x8073504 };
 constexpr intptr_t func_SV_CalcPings_addr[] = 				{ 0x444220, 0x8057204 };
 constexpr intptr_t func_SV_SendMessageToClient_addr[] = 	{ 0x444dc0, 0x8058c84 };
 constexpr intptr_t func_SV_SendClientGameState_addr[] = 	{ 0x43ae70, 0x804cee4 };
+constexpr intptr_t func_SV_DumpUser_f_addr[] =				{ 0x43a8c0, 0x804fd74 };
 constexpr intptr_t func_SV_Status_f_addr[] = 				{ 0x43a4a0, 0x804f7f4 };
 constexpr intptr_t func_SV_SvEntityForGentity_addr[] = 		{ 0x43cd80, 0x804ffb4 };
 constexpr intptr_t func_SV_ConnectionlessPacket_addr[] = 	{ 0x443f00, 0x8056d64 };
