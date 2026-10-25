@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- Original engine: reading a client message stops at its end, as ioq3 and OpenJK do (CVE-2017-11721). The original `MSG_ReadBits` kept reading the bytes after the end of a short or truncated message, and gave them as values. A read past the end now gives `0`. Hardening: the callers already stopped on an overflow, and the buffer is on the stack, so nothing past it could be read.
 - A `forwardmove`, `rightmove` or `upmove` of `-128` in a usercmd is now `-127`, as in ioq3, OpenJK, Quake3e and TaystJK: a client could move about 1% faster backwards than forwards. Any engine.
 - The userinfo is now validated before the fixes of the name, the model and `forcepowers` read it, with OpenJK's default rules (size, slashes, control characters, number of each known key). A long userinfo, or one with a key twice or with another case, used to let a bad `forcepowers` or model through, because the game reads a key without case and the proxy replaced it with case. A client that fails is refused on connect, and dropped on a userinfo change, with `Failed userinfo validation: <reason>`. When a cleaned value does not fit in the userinfo, the client is refused too. Any engine. Bots are not validated.
 - Original engine: the command tokenizer reads a bounded copy of the text, as Quake3e does, so a text longer than 8191 characters is cut instead of overflowing the token buffer. No caller of the original game is known to send such a text: this is hardening.

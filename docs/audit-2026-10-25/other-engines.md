@@ -257,6 +257,15 @@ Status: **source only**. CVE-2017-11721, fixed in ioq3 and OpenJK ([`bf403f7e`](
 
 In JKA the receive buffer is a local `bufData[MAX_MSGLEN]` of `Com_EventLoop` ([`qcommon/common.cpp:924`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/common.cpp#L924)), so a read past the end reads the stack, not unmapped memory. The fix needs a hook on `MSG_ReadBits` and on the Huffman read, two hot functions. Low priority.
 
+#### Applied
+
+Status: **applied**, original engine only (the hook needs the engine's addresses). Compared again with the local clones, all at the upstream head: ioq3 (`87a99d18`), OpenJK (`260c59c2`) and TaystJK have the same bounds. Quake3e rewrote the function with its own (`msg->bit >= msg->maxbits` at the start, bounded symbol decoding). JK2MV, CleanJK, the retail source and Quake III Arena have none.
+
+- The bounds of ioq3 and OpenJK are the ones used: `readcount > cursize` gives `0`; in out-of-band mode `readcount + bits/8 > cursize` sets `readcount = cursize + 1` and gives `0`; in Huffman mode `bit + bits%8 > cursize*8` does the same, and so does `bit > cursize*8` after the read.
+- One part is not ported: the bound passed to `Huff_offsetReceive` (`maxoffset`, a 5th argument in ioq3). The retail function has 4 arguments and is also called from elsewhere, so it is not changed. Instead the proxy hook is a wrapper around the original `MSG_ReadBits` ([Proxy_msg.cpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_msg.cpp)): it tests before the call and after it. One read can go up to a few bytes past the end (a Huffman symbol has no fixed length). The receive buffer is a local array of `MAX_MSGLEN`, so that stays inside it unless the message fills the buffer, and the value is replaced by `0`. No second hook, and the Huffman functions are not touched.
+- `MSG_ReadBits` is at `0x4186d0` in `jampDed.exe` and `0x8077834` in `linuxjampded` (cdecl on both). The first instructions have no relative instruction: `push ecx; mov eax, [esp+0xc]` (6 bytes with `push ebp`) and `push ebp; mov ebp, esp; sub esp, 0x38`. On Linux there are 41 call sites, so every `MSG_Read*` goes through it.
+- Not compiled when written.
+
 ## Q3/JKA differences: nothing to do
 
 | Fix in another engine | Why nothing to do |

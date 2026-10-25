@@ -4,6 +4,7 @@
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_common.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_files.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_msg.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_game.hpp"
@@ -24,6 +25,7 @@
 
 static std::variant<
 	HookUtils::HookEntry<decltype(Proxy_Com_Printf)>,
+	HookUtils::HookEntry<decltype(Proxy_MSG_ReadBits)>,
 	HookUtils::HookEntry<decltype(Proxy_Cmd_TokenizeString)>, // HookEntry<decltype(&Proxy_Info_Print)>,
 	HookUtils::HookEntry<decltype(Proxy_SV_SendMessageToClient)>,
 	HookUtils::HookEntry<decltype(Proxy_SV_CalcPings)>, // HookEntry<decltype(&Proxy_SV_Status_f)>, HookEntry<decltype(&Proxy_Com_WriteConfig_f)>,
@@ -33,6 +35,7 @@ static std::variant<
 	HookUtils::HookEntry<decltype(Proxy_SV_ExecuteClientCommand)>
 > hookEntries[] = {
 	HookUtils::HookEntry("Com_Printf", (unsigned char*)func_Com_Printf_addr[PROXY_PLATFORM], &Original_Com_Printf, &Proxy_Com_Printf),
+	HookUtils::HookEntry("MSG_ReadBits", (unsigned char*)func_MSG_ReadBits_addr[PROXY_PLATFORM], &Original_MSG_ReadBits, &Proxy_MSG_ReadBits),
 	HookUtils::HookEntry("Cmd_TokenizeString", (unsigned char*)func_Cmd_TokenizeString_addr[PROXY_PLATFORM], &Original_Cmd_TokenizeString, &Proxy_Cmd_TokenizeString),
 	HookUtils::HookEntry("Com_WriteConfig_f", (unsigned char*)func_Com_WriteConfig_f_addr[PROXY_PLATFORM], &Original_Com_WriteConfig_f, &Proxy_Com_WriteConfig_f),
 	HookUtils::HookEntry("Info_Print", (unsigned char*)func_Info_Print_addr[PROXY_PLATFORM], &Original_Info_Print, &Proxy_Info_Print),

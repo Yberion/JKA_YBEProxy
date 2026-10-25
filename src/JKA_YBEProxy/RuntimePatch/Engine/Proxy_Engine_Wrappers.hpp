@@ -96,6 +96,7 @@ constexpr intptr_t func_NET_AdrToString_addr[] = 					{ 0x419f10, 0x807b314 };
 constexpr intptr_t func_NET_OutOfBandPrint_addr[] = 				{ 0x41a230, 0x807b744 };
 constexpr intptr_t func_NET_CompareBaseAdr_addr[] = 				{ 0x419e90, 0x807b284 };
 constexpr intptr_t func_MSG_Init_addr[] = 							{ 0x419d00, 0x80774a4 };
+constexpr intptr_t func_MSG_ReadBits_addr[] = 						{ 0x4186d0, 0x8077834 };
 constexpr intptr_t func_MSG_ReadByte_addr[] = 						{ 0x4189f0, 0x8077df4 };
 constexpr intptr_t func_MSG_ReadDeltaUsercmdKey_addr[] = 			{ 0x418b50, 0x8078b34 };
 constexpr intptr_t func_MSG_ReadShort_addr[] = 						{ 0x418a20, 0x8077e34 };
