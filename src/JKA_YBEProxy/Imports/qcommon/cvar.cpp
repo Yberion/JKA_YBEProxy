@@ -13,7 +13,7 @@ cvar_t* Cvar_SetValue(const char* var_name, float value)
 	if (Q_isintegral(value))
 		Com_sprintf(val, sizeof(val), "%i", (int)value);
 	else
-		Com_sprintf(val, sizeof(val), "%f", value);
+		Com_sprintf(val, sizeof(val), "%f", (double)value);
 
 	proxy.trap->Cvar_Set(var_name, val);
 

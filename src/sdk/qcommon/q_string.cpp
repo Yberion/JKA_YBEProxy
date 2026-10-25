@@ -186,7 +186,7 @@ char* Q_CleanStr(char* string)
 		}
 		else if (c >= 0x20 && c <= 0x7E)
 		{
-			*d++ = c;
+			*d++ = (char)c;
 		}
 		s++;
 	}
@@ -204,7 +204,7 @@ char* Q_CleanAsciiStr(char* string) {
 	d = string;
 	while ((c = *s) != 0) {
 		if (c >= 0x20 && c <= 0x7E) {
-			*d++ = c;
+			*d++ = (char)c;
 		}
 		s++;
 	}

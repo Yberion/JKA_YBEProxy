@@ -79,27 +79,26 @@ The engine reloads the game module on every map change.
 
 ## Building
 
-Requirements: CMake 3.12 or later and a C++20 compiler (Visual Studio 2026, GCC or Clang). Without an explicit build type, CMake builds in Release.
+Requirements: CMake 3.25 or later and a C++20 compiler (Visual Studio 2026, GCC or Clang). The build is described by [CMakePresets.json](CMakePresets.json); list the presets with `cmake --list-presets`. The module is written to `build/<preset>/bin/`.
 
 ### Windows
 
 Requirements: Visual Studio 2026 and CMake 4.2 or later, the first version with the Visual Studio 2026 generator.
 
-Run `CreateVisualStudio2026Projects_x86.bat`. It generates a Visual Studio 2026 solution in `build/` (Win32, static runtime):
-
 ```
-cmake -G "Visual Studio 18 2026" -A Win32 -T host=x86 -D MSVC_RUNTIME=static ..
+cmake --preset windows-x86
+cmake --build --preset windows-x86-release
 ```
 
-If `build/` was generated for another Visual Studio version, delete it first: CMake does not change the generator of an existing build folder.
+The output is `build/windows-x86/bin/Release/jampgamex86.dll` (static runtime). You can also open the `JKA_YBEProxy` solution in `build/windows-x86/`.
 
-Open the `JKA_YBEProxy` solution in `build/` and build the Release configuration. The output is `build/Release/jampgamex86.dll`.
+`windows-x64` produces a 64-bit build. It is only useful with a 64-bit OpenJK server, not with the original engine.
 
-`CreateVisualStudio2026Projects_x64.bat` produces a 64-bit build. It is only useful with a 64-bit OpenJK server, not with the original engine.
+If `build/<preset>/` was generated for another Visual Studio version, delete it first: CMake does not change the generator of an existing build folder.
 
 ### Linux
 
-The original engine is 32-bit, so on a 64-bit distribution the proxy is built in 32-bit (`-DTARGET_ARCH=x86`). This needs the 32-bit C library and the 32-bit C++ library for GCC.
+The original engine is 32-bit, so on a 64-bit distribution the proxy is built in 32-bit (`linux-x86-*` presets, `-m32`). This needs the 32-bit C library and the 32-bit C++ library for GCC.
 
 Debian, Ubuntu (`apt`):
 
@@ -125,14 +124,22 @@ sudo dnf install gcc gcc-c++ make cmake git glibc-devel.i686 libstdc++-devel.x86
 Build:
 
 ```
-mkdir build && cd build
-cmake .. -DTARGET_ARCH=x86
-make
+cmake --preset linux-x86-release
+cmake --build --preset linux-x86-release
 ```
 
-The output is `build/src/jampgamei386.so`. `file src/jampgamei386.so` must show `ELF 32-bit LSB shared object, Intel 80386`.
+The output is `build/linux-x86-release/bin/jampgamei386.so`. `file` on it must show `ELF 32-bit LSB shared object, Intel 80386`. `linux-x86-debug`, `linux-x64-release` and `linux-x64-debug` exist too.
 
 `libstdc++` and `libgcc` are linked into the `.so`, so the server needs no C++ library. It still needs a glibc at least as recent as the one the `.so` was built with, otherwise the server cannot load it (`version 'GLIBC_2.xx' not found`). Build on the server itself, or on a distribution that is not newer than the server's.
+
+### Options
+
+Set with `-D<name>=ON` on the configure command. All are off by default, except `ybeproxy_ENABLE_CACHE` (uses `ccache` or `sccache` when found).
+
+- `ybeproxy_WARNINGS_AS_ERRORS`: `-Werror` / `/WX`.
+- `ybeproxy_ENABLE_HARDENING`: stack protector, CET, `_FORTIFY_SOURCE`, `/sdl`, `/guard:cf`. Not tested with the runtime hooks.
+- `ybeproxy_ENABLE_IPO`: link-time optimization. Not tested with the runtime hooks.
+- `ybeproxy_ENABLE_CLANG_TIDY`, `ybeproxy_ENABLE_CPPCHECK`: static analysis.
 
 ## Developer notes
 

@@ -72,5 +72,5 @@ void Proxy_ClientCommand_MyRatio(int clientNum)
 		S_COLOR_WHITE "Ratio" S_COLOR_BLUE ": " S_COLOR_WHITE "%.2f %s\n\"",
 		ps->persistant[PERS_SCORE], ps->persistant[PERS_KILLED],
 		ps->fd.suicides,
-		ratio, ratioStringBuffer));
+		(double)ratio, ratioStringBuffer));
 }

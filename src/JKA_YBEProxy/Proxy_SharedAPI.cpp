@@ -20,7 +20,7 @@ void Proxy_SharedAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int
 	proxy.locatedGameData.g_clientSize = sizeofGameClient;
 }
 
-void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* ucmd)
+void Proxy_SharedAPI_GetUsercmd(int /*clientNum*/, usercmd_t* ucmd)
 {
 	if (ucmd->forcesel == FP_LEVITATION || ucmd->forcesel >= NUM_FORCE_POWERS)
 	{
@@ -65,7 +65,7 @@ void Proxy_SharedAPI_ClientDisconnect(int clientNum)
 	}
 }
 
-void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset)
+void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean /*allowTeamReset*/)
 {
 	if (clientNum >= 0 && clientNum < MAX_CLIENTS)
 	{

@@ -30,17 +30,17 @@ namespace HookUtils {
 		bool			isMemoryAllocated;
 
 		HookEntry(
-			const char* hookName,
-			unsigned char* originalFunctionAddr,
-			FunctionType** originalRedirectedFunctionPtr,
-			FunctionType* proxyFunctionPtr,
-			std::size_t savedOpcodeLength
+			const char* hookName_,
+			unsigned char* originalFunctionAddr_,
+			FunctionType** originalRedirectedFunctionPtr_,
+			FunctionType* proxyFunctionPtr_,
+			std::size_t savedOpcodeLength_
 		) :
-			hookName(hookName),
-			originalFunctionAddr(originalFunctionAddr),
-			originalRedirectedFunctionPtr(originalRedirectedFunctionPtr),
-			proxyFunctionPtr(proxyFunctionPtr),
-			savedOpcodeLength(savedOpcodeLength),
+			hookName(hookName_),
+			originalFunctionAddr(originalFunctionAddr_),
+			originalRedirectedFunctionPtr(originalRedirectedFunctionPtr_),
+			proxyFunctionPtr(proxyFunctionPtr_),
+			savedOpcodeLength(savedOpcodeLength_),
 			isMemoryAllocated(false)
 		{}
 	};

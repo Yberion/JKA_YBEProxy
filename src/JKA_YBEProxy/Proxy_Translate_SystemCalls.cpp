@@ -1029,7 +1029,7 @@ void SVSyscall_Trace(trace_t* results, const vec3_t start, const vec3_t mins, co
 	}
 }
 
-NORETURN void QDECL G_Error(int errorLevel, const char* error, ...) {
+NORETURN void QDECL G_Error(int /*errorLevel*/, const char* error, ...) {
 	va_list argptr;
 	char text[1024];
 
@@ -1056,7 +1056,7 @@ void QDECL G_Printf(const char* msg, ...) {
 }
 
 void Proxy_Translate_SystemCalls(void) {
-	static gameImport_t import = { 0 };
+	static gameImport_t import = {};
 
 	proxy.trap = &import;
 

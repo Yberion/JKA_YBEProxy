@@ -46,9 +46,7 @@
     ```
 
     </details>
-- **Redo the CMake project.** See also A5 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md). Possible templates:
-  - https://github.com/cpp-best-practices/cmake_conan_boilerplate_template
-  - https://github.com/cpp-best-practices/cmake_template (newer)
+- **Uniform includes and SDK folder.** Part of A5 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md): one include style rooted at `src/`, `src/sdk/` content checked against the original headers.
 - **Create a plugin system.** See A6 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
 - Store player IPs, as OpenJK does.
 - Patch `NET_SendPacket` to log packets. Maybe only packets under about 300 bytes, because some packets, such as info responses, are large.

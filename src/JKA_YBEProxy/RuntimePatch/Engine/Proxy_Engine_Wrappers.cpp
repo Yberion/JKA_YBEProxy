@@ -2,7 +2,7 @@
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Utils.hpp"
 #include "Patches/qcommon/Proxy_common.hpp"
 
-ProxyServer_t server = { 0 };
+ProxyServer_t server = {};
 
 void Proxy_Engine_Initialize_MemoryLayer(void)
 {

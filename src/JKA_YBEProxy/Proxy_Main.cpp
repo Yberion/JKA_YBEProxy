@@ -13,7 +13,7 @@
 #include "Proxy_Translate_SystemCalls.hpp"
 #include "Wrappers/Proxy_OriginalAPI_Wrappers.hpp"
 
-Proxy_t proxy = { 0 };
+Proxy_t proxy = {};
 
 static void Proxy_GetOriginalGameAPI(void)
 {

@@ -128,17 +128,30 @@ Side effect: a text longer than `BIG_INFO_STRING - 1` characters is truncated in
 
 ## A5. Build
 
-Status: **corrected**. From CMake's documented behaviour, not observed in a generated project.
+Status: **CMake part applied**, includes and SDK folder still open.
 
-- [CMakeLists.txt:141](../../CMakeLists.txt#L141): the MSVC flags `/EHsc /sdl /Ot /Gy /TP /W4` are added to `CMAKE_C_FLAGS` only, and the project has no `.c` file. Smaller impact than first written:
-  - CMake's default C++ flags already contain `/EHsc` (`/DWIN32 /D_WINDOWS /W3 /GR /EHsc`);
-  - `/O2`, CMake's default in Release, already implies `/Ot` and `/Gy`;
-  - `/TP` means nothing for C++ files.
+Problems found in the old build:
 
-  Only `/W4` and `/sdl` are really missing for C++. Moving them may raise new warnings, and `/sdl` turns some of them into errors: test a build before committing.
-- [CMakeLists.txt:186](../../CMakeLists.txt#L186): `-std=c++11` contradicts `CMAKE_CXX_STANDARD 20`. In practice CMake adds its own `-std=gnu++20` after `CMAKE_CXX_FLAGS`, which is why `std::variant` compiles. Remove `-std=c++11` for clarity.
-- The GCC C++ flags are fine: `-mstackrealign` and `-mfpmath=sse` are set for C++ as well ([CMakeLists.txt:226-229](../../CMakeLists.txt#L226-L229)).
-- Related todo item: "Redo the CMake project".
+- the MSVC flags `/EHsc /sdl /Ot /Gy /TP /W4` were added to `CMAKE_C_FLAGS` only, and the project has no `.c` file, so only `/W4` and `/sdl` were really missing for C++ (CMake's default C++ flags already contain `/EHsc`, `/O2` implies `/Ot` and `/Gy`, `/TP` means nothing for C++ files);
+- `-std=c++11` contradicted `CMAKE_CXX_STANDARD 20`;
+- dead weight: `winmm`, `GetGitRevisionDescription` (the SHA was never used), Apple/Intel/PowerPC/BSD branches, MinGW and `linux-i686` toolchains, the `MSVCRuntime` macro.
+
+Applied (CMake rewrite), based on [cpp-best-practices/cmake_template](https://github.com/cpp-best-practices/cmake_template) without tests, dependencies, WebAssembly, sanitizers, packaging and fuzzing:
+
+- Layout: `CMakeLists.txt`, `ProjectOptions.cmake`, `cmake/*.cmake` (warnings, hardening, IPO, ccache, static analyzers, in-source build guard), `cmake/toolchains/linux-x86.cmake`, `CMakePresets.json` (replaces the `CreateVisualStudio*.bat` and `-DTARGET_ARCH=x86`), `src/CMakeLists.txt`. `CMakeModules/` is gone.
+- One target, sources by `file(GLOB_RECURSE ... CONFIGURE_DEPENDS)`. The length disassembler is chosen with `CMAKE_SIZEOF_VOID_P`.
+- Project flags are on the target (`target_compile_options`, `target_compile_definitions`), not in `CMAKE_*_FLAGS`. Same flags as before otherwise: `-fsigned-char`, `-masm=intel`, `-msse2` (32-bit), `-mstackrealign -mfpmath=sse` (GCC), static libgcc/libstdc++ and `--exclude-libs,ALL`, `-fvisibility=hidden`, static MSVC runtime (`MSVC_RUNTIME_LIBRARY`), `/arch:SSE2` (32-bit), same defines (`WIN64` dropped: `_WIN64` already does it).
+- Warnings follow the template (`/W4` + its list, `-Wall -Wextra -Wshadow -Wconversion`...), as warnings only. `-Wno-invalid-offsetof -Wno-write-strings -Wno-comment` are kept, and `-Wold-style-cast` and `-Wuseless-cast` (GCC) are turned off: the engine code is written with C casts, and the `intptr_t` casts are useless on 32-bit only. `/permissive-` is not set: it would turn the `char*` from string literal conversions into errors.
+- Warnings fixed after the first builds: the `disablewarnings.hpp` pragmas for the MSVC warnings 4136, 4284 and 4663 (they no longer exist), `= { 0 }` on structures (now `= {}`), unused parameters, `float` to `double` in `printf`, int/float conversions in the timenudge computation, and the `HookEntry` constructor parameters that shadowed members. No warning left on MSVC 19.51, GCC 12 (Debian 12) and GCC 16 (Fedora 44).
+- Hardening and IPO (on by default in the template) are options, off: they change function bodies and the hooks patch those at runtime. Not tested.
+- `CMAKE_CXX_EXTENSIONS` stays `ON` (the template turns it off): the copied engine code may use GNU extensions. Try `OFF` later.
+- Built and tested on Windows (VS 2026), Debian 12 (GCC 12) and Fedora 44 in a container (GCC 16).
+
+Left to do:
+
+- Uniform includes: today three styles are mixed (`"sdk/qcommon/q_shared.hpp"`, `"JKA_YBEProxy/Proxy_Header.hpp"` and bare `"Proxy_Engine_Wrappers.hpp"`). Use one, rooted at `src/` (the include directory of the target).
+- Keep the folder name `sdk`. Check its content against the original headers (retail source and OpenJK): the engine structures must stay retail-compatible, and the OpenJK copies that carry fixes must keep working. `files.cpp`, `q_shared.cpp`, `q_string.cpp` and `sv_client.cpp` in `sdk` are code, not headers.
+- Add `.clang-format` / `.clang-tidy` once a style is chosen (the template has both).
 
 ## A6. Pinned loader and reloadable plugin
 
