@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- Original engine: fixed a one-byte buffer overflow in `Info_SetValueForKey` and `Info_SetValueForKey_Big`. When the new key would bring the string to exactly 1024 (or 8192) characters, the engine accepted it and wrote the terminating `\0` past the buffer. A `connect` packet with a 1007-character userinfo reached it through the `ip` key that `SV_DirectConnect` adds (a valid challenge is enough). It is the `>=` of ioq3 and JK2MV. The client is refused with `Userinfo string length exceeded.` as before.
 - The proxy cvars are read once per second of server time. It was once every `sv_fps` frames, so a changed `sv_fps` also changed the delay.
 - Added [`proxy_sv_disableWelcomeMessage`](features.md#proxy_sv_disablewelcomemessage) (default `0`, `1` disables the message): the welcome message sent to human players when they enter the game can be turned off. Any engine.
 - Original engine: the message `Client <name> lost <n> clientCommands` in the server console printed 2 more than the real number of lost commands. Cosmetic.

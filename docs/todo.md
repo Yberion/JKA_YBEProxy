@@ -8,7 +8,6 @@
 ### Short term
 
 - Persist bans across server restarts, in a file.
-- Check the IP buffer overflow fix for the userinfo in `SV_DirectConnect()`.
 - Extend the `jedi_/red` model check to every `jedi_*` model. Only the base Jedi models should be allowed; anything else becomes `kyle`.
   - <details><summary>Reference implementation: base Jedi model list</summary>
 

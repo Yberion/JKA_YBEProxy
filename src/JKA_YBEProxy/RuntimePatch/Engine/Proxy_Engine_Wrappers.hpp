@@ -30,6 +30,12 @@ constexpr std::size_t func_SVC_RemoteCommand_timer_NOP_amount[] = { 25, 25 };
 // the address to the byte that will allow use to change the value from 49136 to 1008
 constexpr intptr_t func_SVC_RemoteCommand_Com_BeginRedirect_SV_OUTPUTBUF_LENGTH_addr[] = { 0x443de8, 0x8056c7d };
 
+// Info_SetValueForKey and Info_SetValueForKey_Big of the engine test "length > MAX" (cmp, jbe), so a result of exactly
+// MAX_INFO_STRING / BIG_INFO_STRING passes and its terminating NUL is written one byte past the buffer. The jbe (0x76)
+// becomes jb (0x72), which is ">=" as in ioq3 and JK2MV
+constexpr intptr_t func_Info_SetValueForKey_length_jbe_addr[] = { 0x41beb2, 0x807fe24 };
+constexpr intptr_t func_Info_SetValueForKey_Big_length_jbe_addr[] = { 0x41c091, 0x8080024 };
+
 // --------------------------------
 // Function address to hook
 // --------------------------------

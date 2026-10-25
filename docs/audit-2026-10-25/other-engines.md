@@ -56,6 +56,7 @@ These proxy fixes match another engine.
 | [O9](#o9-movement-events-that-lag-every-player-around-medium) | Medium | Movement events that lag every player around (ffa3) |
 | [O10](#o10-forwardmove-of--128-low) | Low | `forwardmove` of -128 |
 | [O11](#o11-msg_readbits-reads-past-the-message-low) | Low | `MSG_ReadBits` reads past the message |
+| [O12](#o12-info_setvalueforkey-writes-one-byte-past-the-buffer-medium) | Medium | `Info_SetValueForKey` writes one byte past the buffer |
 
 ### O1. The `ip` userinfo key is not maintained (High)
 
@@ -265,6 +266,16 @@ Status: **applied**, original engine only (the hook needs the engine's addresses
 - One part is not ported: the bound passed to `Huff_offsetReceive` (`maxoffset`, a 5th argument in ioq3). The retail function has 4 arguments and is also called from elsewhere, so it is not changed. Instead the proxy hook is a wrapper around the original `MSG_ReadBits` ([Proxy_msg.cpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_msg.cpp)): it tests before the call and after it. One read can go up to a few bytes past the end (a Huffman symbol has no fixed length). The receive buffer is a local array of `MAX_MSGLEN`, so that stays inside it unless the message fills the buffer, and the value is replaced by `0`. No second hook, and the Huffman functions are not touched.
 - `MSG_ReadBits` is at `0x4186d0` in `jampDed.exe` and `0x8077834` in `linuxjampded` (cdecl on both). The first instructions have no relative instruction: `push ecx; mov eax, [esp+0xc]` (6 bytes with `push ebp`) and `push ebp; mov ebp, esp; sub esp, 0x38`. On Linux there are 41 call sites, so every `MSG_Read*` goes through it.
 - Not compiled when written.
+
+### O12. `Info_SetValueForKey` writes one byte past the buffer (Medium)
+
+Status: **applied**, original engine. Found from the todo item "Check the IP buffer overflow fix for the userinfo in `SV_DirectConnect()`".
+
+The retail `Info_SetValueForKey` refuses a pair only when `strlen(newi) + strlen(s) > MAX_INFO_STRING` ([`game/q_shared.c:1311`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/q_shared.c#L1311)). A sum of exactly 1024 passes, then `strcat(newi, s)` and `strcpy(s, newi)` write 1024 characters and the `\0`: 1025 bytes in a 1024-byte buffer. `Info_SetValueForKey_Big` is the same with 8192. ioq3, JK2MV and Quake3e use `>=`. OpenJK's `SV_DirectConnect` also checks `strlen(ip) + strlen(userinfo) + 4 >= MAX_INFO_STRING` before the call.
+
+How a client gets there: a `connect` packet with a valid challenge and a 1007-character userinfo. `SV_DirectConnect` copies it into its local `userinfo[1024]` and adds `\ip\1.2.3.4:29070` (17 characters) with this function: 1007 + 17 = 1024.
+
+Fix: the engine tests with `cmp reg, 0x400; jbe`, in both binaries and for both functions. The `jbe` (`0x76`) is changed to `jb` (`0x72`) at `0x41beb2` and `0x41c091` in `jampDed.exe`, `0x807fe24` and `0x8080024` in `linuxjampded` (see `func_Info_SetValueForKey_length_jbe_addr` in [Proxy_Engine_Wrappers.hpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp)), in `Proxy_Engine_Inline_Patches`. Every engine caller is covered, not only `SV_DirectConnect`. The refusal reaches the player through the check of the missing `ip` (F2). Not compiled when written.
 
 ## Q3/JKA differences: nothing to do
 

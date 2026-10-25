@@ -223,4 +223,15 @@ void Proxy_Engine_Inline_Patches(void)
 	{
 		Proxy_FatalHookError("SVC_RemoteCommand Com_BeginRedirect", HookUtils::Status::ProtectionFailed);
 	}
+	// "jbe" to "jb": a userinfo that reaches exactly 1024 characters (or a big info string, 8192) must be refused, not
+	// written with its NUL one byte past the buffer. The connect packet gets there through SV_DirectConnect's "ip" key
+	if (!HookUtils::Patch((unsigned char*)func_Info_SetValueForKey_length_jbe_addr[PROXY_PLATFORM], 0x72))
+	{
+		Proxy_FatalHookError("Info_SetValueForKey length", HookUtils::Status::ProtectionFailed);
+	}
+
+	if (!HookUtils::Patch((unsigned char*)func_Info_SetValueForKey_Big_length_jbe_addr[PROXY_PLATFORM], 0x72))
+	{
+		Proxy_FatalHookError("Info_SetValueForKey_Big length", HookUtils::Status::ProtectionFailed);
+	}
 }
