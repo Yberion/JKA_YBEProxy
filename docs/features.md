@@ -14,6 +14,7 @@ All proxy cvars are archived (`CVAR_ARCHIVE`). The proxy reads them again about 
 | [`proxy_sv_pingFix`](#proxy_sv_pingfix) | `0` | Original | More accurate ping |
 | [`proxy_sv_enableNetStatus`](#proxy_sv_enablenetstatus) | `0` | Original | Enables `/netStatus` and `/showNet` |
 | [`proxy_sv_maxCallVoteMapRestartValue`](#proxy_sv_maxcallvotemaprestartvalue) | `60` | Any | Highest delay allowed for `callvote map_restart` |
+| [`proxy_sv_maxClientsPerIP`](#proxy_sv_maxclientsperip) | `3` | Any | Maximum clients from one IP address |
 | [`proxy_sv_disableKillCmd`](#proxy_sv_disablekillcmd) | `0` | Any | Disables `/kill` |
 | [`proxy_sv_modelPathLength`](#proxy_sv_modelpathlength) | `64` | Any (partial) | Maximum model name length |
 
@@ -51,6 +52,23 @@ Engine: Any.
 Highest delay, in seconds, accepted for `callvote map_restart <delay>`. The proxy drops a vote outside `0` to this value without any message.
 
 Values: a number. Default `60`.
+
+### `proxy_sv_maxClientsPerIP`
+
+Engine: Any.
+
+Maximum number of clients that can be connected at the same time from one IP address (the port is ignored). A new connection beyond that is refused with `Too many connections from your IP address.`. Without a limit, one address can fill every slot with clients that complete the connection (tools like q3fill).
+
+- Only new connections are counted and refused. The clients that are already in are never removed, and the reconnect of every client at each map change is not affected.
+- Bots are not counted.
+- Several players can share one address (LAN party, carrier NAT): raise the value for them.
+
+Credits: Quake3e's `sv_maxclientsPerIP`.
+
+Values:
+
+- `0`: no limit.
+- a number: the limit. Default `3`.
 
 ### `proxy_sv_disableKillCmd`
 

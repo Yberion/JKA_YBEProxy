@@ -163,7 +163,15 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 				return (intptr_t)reason;
 			}
 
-			break;
+			const intptr_t response = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+
+			// The game returns a reason when it refuses the client
+			if (!response)
+			{
+				Proxy_SharedAPI_ClientConnected((int)arg0, (qboolean)arg2);
+			}
+
+			return response;
 		}
 		//==================================================
 		case GAME_CLIENT_DISCONNECT: // (int clientNum, qboolean firstTime, qboolean isBot)

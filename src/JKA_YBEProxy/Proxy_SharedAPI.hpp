@@ -14,6 +14,8 @@ void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* ucmd);
 // ==================================================
 
 const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
+// Called when the game accepted the client
+void Proxy_SharedAPI_ClientConnected(int clientNum, qboolean isBot);
 void Proxy_SharedAPI_ClientDisconnect(int clientNum);
 void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum);

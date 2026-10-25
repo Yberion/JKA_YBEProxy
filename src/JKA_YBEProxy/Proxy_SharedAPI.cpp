@@ -34,6 +34,15 @@ void Proxy_SharedAPI_GetUsercmd(int /*clientNum*/, usercmd_t* ucmd)
 // EXPORT TABLE
 // ==================================================
 
+// "1.2.3.4:29070" -> "1.2.3.4"
+static void Proxy_GetBaseAddress(const char* ip, char* out, std::size_t outSize)
+{
+	const char* port = std::strrchr(ip, ':');
+	const std::size_t len = port ? (std::size_t)(port - ip) : std::strlen(ip);
+
+	Q_strncpyz(out, ip, (outSize < len + 1) ? outSize : len + 1);
+}
+
 const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
 {
 	// The game reads the userinfo here, before SV_UserinfoChanged and GAME_CLIENT_USERINFO_CHANGED
@@ -52,6 +61,27 @@ const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qbo
 			return "Userinfo string length exceeded.  Try removing setu cvars from your config.";
 		}
 
+		// Limit of clients per IP address, from Quake3e's sv_maxclientsPerIP (SV_DirectConnect): a new connection is refused
+		// when the other clients of the address already reach the limit
+		// Several players can share one address (LAN, carrier NAT): the limit is a setting. Only for a new connection: at
+		// each map change the engine connects again the clients that are already in
+		if (firstTime && proxy.cvars.proxy_sv_maxClientsPerIP.integer > 0)
+		{
+			char address[sizeof(proxy.clientData[0].address)];
+			int count = 0;
+
+			Proxy_GetBaseAddress(Info_ValueForKey(userinfo, "ip"), address, sizeof(address));
+
+			for (int i = 0; i < MAX_CLIENTS; ++i)
+			{
+				// The address of a slot is empty for a bot, and until the game accepted its client
+				if (i != clientNum && !std::strcmp(proxy.clientData[i].address, address) && ++count >= proxy.cvars.proxy_sv_maxClientsPerIP.integer)
+				{
+					return "Too many connections from your IP address.";
+				}
+			}
+		}
+
 		const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum);
 
 		// Returning the reason refuses the client, never DropClient here (the slot is still CS_FREE)
@@ -65,6 +95,19 @@ const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qbo
 	proxy.clientData[clientNum].sendWelcomeMessage = firstTime && !isBot;
 
 	return nullptr;
+}
+
+void Proxy_SharedAPI_ClientConnected(int clientNum, qboolean isBot)
+{
+	if (isBot)
+	{
+		return;
+	}
+
+	char userinfo[MAX_INFO_STRING];
+
+	proxy.trap->GetUserinfo(clientNum, userinfo, sizeof(userinfo));
+	Proxy_GetBaseAddress(Info_ValueForKey(userinfo, "ip"), proxy.clientData[clientNum].address, sizeof(proxy.clientData[clientNum].address));
 }
 
 void Proxy_SharedAPI_ClientDisconnect(int clientNum)

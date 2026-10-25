@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- Added [`proxy_sv_maxClientsPerIP`](features.md#proxy_sv_maxclientsperip) (default `3`, `0` disables it): at most that many clients from one IP address. One address can no longer fill every slot of the server. Any engine.
 - A player who is already on the server can no longer stay after its address is banned (`addip`) by sending a fake or missing `ip` in its userinfo: the game only checks the ban again at the next map change, with the `ip` of the userinfo. A new connection was never affected, the engine sets `ip` itself. The proxy now sets `ip` again from the address of the connection at every userinfo change (original engine), and refuses on connect a userinfo that had no room for it (any engine).
 - Hooks: the instruction decoder is now [Zydis](https://github.com/zyantific/zydis) (git submodule) instead of HDE, and the hook code was rewritten:
   - a `call` or `jmp` with a 32-bit offset in the bytes copied to the trampoline is relocated, so it reaches its target;

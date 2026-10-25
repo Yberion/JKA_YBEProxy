@@ -134,6 +134,16 @@ Fix, in the F2 connect path, for a first connection of a non-bot:
 
 Decision of the author: add it, as a new cvar `proxy_sv_maxClientsPerIP` (archived, any engine). Several players can share one address behind NAT, so it needs a setting: default `3` like Quake3e, `0` disables it.
 
+#### Applied
+
+Status: **applied**, in the game's connect path, so it works on any engine. Compared again with the other sources: only Quake3e does it in the engine (`SV_DirectConnect`, before the challenge), and CleanJK does it in the game (`ClientConnect`, `g_maxConnPerIP`, for a non-bot `firstTime` connection, comparing the stored IP without the port). The proxy does as CleanJK: the check is in `Proxy_SharedAPI_ClientConnect`, with the same rules as Quake3e (a new connection is refused when the number of other clients from the address already equals the limit).
+
+- The address is the `ip` of the userinfo, which the engine sets from the real address (see O1), without the port. It is kept in `ClientData_t::address` of each slot once the game accepted the client (`Proxy_SharedAPI_ClientConnected`, after the game's own `ClientConnect`), and cleared by the reset of the slot in `Proxy_SharedAPI_ClientDisconnect`. Counting the slots this way avoids reading the engine's `client_t` array, which only exists on the original engine, and does not count a client that the game refused after the proxy checked it.
+- The game module is unloaded at each map change, so the table is empty at the start of a map: the engine connects every client again (`firstTime = qfalse`), and each one is recorded then. No new connection can come in between.
+- Difference with Quake3e: the refusal comes after the challenge, not before. A client that completes the challenge gets a slot for the length of the check, and the engine frees it as soon as the connect is refused. The proxy's rate limiting of `connect` packets (F6) still applies before.
+- A limit of `0` disables it (Quake3e does not accept `0`).
+- Not compiled when written.
+
 ### O6. Server commands longer than 1022 characters: do not port (corrected)
 
 Status: **source only**.

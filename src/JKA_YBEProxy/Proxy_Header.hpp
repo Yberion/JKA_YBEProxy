@@ -121,6 +121,8 @@ struct ClientData_t
 	bool				isConnected;
 	bool				sendWelcomeMessage;
 	char				cleanName[MAX_NETNAME];
+	// IP address of the connection, without the port. Empty until the game accepted the client, and for bots
+	char				address[32];
 
 	timenudgeData_t		timenudgeData;
 	int					timenudge; // Approximation (+- 7 with stable connection)
@@ -145,6 +147,7 @@ struct Proxy_CVars_t
 	vmCvar_t proxy_sv_maxCallVoteMapRestartValue;
 	vmCvar_t proxy_sv_modelPathLength;
 	vmCvar_t proxy_sv_disableKillCmd;
+	vmCvar_t proxy_sv_maxClientsPerIP;
 
 	// get cvars
 	vmCvar_t sv_fps;
