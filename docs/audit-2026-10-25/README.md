@@ -104,7 +104,7 @@ The risk sits in two places:
 - ✅ O5: connections per IP address (`proxy_sv_maxClientsPerIP`)
 - ❌ O6: server commands longer than 1022 characters (must not be ported)
 - ✅ O7: tokenizer reads its bounded copy (with A4)
-- ⏳ O8: userinfo sanitisation bypassed by a long userinfo
+- ✅ O8: userinfo sanitisation bypassed by a long userinfo
 - ⏳ O9: movement events that lag every player around. Postponed: two designs were written then removed (see the section for them)
 - ⏳ O10: `forwardmove` of -128
 - ⏳ O11: `MSG_ReadBits` reads past the message
@@ -135,7 +135,7 @@ The risk sits in two places:
 5. F5: wrong cvars.
 6. F4: option A (no `GetModuleAPI` export). It covers OpenJK with the retail jampgame and OpenJK with an OpenJK jampgame.
 7. O9: movement event lag (the todo's ffa3 exploit). Postponed.
-8. The rest: A3, O8, O10, O11.
+8. The rest: A3, O10, O11.
 
 ## Decisions of the author
 

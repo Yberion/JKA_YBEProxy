@@ -194,6 +194,17 @@ Fix, in the F2 sanitiser:
 
 "Refuse" means returning the reason from `GAME_CLIENT_CONNECT`, and `DropClient` on a userinfo change (F2).
 
+#### Applied
+
+Status: **applied**, both parts, on any engine. Compared again with OpenJK, TaystJK (the same code and the same field table) and CleanJK (a port of OpenJK's): none of them changes the rules, and none has a fix for the case below.
+
+- The validation is a port of OpenJK's `G_ValidateUserinfo` with its default `g_userinfoValidate` (`25165823`): size, slashes, control characters (`\n \r ; "`) and the count of each field without case, with the same field table. Extended ASCII is not checked, as in the default. There is no `g_userinfoValidate` cvar nor toggle command: the default is hardcoded. `Proxy_ValidateUserinfo` in [Proxy_SharedAPI.cpp](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp), run first by `Proxy_SharedAPI_SanitizeUserinfo`, on connect (non-bot) and on every userinfo change (not for a bot, found with `SVF_BOT`). On failure the reason is `Failed userinfo validation: <reason>`: returned from `GAME_CLIENT_CONNECT`, or given to `DropClient` on a change. No anti-cheat chat message for it.
+- OpenJK's `Info_NextPair` was added to the SDK ([q_shared.cpp](../../src/sdk/qcommon/q_shared.cpp)).
+- Part 2 of the fix: `Info_SetValueForKey` of the SDK returns `qboolean`, as JK2MV's does (`qfalse` for a forbidden character or when there is no room left). The sanitiser refuses the client (`Userinfo string length exceeded.`) when it fails to write the name, the model or `forcepowers`, and `Proxy_SV_UserinfoChanged` drops the client when it fails to write the model, as JK2MV does.
+- The validation alone would not close the hole: OpenJK counts `Forcepowers` as the `forcepowers` field, so a single capitalised key near the size limit passes it, and `Info_SetValueForKey` then removes nothing (`Info_RemoveKey` compares with case) and adds nothing (no room). The second part catches that case.
+- Checked against the retail client in the jediacademy source (see above): it sends every required key with its default settings. A player who empties a required cvar is refused.
+- Not compiled when written.
+
 ### O9. Movement events that lag every player around (Medium)
 
 Status: **source only**. This is the todo item "ffa3 crash exploit with events (look at `SV_AddEntitiesVisibleFromPoint`)". The author knows the bug and has reproduced it. Decision: **not fixed for now**. The author did not keep the fix and may add it later, after a hook on `SV_AddEntToSnapshot` was designed (see "Design that was dropped" below).

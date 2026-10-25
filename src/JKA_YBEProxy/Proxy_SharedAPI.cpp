@@ -34,6 +34,19 @@ void Proxy_SharedAPI_GetUsercmd(int /*clientNum*/, usercmd_t* ucmd)
 // EXPORT TABLE
 // ==================================================
 
+// The userinfo of a bot comes from the bot files, and has no forcepowers key
+static bool Proxy_IsBot(int clientNum)
+{
+	if (!proxy.locatedGameData.g_entities)
+	{
+		return false;
+	}
+
+	const sharedEntity_t* ent = (const sharedEntity_t*)((const unsigned char*)proxy.locatedGameData.g_entities + (std::size_t)proxy.locatedGameData.g_entitySize * (std::size_t)clientNum);
+
+	return (ent->r.svFlags & SVF_BOT) != 0;
+}
+
 // "1.2.3.4:29070" -> "1.2.3.4"
 static void Proxy_GetBaseAddress(const char* ip, char* out, std::size_t outSize)
 {
@@ -82,7 +95,7 @@ const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qbo
 			}
 		}
 
-		const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum);
+		const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum, true, nullptr);
 
 		// Returning the reason refuses the client, never DropClient here (the slot is still CS_FREE)
 		if (reason)
@@ -312,11 +325,16 @@ void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd)
 
 qboolean Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 {
-	const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum);
+	bool isAntiCheat = false;
+	const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum, !Proxy_IsBot(clientNum), &isAntiCheat);
 
 	if (reason)
 	{
-		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData[clientNum].cleanName));
+		if (isAntiCheat)
+		{
+			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData[clientNum].cleanName));
+		}
+
 		proxy.trap->DropClient(clientNum, reason);
 
 		return qfalse;
@@ -325,11 +343,164 @@ qboolean Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	return qtrue;
 }
 
-const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum)
+// ==================================================
+// Userinfo validation
+// --------------------------------------------------
+// Port of OpenJK's G_ValidateUserinfo (codemp/game/g_client.c), with its default settings (g_userinfoValidate): size,
+// slashes, control characters, and the number of each known key counted without case. Extended ASCII is not checked.
+// The info functions of the game read a key without case, but remove only a key with the same case: a userinfo with a
+// key twice, or with another case, would let a bad value through the checks below
+// The retail client sends every key that is required here, with its default settings
+// ==================================================
+
+struct UserinfoField_t
 {
+	const char*		name;
+	unsigned int	minCount;
+	unsigned int	maxCount;
+};
+
+static const UserinfoField_t userinfoFields[] =
+{
+	{ "cl_guid",		0, 0 }, // not allowed, q3fill protection
+	{ "cl_punkbuster",	0, 0 }, // not allowed, q3fill protection
+	{ "ip",				0, 1 }, // the engine adds this
+	{ "name",			1, 1 },
+	{ "rate",			1, 1 },
+	{ "snaps",			1, 1 },
+	{ "model",			1, 1 },
+	{ "forcepowers",	1, 1 },
+	{ "color1",			1, 1 },
+	{ "color2",			1, 1 },
+	{ "handicap",		1, 1 },
+	{ "sex",			0, 1 },
+	{ "cg_predictItems",1, 1 },
+	{ "saber1",			1, 1 },
+	{ "saber2",			1, 1 },
+	{ "char_color_red",	1, 1 },
+	{ "char_color_green",1, 1 },
+	{ "char_color_blue",1, 1 },
+	{ "teamtask",		0, 1 }, // optional
+	{ "password",		0, 1 }, // optional
+	{ "teamoverlay",	0, 1 }, // only registered in cgame, not sent when connecting
+};
+
+// Returns nullptr, or why the userinfo is not valid. The text of the reason is only valid until the next call
+static const char* Proxy_ValidateUserinfo(const char* userinfo)
+{
+	static char reason[64];
+	const std::size_t length = std::strlen(userinfo);
+
+	if (length < 1)
+	{
+		return "Userinfo too short";
+	}
+
+	if (length >= MAX_INFO_STRING)
+	{
+		return "Userinfo too long";
+	}
+
+	// there must be a leading slash
+	if (userinfo[0] != '\\')
+	{
+		return "Missing leading slash";
+	}
+
+	// no trailing slash allowed, the engine adds ip\ip:port in front
+	if (userinfo[length - 1] == '\\')
+	{
+		return "Trailing slash";
+	}
+
+	// the format is \key\value, so there must be an even number of slashes
+	std::size_t slashes = 0;
+
+	for (std::size_t i = 0; i < length; ++i)
+	{
+		if (userinfo[i] == '\\')
+		{
+			++slashes;
+		}
+	}
+
+	if (slashes & 1)
+	{
+		return "Bad number of slashes";
+	}
+
+	// disallow \n \r ; and \"
+	if (Q_strchrs(userinfo, "\n\r;\""))
+	{
+		return "Invalid characters found";
+	}
+
+	unsigned int fieldCount[ARRAY_LEN(userinfoFields)] = {};
+	char key[MAX_INFO_KEY];
+	char value[MAX_INFO_VALUE];
+	const char* s = userinfo;
+
+	while (s)
+	{
+		Info_NextPair(&s, key, value);
+
+		if (!key[0])
+		{
+			break;
+		}
+
+		for (std::size_t i = 0; i < ARRAY_LEN(userinfoFields); ++i)
+		{
+			if (!Q_stricmp(key, userinfoFields[i].name))
+			{
+				++fieldCount[i];
+			}
+		}
+	}
+
+	for (std::size_t i = 0; i < ARRAY_LEN(userinfoFields); ++i)
+	{
+		if (userinfoFields[i].minCount && !fieldCount[i])
+		{
+			Com_sprintf(reason, sizeof(reason), "%s field not found", userinfoFields[i].name);
+
+			return reason;
+		}
+
+		if (fieldCount[i] > userinfoFields[i].maxCount)
+		{
+			Com_sprintf(reason, sizeof(reason), "Too many %s fields (%u/%u)", userinfoFields[i].name, fieldCount[i], userinfoFields[i].maxCount);
+
+			return reason;
+		}
+	}
+
+	return nullptr;
+}
+
+const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum, bool validate, bool* isAntiCheat)
+{
+	static char reason[96];
 	char userinfo[MAX_INFO_STRING];
 
 	proxy.trap->GetUserinfo(clientNum, userinfo, sizeof(userinfo));
+
+	if (isAntiCheat)
+	{
+		*isAntiCheat = false;
+	}
+
+	if (validate)
+	{
+		const char* invalid = Proxy_ValidateUserinfo(userinfo);
+
+		if (invalid)
+		{
+			Com_sprintf(reason, sizeof(reason), "Failed userinfo validation: %s", invalid);
+
+			return reason;
+		}
+	}
 
 	if (std::strlen(userinfo) == 0)
 	{
@@ -345,7 +516,12 @@ const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum)
 
 	// Fix bad names
 	Proxy_ClientCleanName(val, currentClientData->cleanName, sizeof(currentClientData->cleanName));
-	Info_SetValueForKey(userinfo, "name", currentClientData->cleanName);
+
+	// Info_SetValueForKey adds nothing when the userinfo has no room left: the old value would stay, and the game would read it
+	if (!Info_SetValueForKey(userinfo, "name", currentClientData->cleanName))
+	{
+		return "Userinfo string length exceeded.";
+	}
 
 	val = Info_ValueForKey(userinfo, "model");
 
@@ -358,6 +534,11 @@ const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum)
 
 		if (!Q_stricmpn(val, "darksidetools", 13))
 		{
+			if (isAntiCheat)
+			{
+				*isAntiCheat = true;
+			}
+
 			return "(Anti-Cheat system) you got kicked cause of cheating";
 		}
 
@@ -368,7 +549,10 @@ const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum)
 			!Q_IsValidAsciiStr(val) ||
 			len >= /*MAX_QPATH*/ (std::size_t)proxy.cvars.proxy_sv_modelPathLength.integer)
 		{
-			Info_SetValueForKey(userinfo, "model", "kyle");
+			if (!Info_SetValueForKey(userinfo, "model", "kyle"))
+			{
+				return "Userinfo string length exceeded.";
+			}
 		}
 	}
 
@@ -426,7 +610,10 @@ const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum)
 		Q_strncpyz(forcePowers, "7-1-030000000000003332", sizeof(forcePowers));
 	}
 
-	Info_SetValueForKey(userinfo, "forcepowers", forcePowers);
+	if (!Info_SetValueForKey(userinfo, "forcepowers", forcePowers))
+	{
+		return "Userinfo string length exceeded.";
+	}
 
 	proxy.trap->SetUserinfo(clientNum, userinfo);
 

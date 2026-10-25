@@ -496,7 +496,13 @@ void Proxy_SV_UserinfoChanged(client_t* cl) {
 
 		if (!Q_IsValidAsciiStr(val) || modelLen >= /*MAX_QPATH*/ (std::size_t)proxy.cvars.proxy_sv_modelPathLength.integer)
 		{
-			Info_SetValueForKey(cl->userinfo, "model", "kyle");
+			if (!Info_SetValueForKey(cl->userinfo, "model", "kyle"))
+			{
+				// No room left: the long model name would stay
+				server.functions.SV_DropClient(cl, "userinfo string length exceeded");
+
+				return;
+			}
 		}
 	}
 

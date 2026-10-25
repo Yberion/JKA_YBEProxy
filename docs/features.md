@@ -161,6 +161,15 @@ Engine: Any.
 
 The proxy checks the userinfo on connect, on the reconnect after each map change, and on every userinfo change. Bots are not checked on connect.
 
+- The userinfo is validated first, with the default rules of OpenJK's `G_ValidateUserinfo`:
+  - length: not empty, below 1024 characters;
+  - slashes: a leading slash, no trailing slash, an even number of slashes;
+  - no `\n`, `\r`, `;` or `"`;
+  - the number of each known key, counted without case: `name`, `rate`, `snaps`, `model`, `forcepowers`, `color1`, `color2`, `handicap`, `cg_predictItems`, `saber1`, `saber2`, `char_color_red`, `char_color_green` and `char_color_blue` exactly once; `ip`, `sex`, `teamtask`, `password` and `teamoverlay` at most once; `cl_guid` and `cl_punkbuster` never (q3fill protection). Other keys are not checked.
+
+  A client that fails is refused on connect with `Failed userinfo validation: <reason>`, and dropped with the same message on a userinfo change. The bots are not validated. A player who empties one of the required cvars (for example `/color1 ""`) loses that key, because an empty value is not kept in the userinfo, and is refused.
+- When the proxy cannot put a cleaned value in the userinfo because it has no room left (the name, the model or `forcepowers`), the client is refused with `Userinfo string length exceeded.`, instead of keeping the value it sent.
+
 - Names are cleaned, using a port of OpenJK's `ClientCleanName`:
   - leading spaces and `*` are removed;
   - control characters are removed;

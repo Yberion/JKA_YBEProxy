@@ -21,9 +21,10 @@ void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum);
 qboolean Proxy_SharedAPI_ClientUserinfoChanged(int clientNum);
 
-// Cleans the userinfo of a client in place
-// Returns nullptr, or the reason to reject the client (anti-cheat). Never drops the client itself
-const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum);
+// Checks the userinfo of a client (only if validate), then cleans it in place
+// Returns nullptr, or the reason to reject the client. Never drops the client itself
+// isAntiCheat, if not null, tells whether the reason is the anti-cheat's
+const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum, bool validate, bool* isAntiCheat);
 
 /*
 // If we want to do something with the usercmd then call manually GetUsercmd

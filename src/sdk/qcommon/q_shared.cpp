@@ -204,13 +204,60 @@ void Info_RemoveKey(char* s, const char* key) {
 }
 
 /*
+===================
+Info_NextPair
+
+Used to itterate through all the key/value pairs in an info string
+Return qfalse if we discover the infostring is invalid
+From OpenJK codemp/qcommon/q_shared.c
+===================
+*/
+qboolean Info_NextPair(const char** head, char* key, char* value) {
+	char* o;
+	const char* s = *head;
+
+	if (*s == '\\')
+		s++;
+	key[0] = 0;
+	value[0] = 0;
+
+	o = key;
+	while (*s != '\\') {
+		if (!*s) {
+			key[0] = 0;
+			*head = s;
+			return qtrue;
+		}
+		*o++ = *s++;
+	}
+	*o = 0;
+	s++;
+
+	// If they key is empty at this point with a slash after it
+	// then this is considered invalid, possibly an attempt at hacked userinfo strings
+	if (!key[0])
+		return qfalse;
+
+	o = value;
+	while (*s != '\\' && *s) {
+		*o++ = *s++;
+	}
+	*o = 0;
+
+	*head = s;
+
+	return qtrue;
+}
+
+/*
 ==================
 Info_SetValueForKey
 
 Changes or adds a key/value pair
+Returns qfalse when it could not (a forbidden character, or no room left), as JK2MV does
 ==================
 */
-void Info_SetValueForKey(char* s, const char* key, const char* value) {
+qboolean Info_SetValueForKey(char* s, const char* key, const char* value) {
 	char	newi[MAX_INFO_STRING];
 	const char* blacklist = "\\;\"";
 
@@ -223,14 +270,14 @@ void Info_SetValueForKey(char* s, const char* key, const char* value) {
 		if (strchr(key, *blacklist) || strchr(value, *blacklist))
 		{
 			Com_Printf(S_COLOR_YELLOW "Can't use keys or values with a '%c': %s = %s\n", *blacklist, key, value);
-			return;
+			return qfalse;
 		}
 	}
 
 	Info_RemoveKey(s, key);
 	if (!value || !std::strlen(value))
 	{
-		return;
+		return qtrue;
 	}
 
 	Com_sprintf(newi, sizeof(newi), "\\%s\\%s", key, value);
@@ -238,11 +285,13 @@ void Info_SetValueForKey(char* s, const char* key, const char* value) {
 	if (std::strlen(newi) + std::strlen(s) >= MAX_INFO_STRING)
 	{
 		Com_Printf("Info string length exceeded: %s\n", s);
-		return;
+		return qfalse;
 	}
 
 	strcat(newi, s);
 	strcpy(s, newi);
+
+	return qtrue;
 }
 
 int QDECL Com_sprintf(char* dest, int size, const char* fmt, ...) {
