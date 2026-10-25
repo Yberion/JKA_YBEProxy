@@ -15,6 +15,7 @@ static cvarTable_t proxyCVarTable[] =
 	{ &proxy.cvars.proxy_sv_modelPathLength, "proxy_sv_modelPathLength", "64", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.cvars.proxy_sv_disableKillCmd, "proxy_sv_disableKillCmd", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.cvars.proxy_sv_maxClientsPerIP, "proxy_sv_maxClientsPerIP", "3", CVAR_ARCHIVE, 0, qfalse },
+	{ &proxy.cvars.proxy_sv_disableWelcomeMessage, "proxy_sv_disableWelcomeMessage", "0", CVAR_ARCHIVE, 0, qfalse },
 
 	// get cvars
 	// Flags 0: Cvar_Get ORs the flags into the engine's cvar

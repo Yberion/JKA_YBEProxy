@@ -123,7 +123,7 @@ The risk sits in two places:
 - ✅ A5: build (CMake rewrite, includes, comparison of the SDK with OpenJK)
 - ⏳ A6: pinned loader and reloadable plugin (a larger redesign)
 - ✅ A7: minor observations
-- ⏳ A8: cvar to disable the welcome message
+- ✅ A8: cvar to disable the welcome message
 - ⏳ A9: stateless challenges (optional)
 
 ## Suggested order
@@ -135,7 +135,7 @@ The risk sits in two places:
 5. F5: wrong cvars.
 6. F4: option A (no `GetModuleAPI` export). It covers OpenJK with the retail jampgame and OpenJK with an OpenJK jampgame.
 7. O9: movement event lag (the todo's ffa3 exploit). Postponed.
-8. The rest: A8, A9 (A6 is a redesign, not planned).
+8. The rest: A9 (A6 is a redesign, not planned).
 
 ## Decisions of the author
 

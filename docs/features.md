@@ -16,6 +16,7 @@ All proxy cvars are archived (`CVAR_ARCHIVE`). The proxy reads them again about 
 | [`proxy_sv_maxCallVoteMapRestartValue`](#proxy_sv_maxcallvotemaprestartvalue) | `60` | Any | Highest delay allowed for `callvote map_restart` |
 | [`proxy_sv_maxClientsPerIP`](#proxy_sv_maxclientsperip) | `3` | Any | Maximum clients from one IP address |
 | [`proxy_sv_disableKillCmd`](#proxy_sv_disablekillcmd) | `0` | Any | Disables `/kill` |
+| [`proxy_sv_disableWelcomeMessage`](#proxy_sv_disablewelcomemessage) | `0` | Any | Disables the welcome message |
 | [`proxy_sv_modelPathLength`](#proxy_sv_modelpathlength) | `64` | Any (partial) | Maximum model name length |
 
 ### `proxy_sv_pingFix`
@@ -78,6 +79,15 @@ Values:
 
 - `0` (default): `/kill` works.
 - `1`: the proxy ignores `/kill`.
+
+### `proxy_sv_disableWelcomeMessage`
+
+Engine: Any.
+
+Values:
+
+- `0` (default): human players receive the [welcome message](#welcome-message).
+- `1`: the message is not sent.
 
 ### `proxy_sv_modelPathLength`
 
@@ -196,7 +206,7 @@ Engine: Any.
 
 ### Welcome message
 
-Engine: Any. When they enter the game after their first connection, human players receive a message with the proxy name and version.
+Engine: Any. When they enter the game after their first connection, human players receive a message with the proxy name and version. Turn it off with [`proxy_sv_disableWelcomeMessage`](#proxy_sv_disablewelcomemessage).
 
 ### Engine fixes
 

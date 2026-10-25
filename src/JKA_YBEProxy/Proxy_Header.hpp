@@ -148,6 +148,7 @@ struct Proxy_CVars_t
 	vmCvar_t proxy_sv_modelPathLength;
 	vmCvar_t proxy_sv_disableKillCmd;
 	vmCvar_t proxy_sv_maxClientsPerIP;
+	vmCvar_t proxy_sv_disableWelcomeMessage;
 
 	// get cvars
 	vmCvar_t sv_fps;

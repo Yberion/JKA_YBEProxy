@@ -162,7 +162,10 @@ void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean /*allowTeamReset*/)
 		{
 			currentClientData->sendWelcomeMessage = false;
 
-			proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
+			if (!proxy.cvars.proxy_sv_disableWelcomeMessage.integer)
+			{
+				proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
+			}
 		}
 	}
 }

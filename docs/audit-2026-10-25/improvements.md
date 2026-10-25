@@ -205,6 +205,10 @@ New cvar `proxy_sv_disableWelcomeMessage`: archived, any engine, default `0` (me
 
 Proxy cvars are read about once per second (`Proxy_UpdateAllCvars` in `GAME_RUN_FRAME`), which is enough here.
 
+#### Applied
+
+Status: **applied**, as described above. Not compiled when written.
+
 ## A9. Stateless challenges (optional)
 
 Not required: the F6 rate limiting covers the floods that come from one address. This only matters for a flood of spoofed `getchallenge` packets from many different addresses.
