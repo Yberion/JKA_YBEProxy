@@ -1,4 +1,4 @@
-@REM Create JKA_YBEProxy projects for Visual Studio 2022 using CMake
+@REM Create JKA_YBEProxy projects for Visual Studio 2026 using CMake
 @echo off
 for %%X in (cmake.exe) do (set FOUND=%%~$PATH:X)
 if not defined FOUND (
@@ -13,6 +13,6 @@ if not defined FOUND (
 )
 if not exist build\nul (mkdir build)
 pushd build
-cmake -G "Visual Studio 17" -A Win32 -T host=x86 -D MSVC_RUNTIME=static ..
+cmake -G "Visual Studio 18 2026" -A Win32 -T host=x86 -D MSVC_RUNTIME=static ..
 popd
 pause
