@@ -59,12 +59,25 @@ The proxy loads the original game module from `<fs_game>/JKA_YBEProxy.<ext>`, or
 1. In your `fs_game` folder, or in `base`, rename the original `jampgamei386.so` to `JKA_YBEProxy.so`.
 2. Copy the proxy `jampgamei386.so` into the same folder.
 
+The original `linuxjampded` is a 32-bit program and needs the Intel runtime `libcxa.so.1` (its `NEEDED` libraries are `libdl`, `libm`, `libcxa` and `libc`). On a recent distribution neither is installed. Without them the server does not start (`error while loading shared libraries`). This is needed by the original server, not by the proxy, which has no dependency besides the C library.
+
+1. Install the 32-bit C library.
+   - Debian, Ubuntu: `sudo dpkg --add-architecture i386 && sudo apt update && sudo apt install libc6:i386`
+   - Fedora, RHEL, Rocky Linux, AlmaLinux: `sudo dnf install glibc.i686`
+2. Install `libcxa.so.1` (it is in the release archive) where the loader looks for libraries:
+   ```
+   sudo install -m 755 libcxa.so.1 /usr/local/lib/
+   echo /usr/local/lib | sudo tee /etc/ld.so.conf.d/jka.conf
+   sudo ldconfig
+   ```
+3. Check that nothing is missing: `ldd ./linuxjampded` must not show `not found`.
+
 ### Check
 
 Check the server console. You should see lines like:
 
    ```
-   ----- Proxy: YbeProxy 0.19.0 Beta by Yberion
+   ----- Proxy: YbeProxy X.XX.X Beta by Yberion
    ----- Proxy: JKA_YBEProxy.dll properly loaded
    ----- Proxy: Original engine detected
    ----- Proxy: Engine properly patched
