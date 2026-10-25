@@ -36,6 +36,7 @@
 - `/myratio`: the number in parentheses is now always Kills minus Deaths, as shown. In red, it added the suicides back, so it could even be positive: Kills 2, Deaths 3, Suicides 2 showed a red `1`, and now shows a red `-1`. A player whose only death is a suicide after one kill now sees a red `-1` instead of `0`.
 - Fixed the ping shown too low right after a connect (original engine). For the first 32 snapshots (about 1.6 s at 20 snapshots per second), the snapshot slots not used yet counted as a delay of 0. The engine's own calculation already skipped them, so this came from the proxy, also with `proxy_sv_pingFix 0`.
 - Fixed a server crash on `rcon dumpuser` (original engine). A client could put a key or value of 512 characters or more in its userinfo, and `dumpuser` on that client overflowed a buffer of the engine. The engine function that prints these lists (`Info_Print`) is replaced by the ioq3/OpenJK version, which also fixes `serverinfo` and `systeminfo`. A `systeminfo` value can reach that length with `sv_pure 1` and many pk3 files (`sv_paks`, `sv_pakNames`); that case was not reproduced.
+- Linux: `libstdc++` and `libgcc` are now linked into `jampgamei386.so`, so the server no longer needs the 32-bit `libstdc++` installed.
 - Removed `proxy_sv_enableRconCmdCooldown`, replaced by the rcon rate limiting. When set to `1`, its 500 ms cooldown applied to every rcon packet, even with a wrong password, so a flood of rcon packets also blocked the admins' commands. With the default `0`, rcon had no limit at all.
 
 ## 0.19.0 Beta
