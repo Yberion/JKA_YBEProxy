@@ -3,6 +3,7 @@
 #include "JKA_YBEProxy/Proxy_ClientCommand.hpp"
 #include "sdk/server/sv_client.hpp"
 #include "JKA_YBEProxy/Proxy_SharedAPI.hpp"
+#include "JKA_YBEProxy/Proxy_Bans.hpp"
 #include "JKA_YBEProxy/Imports/game/g_cmds.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.hpp"
 
@@ -89,6 +90,12 @@ const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qbo
 		{
 			// Same message as ioq3, JK2MV and OpenJK give when the connection is refused for that reason
 			return "Userinfo string length exceeded.  Try removing setu cvars from your config.";
+		}
+
+		// The ban list is the proxy's, the game's own is empty (see Proxy_Bans.cpp). Same reason as the game's
+		if (Proxy_Bans_IsBanned(Info_ValueForKey(userinfo, "ip")))
+		{
+			return "Banned.";
 		}
 
 		// Limit of clients per IP address, from Quake3e's sv_maxclientsPerIP (SV_DirectConnect): a new connection is refused
@@ -201,6 +208,11 @@ qboolean Proxy_SharedAPI_ConsoleCommand(void)
 	char cmd[MAX_TOKEN_CHARS];
 
 	proxy.trap->Argv(0, cmd, sizeof(cmd));
+
+	if (Proxy_Bans_ConsoleCommand(cmd))
+	{
+		return qtrue;
+	}
 
 	if (!Q_stricmp(cmd, "forceteam"))
 	{

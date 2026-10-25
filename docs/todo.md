@@ -16,19 +16,6 @@
 
 None known.
 
-### Ban system
-
-Stop treating `0` as a wildcard in IP bans.
-
-Vanilla JKA treats a `0` in a ban as a wildcard. Example with two players:
-
-- player A: `152.0.24.34`
-- player B: `152.99.35.26`
-
-To range-ban player A, an admin bans `152.0`. JKA reads the `0` as `*` and bans `152.*.*.*`, so player B is banned too. A player whose IP contains a `.0` cannot be range-banned without banning far more people than intended.
-
-Wanted behaviour: banning `152.0` bans `152.0.*.*` only, and player B can still play.
-
 ### Long term
 
 - Features from JKA_Anti-cheat: https://hackmd.io/CtIPZON0QHKuqjdxXRw8uw
@@ -41,6 +28,7 @@ Wanted behaviour: banning `152.0` bans `152.0.*.*` only, and player B can still 
 
 ### Features and fixes
 
+- Ban system: a `0` in an IP ban is no longer a wildcard (`addip 152.0` bans `152.0.*.*` only), see `addip` in [features.md](features.md#addip-removeip-listip).
 - `/rcon forceteam -1 <team>` moves everyone, caught with `GAME_CONSOLE_COMMAND`.
 - `dumpuser` accepts a client number, as in ioq3, OpenJK and Quake3e.
 - Mute system: `mute` and `unmute` commands, until the player leaves or the map changes. It blocks the chat commands in `Proxy_SharedAPI_ClientCommand`, not `SV_SendServerCommand`.

@@ -144,6 +144,27 @@ Engine: Any. Server console or `rcon` only.
 
 The mute is kept in the proxy's data of the client slot. It ends when the player leaves, and also at a map change, because the game module (and the proxy with it) is loaded again.
 
+### `addip` `removeip` `listip`
+
+Engine: Any. Server console or `rcon`. Only with `g_filterBan 1` (the default).
+
+IP bans, with the rules of OpenJK instead of the retail game's. In the retail game a `0` in a ban is a wildcard: `addip 152.0` banned `152.*.*.*`, and `addip 152.0.24.34` also banned `152.99.24.34`. Now every octet that is written is compared, `0` included, and `*` is the wildcard:
+
+| Command | Bans |
+| --- | --- |
+| `addip 152.0` | `152.0.*.*` |
+| `addip 152.0.24.34` | that address only |
+| `addip 152.*.24.34` | any second octet |
+| `addip 152` | `152.*.*.*` |
+
+- `removeip` takes the same spelling. The old spelling of a ban made before the proxy (`removeip 152.0.0.0` for `152.*.*.*`) still finds it.
+- `listip` prints the bans, with `*` for a wildcard.
+- The proxy keeps the list in `proxy_sv_banIPs` (archived, like `g_banIPs` was), and the game's own list stays empty. The bans of `g_banIPs` are imported when the game loads, with their old meaning (a `0` was a wildcard), then `g_banIPs` is emptied. The cvar holds `MAX_CVAR_VALUE_STRING` characters, about 20 bans, as `g_banIPs` did. The bans after that are kept until the map changes only.
+- A banned address is refused on connect with `Banned.`, as before. Bots and `localhost` are never banned.
+- With `g_filterBan 0` (only the listed addresses may connect) the proxy does nothing: the game keeps its own list and rules, and a `0` stays a wildcard. The mode is read when the game loads: after a change of `g_filterBan`, restart the map.
+
+Credits: OpenJK's `StringToFilter`.
+
 ### `forceteam -1 <team>`
 
 Engine: Any. Server console or `rcon` only.

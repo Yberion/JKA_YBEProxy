@@ -7,6 +7,7 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
 #include "JKA_YBEProxy/Proxy_CVars.hpp"
 #include "JKA_YBEProxy/Proxy_Files.hpp"
+#include "JKA_YBEProxy/Proxy_Bans.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 #include "JKA_YBEProxy/Proxy_SharedAPI.hpp"
@@ -98,6 +99,9 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 
 				proxy.trap->Print("----- Proxy: Engine properly patched\n");
 			}
+
+			// Before the game loads its ban list from g_banIPs
+			Proxy_Bans_BeforeGameInit();
 
 			break;
 		}
