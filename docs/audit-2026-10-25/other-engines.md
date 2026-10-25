@@ -244,6 +244,13 @@ The fix turns `forwardmove`, `rightmove` and `upmove` of -128 into -127, so that
 
 "Feeling": a normal key press gives ±127, so only an unusual input changes. Mouse movement with `+strafe` can reach -128, and would then move 1/128 slower.
 
+#### Applied
+
+Status: **applied**, on any engine. Compared again with the local clones, all at the upstream head: ioq3 (`87a99d18`), Quake3e, OpenJK (`260c59c2`), TaystJK and CleanJK have the same three tests in `MSG_ReadDeltaUsercmdKey`, after the read of each field and only in the branch where the usercmd changed. JK2MV, the retail source and Quake III Arena do not have them. No engine does it anywhere else, and none has a cvar for it.
+
+- The proxy does it in `Proxy_SharedAPI_GetUsercmd` ([Proxy_SharedAPI.cpp](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp)) instead of in the engine read, so it needs no hook and works on OpenJK. The game reads the usercmd only through that call, so the result is the same: the engine keeps `-128` in its own copy, and the game never sees it. A bot builds its usercmd with a clamp at ±127, so it is not affected.
+- Not compiled when written.
+
 ### O11. `MSG_ReadBits` reads past the message (Low)
 
 Status: **source only**. CVE-2017-11721, fixed in ioq3 and OpenJK ([`bf403f7e`](https://github.com/JACoders/OpenJK/commit/bf403f7e)). JKA's `MSG_ReadBits` has no bound at all ([`qcommon/msg.cpp`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/msg.cpp)).

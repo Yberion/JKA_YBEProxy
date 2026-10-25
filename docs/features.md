@@ -185,6 +185,7 @@ Engine: Any.
 
 - The proxy resets a force power selection of levitation, or out of range, to none (force exploit fix).
 - It forces the roll angle to `0` (angle exploit fix).
+- It turns a `forwardmove`, `rightmove` or `upmove` of `-128` into `-127`. A signed byte reaches `-128` but only `+127`, so a client could move one unit faster backwards, left and down than forwards, right and up (ioq3 bug 5273, also fixed by OpenJK, Quake3e and TaystJK).
 
 ### Anti-cheat
 

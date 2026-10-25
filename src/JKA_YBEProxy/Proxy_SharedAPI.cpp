@@ -28,6 +28,23 @@ void Proxy_SharedAPI_GetUsercmd(int /*clientNum*/, usercmd_t* ucmd)
 	}
 
 	ucmd->angles[ROLL] = 0;
+
+	// A signed char reaches -128 but only +127: a negative move would be one unit longer than the longest positive one
+	// (ioq3 bug 5273, OpenJK, Quake3e and TaystJK do it when they read the usercmd)
+	if (ucmd->forwardmove == -128)
+	{
+		ucmd->forwardmove = -127;
+	}
+
+	if (ucmd->rightmove == -128)
+	{
+		ucmd->rightmove = -127;
+	}
+
+	if (ucmd->upmove == -128)
+	{
+		ucmd->upmove = -127;
+	}
 }
 
 // ==================================================
