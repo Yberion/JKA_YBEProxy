@@ -81,7 +81,7 @@ The risk sits in two places:
 
 - [fixes.md](fixes.md): F1 to F11 are applied. F10.1 is refuted, so there was nothing to do.
 - [other-engines.md](other-engines.md): O2, O3 and O4 are done through F6, F2 and F7. O6 must not be ported. Left: O1, O5, O7 (with A4), O8, O9, O10 and O11.
-- [improvements.md](improvements.md): A2 is no longer needed, because of F4 option A. A5 is applied (CMake rewrite, includes, comparison of the SDK with OpenJK). Left: A1, A3, A4, A8, and A9 (optional). A6 is a larger redesign, and A7 lists minor observations.
+- [improvements.md](improvements.md): A2 is no longer needed, because of F4 option A. A5 is applied (CMake rewrite, includes, comparison of the SDK with OpenJK). A1 is applied except the signature check and the struct layout (relative instructions, partial failure and memory protection are done, with Zydis). Left: A1 (those two), A3, A4, A8, and A9 (optional). A6 is a larger redesign, and A7 lists minor observations.
 
 ## Suggested order
 
@@ -92,7 +92,7 @@ The risk sits in two places:
 5. F5: wrong cvars.
 6. F4: option A (no `GetModuleAPI` export). It covers OpenJK with the retail jampgame and OpenJK with an OpenJK jampgame.
 7. O9: movement event lag (the todo's ffa3 exploit).
-8. The rest: F8, F10, A1, A3, A4, O5, O7, O10, O11.
+8. The rest: F8, F10, A1 (signature check, struct layout), A3, A4, O5, O7, O10, O11.
 
 ## Decisions of the author
 
@@ -104,6 +104,7 @@ The risk sits in two places:
 - F10.6: keep `exit()` when the original game module cannot be loaded, as the engine stops on a game module it cannot load. An `ERR_DROP` version left the server up with no map and no working rcon.
 - F10.7 `/myratio`: show `kill - death` in both colors. This replaces the first decision (keep `kill - (death - suicides)` in red, clamped to 0): Kills 2, Deaths 3, Suicides 2 must show `-1` in red.
 - F11: option 2 only, hook `Info_Print` with the ioq3/OpenJK buffer sizes (original engine). It also covers `serverinfo` and `systeminfo`, and drops no client. Option 1 is not applied.
+- A1: HDE is replaced by Zydis (git submodule, static, decoder only). `Attach` relocates a `call`/`jmp rel32` in the trampoline, refuses any other relative instruction, and any hook failure stops the server.
 - A5: the CMake build is based on [cpp-best-practices/cmake_template](https://github.com/cpp-best-practices/cmake_template), without tests, dependencies, WebAssembly, sanitizers, packaging and fuzzing. No Apple, no MinGW. C++20. Warnings follow the template. The folder keeps the name `sdk`, and the includes of its files stay as in the original code. IPO and hardening are options, off.
 - O9: fix it. The author knows the bug and has reproduced it.
 - O5: add a `proxy_sv_maxClientsPerIP` cvar (default 3, 0 disables).

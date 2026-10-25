@@ -113,6 +113,7 @@ Wanted behaviour: banning `152.0` bans `152.0.*.*` only, and player B can still 
 - Better README.
 - OpenJK: the proxy no longer exports `GetModuleAPI`, so OpenJK loads it through `dllEntry` and `vmMain`. Fixes the console log, the cvars and `/myratio` on OpenJK, see F4 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
 - Rate limiter (anti-DDoS): rcon bad passwords, `getstatus` and `getinfo`, see F6 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
+- Replace the HDE length disassembler with [Zydis](https://github.com/zyantific/zydis) (git submodule) and rewrite `HookUtils`: relative `call`/`jmp` relocated, other relative instructions refused, any hook failure stops the server, see A1 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
 - Redo the CMake project, based on [cpp-best-practices/cmake_template](https://github.com/cpp-best-practices/cmake_template), with `CMakePresets.json`. The includes of the proxy code are uniform and the SDK was compared with OpenJK, see A5 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
 
 ### Bugs

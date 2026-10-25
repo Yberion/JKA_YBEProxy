@@ -16,44 +16,39 @@ Fix:
 
 ### Relative instructions
 
-Status: confirmed. HDE32 sets `F_RELATIVE` ([hde32.hpp:34](../../src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86/hde32.hpp#L34), set in [hde32.cpp:268, 306, 310](../../src/JKA_YBEProxy/RuntimePatch/HookUtils/LengthDisassembler/x86/hde32.cpp#L268)).
+Status: **applied** with the move from HDE to Zydis (git submodule `external/zydis`) and the rewrite of `HookUtils`. Built without warnings on MSVC 19.51, GCC 12 and GCC 16, and tested on the original Windows and Linux engines. The 16 hooks were also checked offline with capstone on `jampDed.exe` and `linuxjampded`: all are accepted, and only `Com_WriteConfig_f` on Windows needs the relocation of a `call`.
 
-`GetTramp` copies the first bytes of the target as they are ([HookUtils.hpp:79](../../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp#L79)). A `call`, `jmp` or `jcc` with a relative operand jumps to the wrong place once copied into the trampoline. `GetLen` also ignores `F_ERROR` ([HookUtils.cpp:74-88](../../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.cpp#L74-L88)).
+The problem: `GetTramp` copied the first bytes of the target as they were, so a `call`, `jmp` or `jcc` with a relative operand jumped to the wrong place from the trampoline, and `GetLen` ignored the HDE errors. Checked with capstone on the retail binaries: none of the 18 hooks at the time had a relative instruction in its copied bytes, but the hook of F7 on Windows does (`Com_WriteConfig_f` starts with `sub esp, 0x40; call Cmd_Argc`). F7 itself rewrites the whole function and never runs the trampoline.
 
-Checked on the retail binaries with capstone (files listed in F1): none of the 18 current hooks has a relative instruction in its copied bytes, on Windows or Linux. But the hook F7 needs does: on Windows, `Com_WriteConfig_f` starts with `sub esp, 0x40; call Cmd_Argc`, 8 bytes copied with an `e8 rel32` inside.
+Applied, in [HookUtils.cpp](../../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.cpp):
 
-Fix:
+- `Analyze` decodes the instructions with Zydis until they cover 5 bytes (x86 or x64 mode, from the size of a pointer). A decoding error, or a `ret` before 5 bytes (function too short), fails the hook.
+- A relative instruction (`ZYDIS_ATTRIB_IS_RELATIVE`) other than `call`/`jmp rel32` without prefix (`e8`, `e9`) fails the hook. That covers `jcc`, short `jmp`, `loop` and, on x64, RIP-relative addressing.
+- A `call`/`jmp rel32` is relocated in the trampoline: its destination is computed from the original address, then the offset is rewritten from the trampoline address.
+- Every offset is checked before the engine is touched. On x86 a rel32 reaches every address; on x64 an offset that does not fit in 32 bits fails the hook (`Status::OutOfRange`).
+- `HookBase` keeps the original bytes at `Attach`, and `Detach` restores from that copy, not from the trampoline (where a rel32 was relocated).
 
-1. In `GetTramp`, after the copy, walk the copied instructions with HDE. For an `e8` (call) or `e9` (jmp) with a 32-bit relative operand, keep the same target:
-
-   ```cpp
-   // The copied call/jmp is now at pTramp + offset instead of originalFunctionAddr + offset:
-   // shift its rel32 by the distance between the two copies so that it still reaches the same target
-   *(int32_t*)(pTramp + offset + 1) += (int32_t)(hookEntry.originalFunctionAddr - pTramp);
-   ```
-
-2. For any other instruction with `F_RELATIVE` (short `jcc`/`jmp`, `loop`), or with `F_ERROR`, refuse the hook: `Attach` returns false.
-
-x86 only: on 64-bit, the trampoline may be too far for a 32-bit offset.
-
-Missing from the sketch above: `Detach` restores the engine bytes by copying them back from the trampoline ([HookUtils.hpp:133](../../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp#L133)). Once a rel32 is relocated in the trampoline, that copy would write the shifted offset into the engine. Keep a copy of the original bytes in `HookEntry` at `Attach`, and restore from it.
-
-F7 no longer needs this: its hook rewrites the whole function and never runs the trampoline (see F7 in [fixes.md](fixes.md)).
+Not covered: a jump from elsewhere in the function to the middle of the overwritten bytes. It would land in the `jmp` or in the `nop` padding; only a full analysis of the function would find it.
 
 ### Partial failure
 
-Status: **corrected**. There is no null call.
+Status: **applied**.
 
-- When `GetTramp` fails, `Attach` returns before it writes the detour ([HookUtils.hpp:100-105](../../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp#L100-L105)). The engine keeps calling the unpatched function.
-- Each `Original_X` is only called from its own `Proxy_X`, which is only reached through that detour. Checked: [Proxy_sv_client.cpp:477, 498, 593, 939](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L477) and [Proxy_sv_main.cpp:100, 114, 146](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp#L100).
+There was never a null call: when `GetTramp` failed, `Attach` returned before writing the detour, and each `Original_X` is only called from its own `Proxy_X`. The real problem was a server running with part of the fixes missing, and one line in the console saying so (without a final `
+`).
 
-The real problems:
+Applied: `Attach` returns a `Status` with the reason, and any failure of a hook, of the filter stub of `SV_PacketEvent`, or of an inline patch calls `Proxy_FatalHookError`: the reason is printed and the server exits (`exit(EXIT_FAILURE)`, as when the original game module cannot be loaded). `Detach` of a hook that was never attached does nothing, and a failure to unhook is printed with its reason.
 
-- The server runs with part of the fixes missing, and only one line in the console says so.
-- `Detach` then prints "Could not release memory" for the hook that never attached.
-- Both messages lack a final `\n` ([Proxy_Engine_Patch.cpp:61, 82](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.cpp#L61)).
+### Memory protection
 
-Fix: if any `Attach` fails, detach the hooks already attached and print one clear error. Low priority: `VirtualAlloc`/`mmap` of a few bytes practically never fails.
+Status: **applied**, except the optional items below.
+
+`UnProtect` and `ReProtect` are replaced by a `CodeWriter` object: it makes the pages of the written range writable (all the pages, not only the first and the last), puts the protection back (the original on Windows, read and execute on Linux, where the targets are always code), and flushes the instruction cache. `AllocateMemory` and `ReleaseMemory` take the same exact size (the hidden `+ 5` is gone). The jump offsets are written as `int32_t`: they used `uintptr_t`, which wrote 8 bytes on x64.
+
+Left, optional:
+
+- Put all trampolines in one page. Today each one is a `VirtualAlloc`, which reserves 64 KB of address space.
+- Switch the trampoline memory to RX once written, instead of keeping it RWX. The filter stub of `SV_PacketEvent` is written after `Attach`, so it needs a change too.
 
 ### Struct layout
 
@@ -66,12 +61,6 @@ static_assert(offsetof(serverStatic_t, clients) == 0x0C);
 ```
 
 Add a `sizeof(client_t)` check too, per platform.
-
-### Optional
-
-- Put all trampolines in one page. Today each one is a `VirtualAlloc`, which reserves 64 KB of address space.
-- Switch the trampoline memory to RX once written, instead of keeping it RWX.
-- Call `FlushInstructionCache` after patching. x86 does not need it in practice, but Windows documents it.
 
 ## A2. Bridge for OpenJK with the retail jampgame
 

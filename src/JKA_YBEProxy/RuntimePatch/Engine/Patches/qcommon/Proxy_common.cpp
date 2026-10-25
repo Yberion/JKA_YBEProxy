@@ -20,8 +20,8 @@ Com_WriteConfig_f
 Write the config file to a specific name
 ===============
 */
-// Rewritten whole, Original_Com_WriteConfig_f is never called: on Windows the function starts with a relative call (Cmd_Argc),
-// which the trampoline copies without relocating it (HookUtils::GetTramp copies the bytes as they are), so the trampoline must never run
+// Rewritten whole, Original_Com_WriteConfig_f is never called: nothing from the original function is needed
+// (on Windows it starts with a relative call to Cmd_Argc: HookUtils::Attach relocates it in the trampoline)
 void (*Original_Com_WriteConfig_f)(void);
 void Proxy_Com_WriteConfig_f(void)
 {

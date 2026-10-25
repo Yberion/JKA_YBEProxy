@@ -95,7 +95,7 @@ mov    eax,DWORD PTR [ebp+0x8]  ; 8b 45 08 = 3 bytes
 > [!WARNING]
 > Instructions cannot be split, so we have to replace 6 bytes, not 5.
 
-The proxy finds this length automatically: `HookUtils::GetLen` uses a length disassembler (HDE) and adds up instruction lengths until it reaches at least 5 bytes.
+The proxy finds this length automatically: `HookUtils::AttachHook` decodes the instructions with [Zydis](https://github.com/zyantific/zydis) and adds up their lengths until it reaches at least 5 bytes. Zydis also tells whether an instruction is relative: a `call` or `jmp` with a 32-bit offset (`e8`, `e9`) gets its offset rewritten in the trampoline, so that it still reaches the same target. Any other relative instruction (`jcc`, short `jmp`, `loop`) in these bytes makes the hook fail, and so does a function shorter than 5 bytes.
 
 ### 3.2. Save the original instructions
 
@@ -143,8 +143,8 @@ Result: `addFive(1)` returns `7`. The call goes to `addOne`, which calls the ori
 | Element | Where | Role |
 | --- | --- | --- |
 | `HookUtils::HookEntry` | [HookUtils.hpp](../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp) | Hook name, target address, pointer that receives the trampoline (`Original_X`), replacement function (`Proxy_X`) |
-| `HookUtils::Attach` | [HookUtils.hpp](../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp) | `GetLen`, then `GetTramp` (steps 3.1, 3.2, 3.4), then writes the `jmp` (step 3.3) |
-| `HookUtils::Detach` | [HookUtils.hpp](../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp) | Copies the saved bytes back and frees the trampoline |
+| `HookUtils::Attach` | [HookUtils.hpp](../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp), [HookUtils.cpp](../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.cpp) (`AttachHook`) | Decodes and checks the instructions (step 3.1), builds the trampoline (steps 3.2, 3.4), then writes the `jmp` (step 3.3). Checks everything before touching the engine, and returns a `Status`; a failure stops the server |
+| `HookUtils::Detach` | [HookUtils.hpp](../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp) | Copies the original bytes (saved by `Attach`, not read from the trampoline) back and frees the trampoline |
 | `HookUtils::Patch`, `Patch_NOP_Bytes` | [HookUtils.cpp](../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.cpp) | Inline patches with no trampoline (one byte, or a block of `nop`) |
 | Hook list | [Proxy_Engine_Patch.cpp](../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.cpp) | Every hook, attached on `GAME_INIT` and detached on `GAME_SHUTDOWN` |
 | Addresses | [Proxy_Engine_Wrappers.hpp](../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp) | `{ Windows, Linux }` address of each engine function, variable and cvar |

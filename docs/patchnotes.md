@@ -5,6 +5,11 @@
 
 ## Unreleased
 
+- Hooks: the instruction decoder is now [Zydis](https://github.com/zyantific/zydis) (git submodule) instead of HDE, and the hook code was rewritten:
+  - a `call` or `jmp` with a 32-bit offset in the bytes copied to the trampoline is relocated, so it reaches its target;
+  - any other relative instruction in those bytes, a function shorter than 5 bytes, or a decoding error makes the hook fail;
+  - if any hook or inline patch cannot be installed, the server stops with the reason in the console (before, it kept running with part of the fixes missing);
+  - the original bytes put back by the unhook are the ones saved at the hook, not the ones read from the trampoline.
 - Build: CMake rewritten (CMake 3.25 or later) with `CMakePresets.json`. The `CreateVisualStudio*.bat` scripts are removed: use `cmake --preset windows-x86` or `linux-x86-release` (see the README). The module is now in `build/<preset>/bin/`. MinGW and Apple builds are no longer supported.
 - The userinfo sent on connect is now checked before the game reads it. The name, model and `forcepowers` fixes were skipped until the client's first userinfo change, and now also apply on connect and on the reconnect after each map change.
 - The anti-cheat now refuses a client on connect, with its reason, instead of kicking it later.

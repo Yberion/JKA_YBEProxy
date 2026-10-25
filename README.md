@@ -92,7 +92,7 @@ The engine reloads the game module on every map change.
 
 ## Building
 
-Requirements: CMake 3.25 or later and a C++20 compiler (Visual Studio 2026, GCC or Clang). The build is described by [CMakePresets.json](CMakePresets.json); list the presets with `cmake --list-presets`. Without an explicit build type, CMake builds in Release. The module is written to `build/<preset>/bin/`.
+Requirements: CMake 3.25 or later and a C++20 compiler (Visual Studio 2026, GCC or Clang). The disassembler [Zydis](https://github.com/zyantific/zydis) is a git submodule written in C, in `external/zydis`: clone with `git clone --recurse-submodules`, or run `git submodule update --init --recursive` in an existing clone. The build is described by [CMakePresets.json](CMakePresets.json); list the presets with `cmake --list-presets`. Without an explicit build type, CMake builds in Release. The module is written to `build/<preset>/bin/`.
 
 ### Windows
 
@@ -165,7 +165,7 @@ Set with `-D<name>=ON` on the configure command. All are off by default, except 
 - Assembly shell system by Deathspike and BobaFett, with Sil's fix.
 - [OpenJK](https://github.com/JACoders/OpenJK): several fixes and parts of the code.
 - [jk2mv](https://github.com/mvdevs/jk2mv) and fau: packet and FPS statistics, ping fix.
-- Hacker Disassembler Engine (HDE32/HDE64) by Vyacheslav Patkov: instruction length disassembler.
+- [Zydis](https://github.com/zyantific/zydis) by Florian Bernd and Joel Honer (MIT): instruction decoder used by the hook utilities. It replaced the Hacker Disassembler Engine (HDE32/HDE64) by Vyacheslav Patkov.
 - Original game source code: [jediacademy](https://github.com/jedis/jediacademy) by Raven Software and Activision.
 - Build system: based on [cpp-best-practices/cmake_template](https://github.com/cpp-best-practices/cmake_template) (public domain, Unlicense), without its tests, dependencies, WebAssembly, sanitizers, packaging and fuzzing parts.
 

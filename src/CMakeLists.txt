@@ -1,19 +1,12 @@
 file(GLOB_RECURSE YBEPROXY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 
-# One length disassembler per architecture
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  list(FILTER YBEPROXY_SOURCES EXCLUDE REGEX "/LengthDisassembler/x86/")
-else()
-  list(FILTER YBEPROXY_SOURCES EXCLUDE REGEX "/LengthDisassembler/x64/")
-endif()
-
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${YBEPROXY_SOURCES})
 
 add_library(${PROJECT_NAME} SHARED ${YBEPROXY_SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ybeproxy_options ybeproxy_warnings)
+target_link_libraries(${PROJECT_NAME} PRIVATE ybeproxy_options ybeproxy_warnings Zydis)
 
 set_target_properties(
   ${PROJECT_NAME}
@@ -26,8 +19,8 @@ set_target_properties(
 target_compile_definitions(${PROJECT_NAME} PRIVATE _GAME $<$<NOT:$<CONFIG:Debug>>:FINAL_BUILD>)
 
 if(MSVC)
-  # The DLL is extracted from a pk3 and loaded by the game: it cannot rely on a Visual C++ redistributable
-  set_target_properties(${PROJECT_NAME} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  # The static MSVC runtime is set for every target in the top-level CMakeLists.txt: the DLL is extracted from a pk3
+  # and loaded by the game, it cannot rely on a Visual C++ redistributable
   target_compile_definitions(
     ${PROJECT_NAME}
     PRIVATE NOMINMAX

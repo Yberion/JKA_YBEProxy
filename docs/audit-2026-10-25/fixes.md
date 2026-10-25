@@ -687,7 +687,7 @@ void Proxy_Com_WriteConfig_f(void)
 - It also covers `vstr`, `exec` and the server console, because the check sits in the command itself.
 - It is safe for F1: `writeconfig` never reloads the VM, so this hook is a leaf.
 - Address of `Com_WriteConfig_f`, found in the retail binaries (see F1 for the files): `0x410680` on Windows, `0x8074d64` on Linux. Both are registered by `Cmd_AddCommand("writeconfig", ...)` (at `0x411507` and `0x8074b55`), and both print `Usage: writeconfig <filename>`. Add them to [Proxy_Engine_Wrappers.hpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp) as `{ 0x410680, 0x8074d64 }`.
-- **Windows needs A1 first.** The Windows function starts with `sub esp, 0x40` (3 bytes) then `call Cmd_Argc` (`e8 rel32`). The trampoline copies these 8 bytes as they are, so the copied `call` would jump to a wrong address. `GetTramp` must relocate a copied `e8`/`e9 rel32` before this hook can be added (see A1). Linux starts with `push ebp; mov ebp, esp; sub esp, 0x50` (6 bytes): no problem.
+- **Windows needed A1 first** (done, `Attach` now relocates a copied `e8`/`e9 rel32`). The Windows function starts with `sub esp, 0x40` (3 bytes) then `call Cmd_Argc` (`e8 rel32`). The trampoline copies these 8 bytes as they are, so the copied `call` would jump to a wrong address. `GetTramp` must relocate a copied `e8`/`e9 rel32` before this hook can be added (see A1). Linux starts with `push ebp; mov ebp, esp; sub esp, 0x50` (6 bytes): no problem.
 - Then delete the check in `Proxy_SVC_RemoteCommand`.
 
 Fallback without a new address: put the same test in the F1 filter, on `Cmd_Argv(3)` when `Cmd_Argv(2)` is `writeconfig`, and accept that `vstr`/`exec` bypass it.

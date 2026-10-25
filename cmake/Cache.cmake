@@ -24,6 +24,9 @@ function(ybeproxy_enable_cache)
     set(CMAKE_CXX_COMPILER_LAUNCHER
         ${CACHE_BINARY}
         CACHE FILEPATH "CXX compiler cache used")
+    set(CMAKE_C_COMPILER_LAUNCHER
+        ${CACHE_BINARY}
+        CACHE FILEPATH "C compiler cache used")
   else()
     message(STATUS "No compiler cache (${CACHE_OPTION_VALUES}) found, not using one")
   endif()

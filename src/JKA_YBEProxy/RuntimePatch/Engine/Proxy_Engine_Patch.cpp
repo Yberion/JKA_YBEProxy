@@ -10,7 +10,17 @@
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_snapshot.hpp"
 
+#include <cstdlib>
 #include <variant>
+
+// A hook that cannot be installed leaves the server half patched: stop it, like when the original game module cannot
+// be loaded
+[[noreturn]] static void Proxy_FatalHookError(const char* hookName, HookUtils::Status status)
+{
+	proxy.trap->Print("----- Proxy: Could not hook '%s': %s\n", hookName, HookUtils::StatusString(status));
+
+	exit(EXIT_FAILURE);
+}
 
 static std::variant<
 	HookUtils::HookEntry<decltype(Proxy_Com_Printf)>,
@@ -22,21 +32,21 @@ static std::variant<
 	HookUtils::HookEntry<decltype(Proxy_SV_ExecuteClientMessage)>, // HookEntry<decltype(&Proxy_SV_WriteDownloadToClient)>,
 	HookUtils::HookEntry<decltype(Proxy_SV_ExecuteClientCommand)>
 > hookEntries[] = {
-	HookUtils::HookEntry("Com_Printf", (unsigned char*)func_Com_Printf_addr[PROXY_PLATFORM], &Original_Com_Printf, &Proxy_Com_Printf, 0),
-	HookUtils::HookEntry("Cmd_TokenizeString", (unsigned char*)func_Cmd_TokenizeString_addr[PROXY_PLATFORM], &Original_Cmd_TokenizeString, &Proxy_Cmd_TokenizeString, 0),
-	HookUtils::HookEntry("Com_WriteConfig_f", (unsigned char*)func_Com_WriteConfig_f_addr[PROXY_PLATFORM], &Original_Com_WriteConfig_f, &Proxy_Com_WriteConfig_f, 0),
-	HookUtils::HookEntry("Info_Print", (unsigned char*)func_Info_Print_addr[PROXY_PLATFORM], &Original_Info_Print, &Proxy_Info_Print, 0),
-	HookUtils::HookEntry("SV_SendMessageToClient", (unsigned char*)func_SV_SendMessageToClient_addr[PROXY_PLATFORM], &Original_SV_SendMessageToClient, &Proxy_SV_SendMessageToClient, 0),
-	HookUtils::HookEntry("SV_CalcPings", (unsigned char*)func_SV_CalcPings_addr[PROXY_PLATFORM], &Original_SV_CalcPings, &Proxy_SV_CalcPings, 0),
-	HookUtils::HookEntry("SV_SvEntityForGentity", (unsigned char*)func_SV_SvEntityForGentity_addr[PROXY_PLATFORM], &Original_SV_SvEntityForGentity, &Proxy_SV_SvEntityForGentity, 0),
-	HookUtils::HookEntry("SV_SendClientGameState", (unsigned char*)func_SV_SendClientGameState_addr[PROXY_PLATFORM], &Original_SV_SendClientGameState, &Proxy_SV_SendClientGameState, 0),
-	HookUtils::HookEntry("SV_ExecuteClientMessage", (unsigned char*)func_SV_ExecuteClientMessage_addr[PROXY_PLATFORM], &Original_SV_ExecuteClientMessage, &Proxy_SV_ExecuteClientMessage, 0),
-	HookUtils::HookEntry("SV_UserinfoChanged", (unsigned char*)func_SV_UserinfoChanged_addr[PROXY_PLATFORM], &Original_SV_UserinfoChanged, &Proxy_SV_UserinfoChanged, 0),
-	HookUtils::HookEntry("SV_Status_f", (unsigned char*)func_SV_Status_f_addr[PROXY_PLATFORM], &Original_SV_Status_f, &Proxy_SV_Status_f, 0),
-	HookUtils::HookEntry("SV_BeginDownload_f", (unsigned char*)func_SV_BeginDownload_f_addr[PROXY_PLATFORM], &Original_SV_BeginDownload_f, &Proxy_SV_BeginDownload_f, 0),
-	HookUtils::HookEntry("SV_DoneDownload_f", (unsigned char*)func_SV_DoneDownload_f_addr[PROXY_PLATFORM], &Original_SV_DoneDownload_f, &Proxy_SV_DoneDownload_f, 0),
-	HookUtils::HookEntry("SV_ExecuteClientCommand", (unsigned char*)func_SV_ExecuteClientCommand_addr[PROXY_PLATFORM], &Original_SV_ExecuteClientCommand, &Proxy_SV_ExecuteClientCommand, 0),
-	HookUtils::HookEntry("SV_WriteDownloadToClient", (unsigned char*)func_SV_WriteDownloadToClient_addr[PROXY_PLATFORM], &Original_SV_WriteDownloadToClient, &Proxy_SV_WriteDownloadToClient, 0)
+	HookUtils::HookEntry("Com_Printf", (unsigned char*)func_Com_Printf_addr[PROXY_PLATFORM], &Original_Com_Printf, &Proxy_Com_Printf),
+	HookUtils::HookEntry("Cmd_TokenizeString", (unsigned char*)func_Cmd_TokenizeString_addr[PROXY_PLATFORM], &Original_Cmd_TokenizeString, &Proxy_Cmd_TokenizeString),
+	HookUtils::HookEntry("Com_WriteConfig_f", (unsigned char*)func_Com_WriteConfig_f_addr[PROXY_PLATFORM], &Original_Com_WriteConfig_f, &Proxy_Com_WriteConfig_f),
+	HookUtils::HookEntry("Info_Print", (unsigned char*)func_Info_Print_addr[PROXY_PLATFORM], &Original_Info_Print, &Proxy_Info_Print),
+	HookUtils::HookEntry("SV_SendMessageToClient", (unsigned char*)func_SV_SendMessageToClient_addr[PROXY_PLATFORM], &Original_SV_SendMessageToClient, &Proxy_SV_SendMessageToClient),
+	HookUtils::HookEntry("SV_CalcPings", (unsigned char*)func_SV_CalcPings_addr[PROXY_PLATFORM], &Original_SV_CalcPings, &Proxy_SV_CalcPings),
+	HookUtils::HookEntry("SV_SvEntityForGentity", (unsigned char*)func_SV_SvEntityForGentity_addr[PROXY_PLATFORM], &Original_SV_SvEntityForGentity, &Proxy_SV_SvEntityForGentity),
+	HookUtils::HookEntry("SV_SendClientGameState", (unsigned char*)func_SV_SendClientGameState_addr[PROXY_PLATFORM], &Original_SV_SendClientGameState, &Proxy_SV_SendClientGameState),
+	HookUtils::HookEntry("SV_ExecuteClientMessage", (unsigned char*)func_SV_ExecuteClientMessage_addr[PROXY_PLATFORM], &Original_SV_ExecuteClientMessage, &Proxy_SV_ExecuteClientMessage),
+	HookUtils::HookEntry("SV_UserinfoChanged", (unsigned char*)func_SV_UserinfoChanged_addr[PROXY_PLATFORM], &Original_SV_UserinfoChanged, &Proxy_SV_UserinfoChanged),
+	HookUtils::HookEntry("SV_Status_f", (unsigned char*)func_SV_Status_f_addr[PROXY_PLATFORM], &Original_SV_Status_f, &Proxy_SV_Status_f),
+	HookUtils::HookEntry("SV_BeginDownload_f", (unsigned char*)func_SV_BeginDownload_f_addr[PROXY_PLATFORM], &Original_SV_BeginDownload_f, &Proxy_SV_BeginDownload_f),
+	HookUtils::HookEntry("SV_DoneDownload_f", (unsigned char*)func_SV_DoneDownload_f_addr[PROXY_PLATFORM], &Original_SV_DoneDownload_f, &Proxy_SV_DoneDownload_f),
+	HookUtils::HookEntry("SV_ExecuteClientCommand", (unsigned char*)func_SV_ExecuteClientCommand_addr[PROXY_PLATFORM], &Original_SV_ExecuteClientCommand, &Proxy_SV_ExecuteClientCommand),
+	HookUtils::HookEntry("SV_WriteDownloadToClient", (unsigned char*)func_SV_WriteDownloadToClient_addr[PROXY_PLATFORM], &Original_SV_WriteDownloadToClient, &Proxy_SV_WriteDownloadToClient)
 };
 
 // ==================================================
@@ -67,13 +77,12 @@ static unsigned char* packetEventFilterStub = nullptr;
 // Not in hookEntries: its target is the stub, only known at runtime, and it needs steps the generic loop doesn't do
 // (build the stub before Attach, write the jmp rel32 after, free the stub after Detach)
 // If the stub can't be allocated, this hook is not attached at all, instead of a jmp to nullptr
-static HookUtils::HookEntry<void(netadr_t, msg_t*)> packetEventHookEntry("SV_PacketEvent", (unsigned char*)func_SV_PacketEvent_addr[PROXY_PLATFORM], &Original_SV_PacketEvent, nullptr, 0);
+static HookUtils::HookEntry<void(netadr_t, msg_t*)> packetEventHookEntry("SV_PacketEvent", (unsigned char*)func_SV_PacketEvent_addr[PROXY_PLATFORM], &Original_SV_PacketEvent, nullptr);
 
 // The last rel32 (jmp trampoline) is written once Attach has created the trampoline
 static unsigned char* Proxy_MakeFilterStub(void* filter)
 {
-	// AllocateMemory adds 5 bytes for the jmp of a trampoline: - 5 gives exactly filterStubLength
-	unsigned char* stub = HookUtils::AllocateMemory(filterStubLength - 5);
+	unsigned char* stub = HookUtils::AllocateMemory(filterStubLength);
 
 	if (!stub)
 	{
@@ -103,22 +112,16 @@ static void Proxy_Attach_PacketEventFilter(void)
 
 	if (!packetEventFilterStub)
 	{
-		proxy.trap->Print("----- Proxy: Could not allocate memory for the filter stub '%s'\n", packetEventHookEntry.hookName);
-
-		return;
+		Proxy_FatalHookError(packetEventHookEntry.hookName, HookUtils::Status::AllocationFailed);
 	}
 
 	packetEventHookEntry.proxyFunctionPtr = (decltype(packetEventHookEntry.proxyFunctionPtr))packetEventFilterStub;
 
-	if (!HookUtils::Attach(packetEventHookEntry))
+	const HookUtils::Status status = HookUtils::Attach(packetEventHookEntry);
+
+	if (status != HookUtils::Status::Ok)
 	{
-		proxy.trap->Print("----- Proxy: Could not allocate memory for the trampoline '%s'\n", packetEventHookEntry.hookName);
-
-		// Same length as the allocation: ReleaseMemory adds 5 too, and munmap needs the mmap length on Linux
-		HookUtils::ReleaseMemory(packetEventFilterStub, filterStubLength - 5);
-		packetEventFilterStub = nullptr;
-
-		return;
+		Proxy_FatalHookError(packetEventHookEntry.hookName, status);
 	}
 
 	// The jmp rel32 is the last 4 bytes of the stub. It can only be written now that Attach created the trampoline
@@ -136,13 +139,14 @@ static void Proxy_Detach_PacketEventFilter(void)
 		return;
 	}
 
-	if (!HookUtils::Detach(packetEventHookEntry))
+	const HookUtils::Status status = HookUtils::Detach(packetEventHookEntry);
+
+	if (status != HookUtils::Status::Ok)
 	{
-		proxy.trap->Print("----- Proxy: Could not release memory for the trampoline '%s'\n", packetEventHookEntry.hookName);
+		proxy.trap->Print("----- Proxy: Could not unhook '%s': %s\n", packetEventHookEntry.hookName, HookUtils::StatusString(status));
 	}
 
-	// Same length as the allocation, see Proxy_Attach_PacketEventFilter
-	HookUtils::ReleaseMemory(packetEventFilterStub, filterStubLength - 5);
+	HookUtils::ReleaseMemory(packetEventFilterStub, filterStubLength);
 	packetEventFilterStub = nullptr;
 }
 
@@ -159,9 +163,11 @@ void Proxy_Engine_Attach_Patches(void)
 {
 	for (auto& hookEntry : hookEntries) {
 		std::visit([](auto& hookEntryVisitor) {
-			if (!HookUtils::Attach(hookEntryVisitor))
+			const HookUtils::Status status = HookUtils::Attach(hookEntryVisitor);
+
+			if (status != HookUtils::Status::Ok)
 			{
-				proxy.trap->Print("----- Proxy: Could not allocate memory for the trampoline '%s'", hookEntryVisitor.hookName);
+				Proxy_FatalHookError(hookEntryVisitor.hookName, status);
 			}
 		}, hookEntry);
 	}
@@ -182,9 +188,11 @@ void Proxy_Engine_Detach_Patches(void)
 {
 	for (auto& hookEntry : hookEntries) {
 		std::visit([](auto& hookEntryVisitor) {
-			if (!HookUtils::Detach(hookEntryVisitor))
+			const HookUtils::Status status = HookUtils::Detach(hookEntryVisitor);
+
+			if (status != HookUtils::Status::Ok)
 			{
-				proxy.trap->Print("----- Proxy: Could not release memory for the trampoline '%s'", hookEntryVisitor.hookName);
+				proxy.trap->Print("----- Proxy: Could not unhook '%s': %s\n", hookEntryVisitor.hookName, HookUtils::StatusString(status));
 			}
 		}, hookEntry);
 	}
@@ -202,8 +210,14 @@ void Proxy_Engine_Detach_Patches(void)
 void Proxy_Engine_Inline_Patches(void)
 {
 	// Remove all the timer block in SVC_RemoteCommand, fix rcon disabler
-	HookUtils::Patch_NOP_Bytes((unsigned char*)func_SVC_RemoteCommand_timer_start_block_addr[PROXY_PLATFORM], func_SVC_RemoteCommand_timer_NOP_amount[PROXY_PLATFORM]);
+	if (!HookUtils::Patch_NOP_Bytes((unsigned char*)func_SVC_RemoteCommand_timer_start_block_addr[PROXY_PLATFORM], func_SVC_RemoteCommand_timer_NOP_amount[PROXY_PLATFORM]))
+	{
+		Proxy_FatalHookError("SVC_RemoteCommand timer", HookUtils::Status::ProtectionFailed);
+	}
 	// When calling Com_BeginRedirect in SVC_RemoteCommand, change the length of the buffer from 49136 to 1008
 	// It fix truncated text from SVC_RemoteCommand with the new Com_Printf
-	HookUtils::Patch((unsigned char*)func_SVC_RemoteCommand_Com_BeginRedirect_SV_OUTPUTBUF_LENGTH_addr[PROXY_PLATFORM], 0x03);
+	if (!HookUtils::Patch((unsigned char*)func_SVC_RemoteCommand_Com_BeginRedirect_SV_OUTPUTBUF_LENGTH_addr[PROXY_PLATFORM], 0x03))
+	{
+		Proxy_FatalHookError("SVC_RemoteCommand Com_BeginRedirect", HookUtils::Status::ProtectionFailed);
+	}
 }
