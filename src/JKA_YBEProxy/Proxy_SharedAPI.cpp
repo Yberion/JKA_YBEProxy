@@ -40,6 +40,18 @@ const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qbo
 	// Bots are skipped: their userinfo comes from the bot files
 	if (!isBot)
 	{
+		// SV_DirectConnect adds the "ip" key that the game's ban check reads. When the userinfo was too long to receive it,
+		// the key is missing, and a banned address would pass
+		char userinfo[MAX_INFO_STRING];
+
+		proxy.trap->GetUserinfo(clientNum, userinfo, sizeof(userinfo));
+
+		if (!Info_ValueForKey(userinfo, "ip")[0])
+		{
+			// Same message as ioq3, JK2MV and OpenJK give when the connection is refused for that reason
+			return "Userinfo string length exceeded.  Try removing setu cvars from your config.";
+		}
+
 		const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum);
 
 		// Returning the reason refuses the client, never DropClient here (the slot is still CS_FREE)

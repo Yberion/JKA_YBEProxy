@@ -68,7 +68,7 @@ Status: **source only**.
 
 Consequence: a client sends a `userinfo` with a fake `ip`, or without one. From the next map change on:
 
-- `G_FilterPacket` checks the fake address, so a ban added with `addip` does not apply to them;
+- `G_FilterPacket` checks the fake address, so a ban added with `addip` does not apply to them. `addip` kicks nobody: the ban is only checked again in `ClientConnect`, which runs for every client at each map change (`firstTime = qfalse`). So the bypass is for a player already on the server when its address is banned, not for a new connection, where `SV_DirectConnect` sets `ip` from the real address;
 - the game logs and stores the fake address.
 
 A connect userinfo too long to receive `ip` has the same effect from the start: `Info_SetValueForKey` prints "Info string length exceeded" and adds nothing.
@@ -99,6 +99,17 @@ Info_SetValueForKey(cl->userinfo, "ip", ip);
 - On connect, this hook runs after `GAME_CLIENT_CONNECT`. The F2 sanitiser, which runs in `GAME_CLIENT_CONNECT`, must refuse the client when `ip` is missing: return `"Userinfo string length exceeded."`.
 - On connect, this hook runs while the slot is still `CS_FREE`, and `SV_DropClient` there has the same problem as in F2. It cannot happen: when `SV_DirectConnect` managed to add `ip`, the length check passes, and when it did not, the F2 check has already refused the client. So the drop only happens on a `userinfo` command, where it is safe.
 - OpenJK path: OpenJK's engine already does it.
+
+#### Applied
+
+Status: **applied**. Compared again with ioq3 ([`code/server/sv_client.c:389-400, 1478-1493`](https://github.com/ioquake/ioq3/blob/87a99d182/code/server/sv_client.c#L389-L400)), Quake3e (`sv_client.c:621-631, 1855-1866`), JK2MV (`src/server/sv_client.cpp:125-135, 1180-1188`), OpenJK (`codemp/server/sv_client.cpp:194-205, 1125-1143`), TaystJK (`codemp/server/sv_client.cpp:194-205, 1253-1271`) and Quake 3 1.32. All of them do the same two things, and so does the proxy:
+
+- On connect, they refuse the client with `Userinfo string length exceeded.  Try removing setu cvars from your config.` when `ip` does not fit, instead of letting it in without `ip` as JKA does. The engine's own connect code of the original engine cannot be changed, so `Proxy_SharedAPI_ClientConnect` does it a step later, before the sanitiser, with the same message: a non-bot client whose userinfo has no `ip` is refused. It works on any engine.
+- On every userinfo change, they set `ip` again from `netchan.remoteAddress`: `localhost` for a local (loopback) address, else `NET_AdrToString`. If the result does not fit, they drop the client (`userinfo string length exceeded`). The proxy does this in `Proxy_SV_UserinfoChanged` (original engine), before the original, and does not call the original after a drop. The length test is the one of ioq3, OpenJK and TaystJK, done before `Info_SetValueForKey` (JK2MV and Quake3e test its return value, same result). Bots get an `ip` too, in every engine.
+- The `ip` value the original engine sets on connect is `NET_AdrToString`, even for a loopback address (`loopback`), where the engines above use `localhost`. That differs only for a client inside the server process, which a dedicated server never has.
+- The drop can only happen on a `userinfo` command: on connect the check above has already refused a client that has no room for `ip`.
+- OpenJK engine: it already maintains `ip` (the code above), so the proxy only adds the check on connect.
+- Not compiled when written.
 
 ### O2. Rate limiting of out-of-band packets (High)
 

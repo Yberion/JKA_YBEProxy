@@ -97,7 +97,7 @@ The risk sits in two places:
 
 ### [other-engines.md](other-engines.md)
 
-- ⏳ O1: the `ip` userinfo key is not maintained
+- ✅ O1: the `ip` userinfo key is not maintained
 - ✅ O2: rate limiting of out-of-band packets (through F6)
 - ✅ O3: userinfo sanitised before the game sees it on connect (through F2)
 - ✅ O4: `writeconfig` (through F7)
@@ -135,7 +135,7 @@ The risk sits in two places:
 5. F5: wrong cvars.
 6. F4: option A (no `GetModuleAPI` export). It covers OpenJK with the retail jampgame and OpenJK with an OpenJK jampgame.
 7. O9: movement event lag (the todo's ffa3 exploit). Postponed.
-8. The rest: A3, A4, O5, O7, O10, O11.
+8. The rest: A3, A4, O5, O7, O8, O10, O11.
 
 ## Decisions of the author
 

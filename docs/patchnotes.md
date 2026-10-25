@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- A player who is already on the server can no longer stay after its address is banned (`addip`) by sending a fake or missing `ip` in its userinfo: the game only checks the ban again at the next map change, with the `ip` of the userinfo. A new connection was never affected, the engine sets `ip` itself. The proxy now sets `ip` again from the address of the connection at every userinfo change (original engine), and refuses on connect a userinfo that had no room for it (any engine).
 - Hooks: the instruction decoder is now [Zydis](https://github.com/zyantific/zydis) (git submodule) instead of HDE, and the hook code was rewritten:
   - a `call` or `jmp` with a 32-bit offset in the bytes copied to the trampoline is relocated, so it reaches its target;
   - any other relative instruction in those bytes, a function shorter than 5 bytes, or a decoding error makes the hook fail;

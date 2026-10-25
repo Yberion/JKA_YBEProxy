@@ -150,9 +150,7 @@ The proxy checks the userinfo on connect, on the reconnect after each map change
   - an empty name becomes `Padawan`.
 - The model is replaced with `kyle` when it is empty, when it starts with `rancor` or `wampa` (any skin), when it is `jedi_` without a species (`jedi_` alone or with any skin), when it contains a character outside printable ASCII, or when it is too long (see [`proxy_sv_modelPathLength`](#proxy_sv_modelpathlength)).
 - `forcepowers` must look like `rank-side-powers` (22 to 24 characters). Otherwise the proxy replaces it with `7-1-030000000000003332` (crash fix).
-
-> [!WARNING]
-> Neither the engine nor the proxy keeps the `ip` key of the userinfo up to date, so a client can fake it and avoid an IP ban after the next map change. See O1 in [audit-2026-10-25/other-engines.md](audit-2026-10-25/other-engines.md).
+- The `ip` key, which the game's ban check (`addip`) reads, is set again from the address of the connection at every userinfo change (original engine). The engine only sets it when the client connects, and the `userinfo` command replaces the whole userinfo with the client's string: a client already on the server could send a fake `ip`, or none, and stay after its address was banned with `addip`: the game checks the ban again at the next map change (the reconnect of every client), with the `ip` of the userinfo. A new connection was never affected, the engine sets `ip` itself. A client whose userinfo has no room for `ip` is dropped (`userinfo string length exceeded`). On connect (any engine), a userinfo that was too long to receive `ip` is refused with `Userinfo string length exceeded.  Try removing setu cvars from your config.`, as on ioq3, JK2MV and OpenJK.
 
 ### User commands
 

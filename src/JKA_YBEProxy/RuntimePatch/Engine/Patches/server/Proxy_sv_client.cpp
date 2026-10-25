@@ -456,6 +456,35 @@ void (*Original_SV_UserinfoChanged)(client_t*);
 void Proxy_SV_UserinfoChanged(client_t* cl) {
 	const char* val = nullptr;
 
+	// Maintain the IP information, the game's ban check (G_FilterPacket) reads "ip" from the userinfo
+	// The engine only sets it once, in SV_DirectConnect, and the "userinfo" command replaces the whole userinfo with the
+	// client's string: a client could send a fake "ip", or none, and no longer be banned after the next map change
+	// Taken from the address of the connection, and "localhost" for a local client (NET_IsLocalAddress tests NA_LOOPBACK):
+	// as Quake 3 1.32, ioq3, Quake3e, JK2MV, OpenJK and TaystJK
+	{
+		const char* ip = cl->netchan.remoteAddress.type == NA_LOOPBACK
+			? "localhost"
+			: server.common.functions.NET_AdrToString(cl->netchan.remoteAddress);
+
+		val = Info_ValueForKey(cl->userinfo, "ip");
+
+		// Info_SetValueForKey adds nothing when the result would be too long: do not leave the client without "ip"
+		const std::size_t len = val[0]
+			? std::strlen(ip) - std::strlen(val) + std::strlen(cl->userinfo)
+			: std::strlen(ip) + 4 + std::strlen(cl->userinfo);
+
+		if (len >= MAX_INFO_STRING)
+		{
+			// Only reachable on a "userinfo" command: a client that has no room for "ip" on connect is already refused
+			// by Proxy_SharedAPI_ClientConnect
+			server.functions.SV_DropClient(cl, "userinfo string length exceeded");
+
+			return;
+		}
+
+		Info_SetValueForKey(cl->userinfo, "ip", ip);
+	}
+
 	val = Info_ValueForKey(cl->userinfo, "model");
 
 	// Fix model length crash on some custom clients
