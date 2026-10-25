@@ -118,7 +118,7 @@ The risk sits in two places:
   - ❌ signature check: the `version` check is enough
   - ❌ struct layout: the `version` check is enough
 - ✅ A2: bridge for OpenJK with the retail jampgame (no longer needed, because of F4 option A)
-- ⏳ A3: simplification
+- ✅ A3: simplification
 - ✅ A4: tokenizer hardening
 - ✅ A5: build (CMake rewrite, includes, comparison of the SDK with OpenJK)
 - ⏳ A6: pinned loader and reloadable plugin (a larger redesign)
@@ -135,7 +135,7 @@ The risk sits in two places:
 5. F5: wrong cvars.
 6. F4: option A (no `GetModuleAPI` export). It covers OpenJK with the retail jampgame and OpenJK with an OpenJK jampgame.
 7. O9: movement event lag (the todo's ffa3 exploit). Postponed.
-8. The rest: A3.
+8. The rest: A8, A9.
 
 ## Decisions of the author
 

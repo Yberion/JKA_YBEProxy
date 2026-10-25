@@ -99,6 +99,10 @@ Status: confirmed.
 
   Fix: one `static void Proxy_RegisterCvarTable(cvarTable_t* table, std::size_t size)` and one `static void Proxy_UpdateCvarTable(cvarTable_t* table, std::size_t size)`, called with each table.
 
+#### Applied
+
+Status: **applied**. The F1 and F4 parts were removed with F1 and F4. The two cvar tables now go through `Proxy_RegisterCvarTable` and `Proxy_UpdateCvarTable` in [Proxy_CVars.cpp](../../src/JKA_YBEProxy/Proxy_CVars.cpp). The two prints of the original-engine registration are kept. No behaviour change, so no entry in the patch notes. Not compiled when written.
+
 ## A4. Tokenizer hardening
 
 Status: **applied**, see O7 in [other-engines.md](other-engines.md).
