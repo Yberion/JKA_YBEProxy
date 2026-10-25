@@ -181,11 +181,8 @@ static void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 		server.functions.SV_ClientThink(client, &cmds[i]);
 
 		// Proxy -------------->
-		if (client->ping < 1)
-		{
-			continue;
-		}
-
+		// No ping test: bots never reach SV_UserMove (their usercmds go through BOTLIB_USER_COMMAND),
+		// and a human with a ping of 0 needs its stats too
 		if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer)
 		{
 			Proxy_Engine_Client_UpdateUcmdStats(getClientNumFromAddr(client), &cmds[i], packetIndex);

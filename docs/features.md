@@ -94,10 +94,7 @@ Prints the network settings of every client:
 | `id` | Client number |
 | `name` | Name |
 
-A player can run the command at most once every 500 ms. Bots show `0` for `fps` and `packets`, and so does a human whose ping shows `0`, which can happen without [`proxy_sv_pingFix`](#proxy_sv_pingfix).
-
-> [!WARNING]
-> For any client with a ping of `0`, the command currently sets the engine's snapshot interval to 1 ms. A human player in that case then receives more snapshots than their `snaps` setting asks for, until their next userinfo change. See F9 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
+A player can run the command at most once every 500 ms. Bots show `0` for `fps` and `packets`. A human whose ping shows `0`, which can happen without [`proxy_sv_pingFix`](#proxy_sv_pingfix), gets real values.
 
 > [!WARNING]
 > The `timeNudge` estimate needs:

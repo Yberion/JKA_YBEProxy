@@ -53,23 +53,23 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 
 		ps = Proxy_GetPlayerStateByClientNum(i);
 		
-		// If not a bot
-		if (cl->ping >= 1)
+		// A bot's snapshotMsec can be 0, which is bad for "1000 / snapshotMsec"
+		// Read-only: writing cl->snapshotMsec changed the real snapshot rate of a human with a ping of 0
+		const int snapshotMsec = cl->snapshotMsec > 0 ? cl->snapshotMsec : 1;
+
+		// A ping of 0 is not a bot: a human whose round trip is shorter than one server frame also shows 0
+		if (cl->netchan.remoteAddress.type != NA_BOT)
 		{
 			Proxy_Engine_Client_CalcPacketsAndFPS(i, &packets, &fps);
 		}
-		else {
-			// if a bot then snapshotMsec will = 0, which is bad for "1000 / cl->snapshotMsec"
-			cl->snapshotMsec = 1;
-		}
 
-		if (1000 / cl->snapshotMsec > server.cvars.sv_fps->integer)
+		if (1000 / snapshotMsec > server.cvars.sv_fps->integer)
 		{
 			snaps = server.cvars.sv_fps->integer;
 		}
 		else
 		{
-			snaps = 1000 / cl->snapshotMsec;
+			snaps = 1000 / snapshotMsec;
 		}
 
 		// No need for truncation "feature" if we move name to the end
