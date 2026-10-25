@@ -128,7 +128,7 @@ Side effect: a text longer than `BIG_INFO_STRING - 1` characters is truncated in
 
 ## A5. Build
 
-Status: **CMake part applied**, includes and SDK folder still open.
+Status: **applied** (CMake rewrite, includes, comparison of the SDK). Two optional items are left, at the end.
 
 Problems found in the old build:
 
@@ -147,18 +147,22 @@ Applied (CMake rewrite), based on [cpp-best-practices/cmake_template](https://gi
 - `CMAKE_CXX_EXTENSIONS` stays `ON` (the template turns it off): the copied engine code may use GNU extensions. Try `OFF` later.
 - Built and tested on Windows (VS 2026), Debian 12 (GCC 12) and Fedora 44 in a container (GCC 16).
 
-Left to do:
+Includes and SDK:
 
 - Includes of the proxy code (`src/JKA_YBEProxy/`) are now all rooted at `src/` (`"JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"`, `"sdk/qcommon/q_shared.hpp"`). The files in `src/sdk/` keep the includes of their original (OpenJK and retail: bare names of the same folder, `.h` renamed `.hpp`), so a new diff against the original stays small. In `sdk/game/g_public.hpp` the `icarus/*.hpp` includes do not resolve, but they are inside `#if !defined(_GAME)`, never compiled.
-- Keep the folder name `sdk`. Compared on 2026-10-25 with OpenJK ([`260c59c`](https://github.com/JACoders/OpenJK/commit/260c59c2907187af555a676fe0cc798893bf7757)), ignoring `.h` to `.hpp` and CRLF (read only, nothing changed):
+- The folder keeps the name `sdk`. Compared on 2026-10-25 with OpenJK ([`260c59c`](https://github.com/JACoders/OpenJK/commit/260c59c2907187af555a676fe0cc798893bf7757)), ignoring `.h` to `.hpp` and CRLF (read only, nothing changed):
   - Identical to OpenJK: `ai`, `anims`, `bg_weapons`, `b_public`, `g_team`, `surfaceflags`, `tags`; `bg_vehicles` too, except for an include path.
   - Small, deliberate differences: `g_public.hpp` has the `Vehicle_t` typedef commented out; `teams.hpp` gives the enums a fixed type (`int32_t`) and includes `q_shared`; `g_local.hpp` has the `ClientConnect`/`ClientUserinfoChanged`/`ClientDisconnect`/`ClientBegin` declarations commented out (the proxy defines its own), and defines `GAMEVERSION`; `q_shared.hpp` uses `<cxxx>` headers and C++ aliases for `byte`, `qboolean`..., defines `cvar_t` (OpenJK's is commented out) and `BASE_COMPAT`; `disablewarnings.hpp` no longer disables the warnings 4136, 4284 and 4663 that OpenJK still lists.
   - `bg_public.hpp` lacks OpenJK's legacy fixes block (`CS_LEGACY_FIXES`, `legacyFixes_t`, `BG_FixSaberMoveData`, `BG_FixWeaponAttackAnim`) and the final `EV_NUM_ENTITY_EVENTS`. Nothing in the proxy uses them. The `BASE_COMPAT` guards around `PW_QUAD`, `PW_BATTLESUIT`, `EV_POWERUP_QUAD` and `EV_POWERUP_BATTLESUIT` are active because `q_shared.hpp` defines `BASE_COMPAT`, so the enum values are the same as the retail ones.
   - Not comparable: `qcommon.hpp`, `server.hpp` and `sys_public.hpp` are cut down to the structures the proxy needs, with the retail layout; `files.cpp`, `sv_client.cpp` (`ClientCleanName`) and `q_string.cpp` are short extracts.
   - Up to date on 2026-10-25: the local clones of OpenJK, JK2MV, ioq3 and Quake3e are at the head of their upstream. TaystJK has one newer commit, a cgame-only change ([`21044fb`](https://github.com/taysta/TaystJK/commit/21044fb2)).
   - Functions copied into `sdk` (`va`, `COM_CompareExtension`, `COM_DefaultExtension`, `Info_ValueForKey`, `Q_CleanStr`, `Q_strcat`, `Q_stricmpn`, `Q_StripColor`, `FS_CheckDirTraversal`) and `q_color.hpp`, `q_math.hpp`: same logic as OpenJK and ioq3 (only `std::size_t` instead of `int`/`size_t`). `Proxy_ClientCleanName` matches OpenJK's `ClientCleanName` and TaystJK's `SV_ClientCleanName`; TaystJK only strips the leading `*` on a retail game module. OpenJK has two things the SDK lacks and the proxy does not use: the `arm64` macOS branch of `q_platform.h` and `Q_PrintStrLenTo`.
-  - Still open: the sizes of `playerState_t`, `entityState_t` and `usercmd_t` are not checked by a `static_assert` (see the engine structures item above).
+
+Optional, left open:
+
 - Add `.clang-format` / `.clang-tidy` once a style is chosen (the template has both).
+- Check the sizes of `playerState_t`, `entityState_t` and `usercmd_t` with a `static_assert` (see the engine structures item above).
+- Try `CMAKE_CXX_EXTENSIONS OFF`, `/permissive-` and the hardening option.
 
 ## A6. Pinned loader and reloadable plugin
 

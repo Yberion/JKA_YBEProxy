@@ -92,7 +92,7 @@ The engine reloads the game module on every map change.
 
 ## Building
 
-Requirements: CMake 3.25 or later and a C++20 compiler (Visual Studio 2026, GCC or Clang). The build is described by [CMakePresets.json](CMakePresets.json); list the presets with `cmake --list-presets`. The module is written to `build/<preset>/bin/`.
+Requirements: CMake 3.25 or later and a C++20 compiler (Visual Studio 2026, GCC or Clang). The build is described by [CMakePresets.json](CMakePresets.json); list the presets with `cmake --list-presets`. Without an explicit build type, CMake builds in Release. The module is written to `build/<preset>/bin/`.
 
 ### Windows
 
