@@ -11,7 +11,6 @@
 - **Create a plugin system.** See A6 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
 - Rate policy.
 - Snaps policy.
-- Only apply hooks on x86 (check the defines).
 
 ### Bugs
 
@@ -89,3 +88,4 @@ Wanted behaviour: banning `152.0` bans `152.0.*.*` only, and player B can still 
 - Uptime in the new `rcon status`: it would need a hook on `SV_Init()`, which is not possible.
 - Extend the `jedi_/red` model check to every `jedi_*` model, as EternalJK does (`g_blockUnknownJediModelsInTeamGametypes`): only the six base Jedi models (`jedi_hf`, `jedi_hm`, `jedi_kdm`, `jedi_rm`, `jedi_tf`, `jedi_zf`) would be allowed in team gametypes, anything else becomes `kyle`. The proxy already replaces `jedi_` without a species. The rest is a server policy that would also block valid custom `jedi_*` models, and nobody asked for it.
 - Patch `NET_SendPacket` to log packets. Maybe only packets under about 300 bytes, because some packets, such as info responses, are large.
+- Only apply hooks on x86 (check the defines): the hooks are only installed when the `version` cvar is the original 32-bit engine (`win-x86` or `linux-i386`), so a 64-bit build never hooks anything. The hook code still compiles in a 64-bit build but never runs.
