@@ -31,6 +31,7 @@
 - Fixed a possible server crash (division by zero) in the `/netStatus` `timeNudge` estimate when `sv_fps` was set to `0` (original engine, with `proxy_sv_enableNetStatus 1`). Setting `sv_fps` requires rcon or the server console.
 - The proxy's per-client data is now reset on every disconnect, also for a client that leaves before entering the game. Before, the next client of the slot could inherit it.
 - Client command fixes now compare command names and arguments whole, as the game does, instead of by prefix. `npc spawn` is now only refused for `ragnos` and `saber_droid`, not for every NPC type that starts with `saber_`, and commands such as `teamvote` or `gcX` are no longer caught by the `team` and `gc` checks. The `jkaDST_` anti-cheat check stays a prefix.
+- `rcon status` checks that the gametype is in range before printing its name. The game already keeps it in range, so this changes nothing in practice.
 - Removed `proxy_sv_enableRconCmdCooldown`, replaced by the rcon rate limiting. When set to `1`, its 500 ms cooldown applied to every rcon packet, even with a wrong password, so a flood of rcon packets also blocked the admins' commands. With the default `0`, rcon had no limit at all.
 
 ## 0.19.0 Beta
