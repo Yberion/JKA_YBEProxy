@@ -1,6 +1,7 @@
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 #include "JKA_YBEProxy/Proxy_Header.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_snapshot.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_NetStatus.hpp"
 
 /*
 ====================
@@ -62,6 +63,13 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageSent = (proxy.originalEngineCvars.proxy_sv_pingFix.integer ? proxy.trap->Milliseconds() : server.svs->time);
 	// Proxy <--------------
 	client->frames[client->netchan.outgoingSequence & PACKET_MASK].messageAcked = -1;
+
+	// Proxy -------------->
+	if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer)
+	{
+		Proxy_Engine_NetStatus_SnapshotSent(client);
+	}
+	// Proxy <--------------
 
 	// send the datagram
 	server.functions.SV_Netchan_Transmit(client, msg);	//msg->cursize, msg->data );
