@@ -29,6 +29,7 @@
 - Added the missing bounds checks to the player ghosting fix (`SV_SvEntityForGentity`, original engine), as in JK2MV. The index computed from the entity's address was never checked, and it divided by zero before the game located its entities. With the retail game this was not reachable, since it always passes entities of its own array.
 - Fixed `/netStatus` (original engine): for any client with a ping of `0`, it set the engine's snapshot interval to 1 ms, so a human with a very low ping then received more snapshots than their `snaps` setting asked for, until their next userinfo change. `/netStatus` now only reads the engine state. Bots are detected by their address type instead of their ping, and a human with a ping of `0` now gets real `fps` and `packets` values.
 - Fixed a possible server crash (division by zero) in the `/netStatus` `timeNudge` estimate when `sv_fps` was set to `0` (original engine, with `proxy_sv_enableNetStatus 1`). Setting `sv_fps` requires rcon or the server console.
+- The proxy's per-client data is now reset on every disconnect, also for a client that leaves before entering the game. Before, the next client of the slot could inherit it.
 - Removed `proxy_sv_enableRconCmdCooldown`, replaced by the rcon rate limiting. When set to `1`, its 500 ms cooldown applied to every rcon packet, even with a wrong password, so a flood of rcon packets also blocked the admins' commands. With the default `0`, rcon had no limit at all.
 
 ## 0.19.0 Beta

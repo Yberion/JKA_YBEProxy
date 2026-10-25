@@ -57,7 +57,9 @@ const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qbo
 
 void Proxy_SharedAPI_ClientDisconnect(int clientNum)
 {
-	if (clientNum >= 0 && clientNum < MAX_CLIENTS && proxy.clientData[clientNum].isConnected) {
+	// No isConnected test: it is only set in ClientBegin, so a client that leaves before entering the game
+	// would leave its data (cleanName, sendWelcomeMessage) to the next client of the slot
+	if (clientNum >= 0 && clientNum < MAX_CLIENTS) {
 		// Reset client's data on disconnect
 		std::memset(&proxy.clientData[clientNum], 0, sizeof(*proxy.clientData));
 	}
