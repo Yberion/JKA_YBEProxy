@@ -117,11 +117,12 @@ These are always on and need no configuration.
 Engine: Any.
 
 - The proxy ignores commands from a client that has not fully entered the game yet.
+- Command names and arguments are compared whole and without case, as the game does.
 - It drops commands that contain `\r` or `\n`.
 - It drops commands that contain `;`, except `say`, `say_team` and `tell`. This prevents command injection.
 - It drops `say`, `say_team` and `tell` with more than 256 characters (crash fix).
 - It drops `gc` with a client number equal to or above `sv_maxclients` (crash fix).
-- It drops `npc spawn ragnos` and `npc spawn saber_droid` (crash fix). The current check blocks every NPC name that starts with `saber_`.
+- It drops `npc spawn ragnos` and `npc spawn saber_droid` (crash fix).
 - It drops `team follow1` and `team follow2` (spectator follow crash fix).
 - `callteamvote` is disabled: it is useless in basejka and breaks the UI on some custom clients.
 - `callvote`:

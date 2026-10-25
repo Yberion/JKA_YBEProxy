@@ -96,6 +96,9 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 
 	proxy.trap->Argv(0, cmd, sizeof(cmd));
 
+	// The commands and arguments below are compared whole (Q_stricmp), as the game does: a prefix also matched
+	// other commands ("team" matched "teamvote") and other arguments ("saber_droid" only compared "saber_")
+	// jkaDST_ stays a prefix: it catches every command of the cheat
 	if (!Q_stricmpn(cmd, "jkaDST_", 7))
 	{
 		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", currentClientData->cleanName));
@@ -107,7 +110,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	// Todo (not sure): Check in the entier command + args?
 	const char* argsConcat = ConcatArgs(1);
 
-	if (!Q_stricmpn(cmd, "say", 3) || !Q_stricmpn(cmd, "say_team", 8) || !Q_stricmpn(cmd, "tell", 4))
+	if (!Q_stricmp(cmd, "say") || !Q_stricmp(cmd, "say_team") || !Q_stricmp(cmd, "tell"))
 	{
 		sayCmd = qtrue;
 
@@ -127,35 +130,35 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	proxy.trap->Argv(2, cmd_arg2, sizeof(cmd_arg2));
 
 	// Fix: crach gc
-	if (!Q_stricmpn(cmd, "gc", 2) && atoi(cmd_arg1) >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients"))
+	if (!Q_stricmp(cmd, "gc") && atoi(cmd_arg1) >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients"))
 	{
 		return qfalse;
 	}
 
 	// Fix: crash npc spawn
-	if (!Q_stricmpn(cmd, "npc", 3) && !Q_stricmpn(cmd_arg1, "spawn", 5) && (!Q_stricmpn(cmd_arg2, "ragnos", 6) || !Q_stricmpn(cmd_arg2, "saber_droid", 6)))
+	if (!Q_stricmp(cmd, "npc") && !Q_stricmp(cmd_arg1, "spawn") && (!Q_stricmp(cmd_arg2, "ragnos") || !Q_stricmp(cmd_arg2, "saber_droid")))
 	{
 		return qfalse;
 	}
 
 	// Fix: team crash
-	if (!Q_stricmpn(cmd, "team", 4) && (!Q_stricmpn(cmd_arg1, "follow1", 7) || !Q_stricmpn(cmd_arg1, "follow2", 7)))
+	if (!Q_stricmp(cmd, "team") && (!Q_stricmp(cmd_arg1, "follow1") || !Q_stricmp(cmd_arg1, "follow2")))
 	{
 		return qfalse;
 	}
 
 	// Disable: callteamvote, useless in basejka and can lead to a bugged UI on custom client
-	if (!Q_stricmpn(cmd, "callteamvote", 12))
+	if (!Q_stricmp(cmd, "callteamvote"))
 	{
 		return qfalse;
 	}
 
-	if (proxy.cvars.proxy_sv_disableKillCmd.integer && !Q_stricmpn(cmd, "kill", 4))
+	if (proxy.cvars.proxy_sv_disableKillCmd.integer && !Q_stricmp(cmd, "kill"))
 	{
 		return qfalse;
 	}
 
-	if (!Q_stricmpn(cmd, "callvote", 8))
+	if (!Q_stricmp(cmd, "callvote"))
 	{
 		const int cmdArg2NumberValue = atoi(cmd_arg2);
 
@@ -170,7 +173,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		}
 
 		// Fix: callvote capturelimit with wrong values
-		if (!Q_stricmpn(cmd_arg1, "capturelimit", 12))
+		if (!Q_stricmp(cmd_arg1, "capturelimit"))
 		{
 			minArg2Value = 0;
 			maxArg2Value = 0x7FFFFFFF;
@@ -178,7 +181,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		}
 
 		// Fix: callvote fraglimit with wrong values
-		if (!Q_stricmpn(cmd_arg1, "fraglimit", 9))
+		if (!Q_stricmp(cmd_arg1, "fraglimit"))
 		{
 			minArg2Value = 0;
 			maxArg2Value = 0x7FFFFFFF;
@@ -186,7 +189,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		}
 
 		// Fix: callvote g_doWarmup with wrong values
-		if (!Q_stricmpn(cmd_arg1, "g_doWarmup", 10))
+		if (!Q_stricmp(cmd_arg1, "g_doWarmup"))
 		{
 			minArg2Value = 0;
 			maxArg2Value = 1;
@@ -194,7 +197,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		}
 
 		// Fix: callvote map_restart with wrong values
-		if (!Q_stricmpn(cmd_arg1, "map_restart", 11))
+		if (!Q_stricmp(cmd_arg1, "map_restart"))
 		{
 			minArg2Value = 0;
 			maxArg2Value = proxy.cvars.proxy_sv_maxCallVoteMapRestartValue.integer;
@@ -202,7 +205,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		}
 
 		// Fix: callvote timelimit with wrong values
-		if (!Q_stricmpn(cmd_arg1, "timelimit", 9))
+		if (!Q_stricmp(cmd_arg1, "timelimit"))
 		{
 			minArg2Value = 0;
 			maxArg2Value = 35790;
@@ -225,7 +228,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		return qfalse;
 	}
 
-	if (!Q_stricmpn(cmd, "myratio", 7))
+	if (!Q_stricmp(cmd, "myratio"))
 	{
 		Proxy_ClientCommand_MyRatio(clientNum);
 
@@ -235,7 +238,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	// Only work on default engine since it require memory hook
 	if (proxy.isOriginalEngine)
 	{
-		if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer && (!Q_stricmpn(cmd, "netStatus", 9) || !Q_stricmpn(cmd, "showNet", 7)))
+		if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer && (!Q_stricmp(cmd, "netStatus") || !Q_stricmp(cmd, "showNet")))
 		{
 			Proxy_Engine_ClientCommand_NetStatus(clientNum);
 
