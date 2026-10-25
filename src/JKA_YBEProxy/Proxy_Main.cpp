@@ -11,7 +11,6 @@
 #include "RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 #include "Proxy_SharedAPI.hpp"
 #include "Proxy_Translate_SystemCalls.hpp"
-#include "Wrappers/Proxy_OpenJKAPI_Wrappers.hpp"
 #include "Wrappers/Proxy_OriginalAPI_Wrappers.hpp"
 
 Proxy_t proxy = { 0 };
@@ -108,10 +107,10 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		{
 			if (proxy.isOriginalEngine)
 			{
-				// On "rcon map XXX" or "rcon map_restart 0" it directly goes there from SVC_RemoteCommand
-				// the problem here is that Com_EndRedirect() isn't called after the
-				// Cmd_ExecuteString() of the map change
-				// We need to manually call the Com_EndRedirect()
+				// On "rcon map XXX" or "rcon map_restart 0" it directly goes there from SVC_RemoteCommand,
+				// which only calls Com_EndRedirect() once Cmd_ExecuteString() returns, after the whole map load
+				// While the redirect is active, Com_Printf skips the console and the log file: end it here,
+				// so the rest of the map load is printed there. The later Com_EndRedirect() then does nothing
 				server.common.functions.Com_EndRedirect();
 
 				proxy.trap->Print("----- Proxy: Unpatching engine\n");
@@ -156,7 +155,13 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CLIENT_CONNECT: // (int clientNum, qboolean firstTime, qboolean isBot)
 		//==================================================
 		{
-			Proxy_SharedAPI_ClientConnect((int)arg0, (qboolean)arg1, (qboolean)arg2);
+			const char* reason = Proxy_SharedAPI_ClientConnect((int)arg0, (qboolean)arg1, (qboolean)arg2);
+
+			// The engine refuses the client with this reason, as with the game's "Banned."
+			if (reason)
+			{
+				return (intptr_t)reason;
+			}
 
 			break;
 		}
@@ -203,7 +208,11 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CLIENT_USERINFO_CHANGED: // (int clientNum)
 		//==================================================
 		{
-			Proxy_SharedAPI_ClientUserinfoChanged((int)arg0);
+			// The client got dropped: don't forward, the game would set CS_PLAYERS again for a gone client (ghost player)
+			if (!Proxy_SharedAPI_ClientUserinfoChanged((int)arg0))
+			{
+				return 0;
+			}
 
 			break;
 		}
@@ -222,53 +231,4 @@ Q_CABI Q_EXPORT void dllEntry(systemCallFuncPtr_t systemCallFuncPtdr) {
 	Proxy_Translate_SystemCalls();
 }
 
-Q_CABI Q_EXPORT gameExport_t* QDECL GetModuleAPI(int apiVersion, gameImport_t* import)
-{
-	assert(import);
-
-	// Needed for trap_... calls inside of the proxy
-	proxy.trap = import;
-
-	Com_Printf = proxy.trap->Print;
-	Com_Error = proxy.trap->Error;
-
-	if (apiVersion != GAME_API_VERSION)
-	{
-		proxy.trap->Print("=========================================================================\n");
-		proxy.trap->Print("----- Proxy: Mismatched GAME_API_VERSION: expected %i, got %i, exiting\n", GAME_API_VERSION, apiVersion);
-		proxy.trap->Print("=========================================================================\n");
-
-		return nullptr;
-	}
-
-	Proxy_LoadGameLibrary();
-
-	GetGameAPI_t jampGameGetModuleAPI = (GetGameAPI_t)YBEProxy_GetFunctionAddress(proxy.jampgameHandle, "GetModuleAPI");
-
-	if (!jampGameGetModuleAPI)
-	{
-		proxy.trap->Print("==================================================================================\n");
-		proxy.trap->Print("----- Proxy: Failed to find GetModuleAPI function, loading vmMain and dllEntry\n");
-		proxy.trap->Print("==================================================================================\n");
-
-		Proxy_GetOriginalGameAPI();
-
-		return nullptr;
-	}
-
-	static gameImport_t _copyOpenJKAPIGameImportTable = { 0 };
-	static gameExport_t _copyOpenJKAPIGameExportTable = { 0 };
-
-	proxy.originalOpenJKAPIGameImportTable = import;
-	std::memcpy(&_copyOpenJKAPIGameImportTable, import, sizeof(gameImport_t));
-	proxy.copyOpenJKAPIGameImportTable = &_copyOpenJKAPIGameImportTable;
-
-	proxy.originalOpenJKAPIGameExportTable = jampGameGetModuleAPI(apiVersion, &_copyOpenJKAPIGameImportTable);
-	std::memcpy(&_copyOpenJKAPIGameExportTable, proxy.originalOpenJKAPIGameExportTable, sizeof(gameExport_t));
-	proxy.copyOpenJKAPIGameExportTable = &_copyOpenJKAPIGameExportTable;
-
-	Proxy_OpenJKAPI_InitLayerExportTable();
-	Proxy_OpenJKAPI_InitLayerImportTable();
-
-	return proxy.copyOpenJKAPIGameExportTable;
-}
+// No GetModuleAPI export: OpenJK then loads the proxy through dllEntry and vmMain (legacy API), as the original engine does

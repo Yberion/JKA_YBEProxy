@@ -68,7 +68,11 @@ void Proxy_SV_Status_f(void)
 	server.common.functions.Com_Printf("hostname: %s^7\n", hostname);
 	server.common.functions.Com_Printf("server  : %s:%i, %s, %s\n", server.common.functions.Cvar_VariableString("net_ip"), proxy.trap->Cvar_VariableIntegerValue("net_port"), STATUS_OS, ded_table[server.common.cvars.com_dedicated->integer]);
 	server.common.functions.Com_Printf("game    : %s %i, %s\n", VERSION_STRING_DOTTED, PROTOCOL_VERSION, Proxy_FS_GetCurrentGameDir());
-	server.common.functions.Com_Printf("map     : ^7%s^7, %s(%i)\n", server.cvars.sv_mapname->string, gametypeNames[server.cvars.sv_gametype->integer], server.cvars.sv_gametype->integer);//Do we need to validate sv_gametype is 0-9? don't think so
+	// The game clamps g_gametype at GAME_INIT, so it should always be in range, but the check costs nothing
+	const int gametype = server.cvars.sv_gametype->integer;
+	const char* gametypeName = (gametype >= 0 && gametype < (int)ARRAY_LEN(gametypeNames)) ? gametypeNames[gametype] : "Unknown";
+
+	server.common.functions.Com_Printf("map     : ^7%s^7, %s(%i)\n", server.cvars.sv_mapname->string, gametypeName, gametype);
 	server.common.functions.Com_Printf("players : %i %s, %i %s(%i max)\n", humans, (humans == 1 ? "human" : "humans"), bots, (bots == 1 ? "bot" : "bots"), server.cvars.sv_maxclients->integer - server.cvars.sv_privateClients->integer);
 
 	server.common.functions.Com_Printf("score ping rate   address                id name \n");

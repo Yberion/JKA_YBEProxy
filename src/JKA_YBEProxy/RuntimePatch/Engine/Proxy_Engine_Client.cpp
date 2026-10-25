@@ -100,6 +100,14 @@ void Proxy_Engine_Client_UpdateTimenudge(client_t* client, usercmd_t* cmd, int _
 	}
 
 	const int svFps = server.cvars.sv_fps->integer;
+
+	// "rcon sv_fps 0": the engine only resets it to 10 at the start of the next SV_Frame, and this runs before
+	// Keep the data and compute at the next call, instead of dividing by zero below
+	if (svFps <= 0)
+	{
+		return;
+	}
+
 	const int magicOffset = Proxy_GetTimenudgeMagicOffset(svFps);
 
 	// ((serverTime - sv.time) + ping -magicOffset + (1000/sv_fps)) * -1

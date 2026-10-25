@@ -5,9 +5,6 @@ The "Engine" information below means:
 - **Original**: only with the original 1.01 engine (`jampDed.exe` / `linuxjampded`), because the feature needs an engine patch.
 - **Any**: with the original engine and with OpenJK.
 
-> [!WARNING]
-> On OpenJK, proxy cvars are currently never registered, so they all read as `0`. Among other things, `proxy_sv_modelPathLength` at `0` replaces every model with `kyle`. See F4 in [audit/fixes.md](audit/fixes.md).
-
 ## Cvars
 
 All proxy cvars are archived (`CVAR_ARCHIVE`). The proxy reads them again about once per second, so a change applies without a restart.
@@ -15,7 +12,6 @@ All proxy cvars are archived (`CVAR_ARCHIVE`). The proxy reads them again about 
 | Cvar | Default | Engine | Summary |
 | --- | --- | --- | --- |
 | [`proxy_sv_pingFix`](#proxy_sv_pingfix) | `0` | Original | More accurate ping |
-| [`proxy_sv_enableRconCmdCooldown`](#proxy_sv_enablerconcmdcooldown) | `0` | Original | 500 ms cooldown between rcon commands |
 | [`proxy_sv_enableNetStatus`](#proxy_sv_enablenetstatus) | `0` | Original | Enables `/netStatus` and `/showNet` |
 | [`proxy_sv_maxCallVoteMapRestartValue`](#proxy_sv_maxcallvotemaprestartvalue) | `60` | Any | Highest delay allowed for `callvote map_restart` |
 | [`proxy_sv_disableKillCmd`](#proxy_sv_disablekillcmd) | `0` | Any | Disables `/kill` |
@@ -38,20 +34,6 @@ Values:
 
 > [!WARNING]
 > The `timeNudge` column of [`/netStatus`](#netstatus-shownet) needs this fix. With `0`, that column is wrong.
-
-### `proxy_sv_enableRconCmdCooldown`
-
-Engine: Original.
-
-The original engine accepts one rcon packet every 500 ms from anyone, before it checks the password. An attacker who keeps sending rcon packets locks the real admins out (the "rcon disabler" exploit). The proxy always removes that engine timer.
-
-Values:
-
-- `0` (default): no limit. The rcon password can be brute-forced, so use a long random `rconpassword`.
-- `1`: the proxy applies its own 500 ms cooldown between rcon commands.
-
-> [!WARNING]
-> The proxy cooldown is global and is counted before the password check, so enabling it brings the rcon disabler back. A replacement is planned that only limits bad passwords, so admins keep rcon during a flood even with spoofed IPs. See F6 in [audit/fixes.md](audit/fixes.md).
 
 ### `proxy_sv_enableNetStatus`
 
@@ -87,13 +69,10 @@ When a model name is this length or longer, the proxy replaces it with `kyle`. L
 
 The proxy checks the model:
 
-- when the game processes a userinfo change (any engine);
+- on connect, and when the game processes a userinfo change (any engine);
 - in the engine's `SV_UserinfoChanged` as well (original engine only).
 
 Values: a number. Default `64`.
-
-> [!WARNING]
-> At connection time, the game module still receives the raw userinfo. See F2 in [audit/fixes.md](audit/fixes.md).
 
 ## Commands
 
@@ -115,10 +94,7 @@ Prints the network settings of every client:
 | `id` | Client number |
 | `name` | Name |
 
-A player can run the command at most once every 500 ms. Bots show `0` for `fps` and `packets`, and so does a human whose ping shows `0`, which can happen without [`proxy_sv_pingFix`](#proxy_sv_pingfix).
-
-> [!WARNING]
-> For any client with a ping of `0`, the command currently sets the engine's snapshot interval to 1 ms. A human player in that case then receives more snapshots than their `snaps` setting asks for, until their next userinfo change. See F9 in [audit/fixes.md](audit/fixes.md).
+A player can run the command at most once every 500 ms. Bots show `0` for `fps` and `packets`. A human whose ping shows `0`, which can happen without [`proxy_sv_pingFix`](#proxy_sv_pingfix), gets real values.
 
 > [!WARNING]
 > The `timeNudge` estimate needs:
@@ -132,12 +108,6 @@ Engine: Any.
 
 Prints your score (used as kills), deaths, suicides, kill/death ratio, and kills minus deaths. Only in Free For All, Duel and Team FFA. A player can run it at most once per second.
 
-> [!WARNING]
-> Two known issues:
->
-> - The gametype check reads a cvar that does not exist, so it always passes. See F5 in [audit/fixes.md](audit/fixes.md).
-> - On OpenJK, the command never answers. See F4 in [audit/fixes.md](audit/fixes.md).
-
 ## Automatic fixes
 
 These are always on and need no configuration.
@@ -147,11 +117,12 @@ These are always on and need no configuration.
 Engine: Any.
 
 - The proxy ignores commands from a client that has not fully entered the game yet.
+- Command names and arguments are compared whole and without case, as the game does.
 - It drops commands that contain `\r` or `\n`.
 - It drops commands that contain `;`, except `say`, `say_team` and `tell`. This prevents command injection.
 - It drops `say`, `say_team` and `tell` with more than 256 characters (crash fix).
 - It drops `gc` with a client number equal to or above `sv_maxclients` (crash fix).
-- It drops `npc spawn ragnos` and `npc spawn saber_droid` (crash fix). The current check blocks every NPC name that starts with `saber_`.
+- It drops `npc spawn ragnos` and `npc spawn saber_droid` (crash fix).
 - It drops `team follow1` and `team follow2` (spectator follow crash fix).
 - `callteamvote` is disabled: it is useless in basejka and breaks the UI on some custom clients.
 - `callvote`:
@@ -170,19 +141,18 @@ Engine: Any.
 
 Engine: Any.
 
+The proxy checks the userinfo on connect, on the reconnect after each map change, and on every userinfo change. Bots are not checked on connect.
+
 - Names are cleaned, using a port of OpenJK's `ClientCleanName`:
   - leading spaces and `*` are removed;
   - control characters are removed;
   - runs of more than 3 spaces or `@` are shortened;
   - an empty name becomes `Padawan`.
-- The model is replaced with `kyle` when it is `jedi_/red`, `jedi_/blue`, `rancor` or `wampa` (today also any start of these names, see F3 in [audit/fixes.md](audit/fixes.md)), when it contains a character outside printable ASCII, or when it is too long (see [`proxy_sv_modelPathLength`](#proxy_sv_modelpathlength)).
+- The model is replaced with `kyle` when it is empty, when it starts with `rancor` or `wampa` (any skin), when it is `jedi_` without a species (`jedi_` alone or with any skin), when it contains a character outside printable ASCII, or when it is too long (see [`proxy_sv_modelPathLength`](#proxy_sv_modelpathlength)).
 - `forcepowers` must look like `rank-side-powers` (22 to 24 characters). Otherwise the proxy replaces it with `7-1-030000000000003332` (crash fix).
 
 > [!WARNING]
-> Two known gaps:
->
-> - These fixes are not applied to the userinfo the client sends when it connects. See F2 in [audit/fixes.md](audit/fixes.md).
-> - Neither the engine nor the proxy keeps the `ip` key of the userinfo up to date, so a client can fake it and avoid an IP ban after the next map change. See O1 in [audit/other-engines.md](audit/other-engines.md).
+> Neither the engine nor the proxy keeps the `ip` key of the userinfo up to date, so a client can fake it and avoid an IP ban after the next map change. See O1 in [audit-2026-10-25/other-engines.md](audit-2026-10-25/other-engines.md).
 
 ### User commands
 
@@ -191,22 +161,16 @@ Engine: Any.
 - The proxy resets a force power selection of levitation, or out of range, to none (force exploit fix).
 - It forces the roll angle to `0` (angle exploit fix).
 
-> [!WARNING]
-> On OpenJK, these fixes currently have no effect. See F4 in [audit/fixes.md](audit/fixes.md).
-
 ### Anti-cheat
 
 Engine: Any.
 
 - A client that sends a command starting with `jkaDST_` is kicked, with a public message.
-- A client using the `darksidetools` model is kicked, with a public message.
-
-> [!WARNING]
-> The model check has false positives (empty model, any prefix of `darksidetools`) and can be bypassed. See F3 in [audit/fixes.md](audit/fixes.md).
+- A client using a model that starts with `darksidetools` is kicked, with a public message. On connect, it is refused with the same reason, without the public message.
 
 ### Welcome message
 
-Engine: Original. On their first connection, human players receive a message with the proxy name and version.
+Engine: Any. When they enter the game after their first connection, human players receive a message with the proxy name and version.
 
 ### Engine fixes
 
@@ -214,6 +178,7 @@ Engine: Original.
 
 - `Com_Printf` formats into a bounded buffer. The original `vsprintf` could overflow.
 - `Cmd_TokenizeString` is replaced by the Quake 3 1.32 version (`Cmd_TokenizeString2`).
+- `Info_Print`, used by `serverinfo`, `systeminfo` and `dumpuser`, gets the ioq3/OpenJK buffer sizes. A key or value of 512 characters or more, such as one a client puts in its userinfo, no longer crashes the server.
 - Client packet processing (`SV_ExecuteClientMessage`, `SV_UserMove`) is rewritten with ioquake3 fixes:
   - the gamestate is only resent when the client really dropped it;
   - a client that floods text commands has those commands ignored, but its movement is still processed;
@@ -224,13 +189,19 @@ Engine: Original.
   - paths with directory traversal are refused (q3dirtrav fix);
   - only pk3 files referenced by the server can be downloaded;
   - download commands are refused once the client is in the game.
-- `getstatus` and `getinfo` requests with an argument longer than 128 characters are ignored (q3infoboom fix).
+- `getstatus` and `getinfo`:
+  - requests with an argument longer than 128 characters are ignored (q3infoboom fix);
+  - rate limiting, so the server cannot be used to amplify a DDoS: each address gets a burst of 10, then 1 per second, and the server answers a burst of 10, then 10 per second in total. Requests beyond that are ignored. During a flood the server may briefly disappear from server browsers.
+- `getchallenge` and `connect`: the same per-address limit, shared with `getstatus` and `getinfo` (a burst of 10, then 1 per second), as Quake3e. Requests beyond that are ignored. Players behind one public address (LAN party, carrier NAT) who connect at the same time may wait a few seconds: their client retries every 3 seconds.
+- With `developer 1`, every request dropped by these limits, rcon included, is printed in the server console, as in ioq3 and Quake3e.
 - rcon:
-  - the engine's 500 ms timer is removed (see [`proxy_sv_enableRconCmdCooldown`](#proxy_sv_enablerconcmdcooldown));
-  - rcon output is sent in chunks of 1008 bytes, so long output such as `rcon status` is no longer truncated;
-  - `writeconfig` refuses a file name with a 3-letter extension other than `.cfg`. Shorter extensions such as `.so` get through, and `vstr`/`exec` bypass the check, see F7 in [audit/fixes.md](audit/fixes.md).
+  - the engine's 500 ms timer is removed. It was global and checked before the password, so anyone could lock the admins out (rcon disabler fix);
+  - a valid password is never limited, even during a flood with spoofed addresses;
+  - bad passwords are limited for the whole server, whatever the addresses: a burst of 10, then 1 per second. Packets beyond that are ignored without a reply;
+  - rcon output is sent in chunks of 1008 bytes, so long output such as `rcon status` is no longer truncated.
+- `writeconfig` only writes `.cfg` files. A name without an extension still gets `.cfg`. It refuses any other extension, a name with `..`, and the reserved names `mpdefault.cfg` and `default.cfg`. The check is in the command itself, so it applies to rcon, the server console, `vstr` and `exec`.
 - `status` is rewritten:
   - it shows the hostname, address, OS, version, gamedir, map, gametype, and the number of humans and bots;
   - the name is printed last, so it is never truncated.
-- `SV_SvEntityForGentity` computes the entity index from the entity's address instead of trusting `s.number`, like JK2MV's fix for the "player ghosting" bug (players walking through another player).
+- `SV_SvEntityForGentity` computes the entity index from the entity's address instead of trusting `s.number`, like JK2MV's fix for the "player ghosting" bug (players walking through another player). When the address is not an entity of the game's array, it falls back to `s.number`, and an index out of range stops with an error instead of reading outside the array.
 - Ping calculation: bots show `0`, and the accurate mode is available (see [`proxy_sv_pingFix`](#proxy_sv_pingfix)).

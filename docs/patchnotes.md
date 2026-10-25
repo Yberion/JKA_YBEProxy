@@ -3,6 +3,42 @@
 > [!WARNING]
 > The proxy is a work in progress.
 
+## Unreleased
+
+- The userinfo sent on connect is now checked before the game reads it. The name, model and `forcepowers` fixes were skipped until the client's first userinfo change, and now also apply on connect and on the reconnect after each map change.
+- The anti-cheat now refuses a client on connect, with its reason, instead of kicking it later.
+- Fixed a ghost player entry left after an anti-cheat kick.
+- Fixed the darksidetools anti-cheat: an empty model, or any start of `darksidetools` (`d`, `dark`…), kicked the player, and `darksidetools/default` was not detected. Every model that starts with `darksidetools` is now kicked.
+- Every `rancor` and `wampa` model, skins included, and `jedi_` without a species, with any skin, are now replaced with `kyle`. Before, `rancor/default` or `jedi_/green` got through. An empty model also becomes `kyle`.
+- OpenJK: the proxy no longer exports `GetModuleAPI`, so OpenJK loads it through `dllEntry` and `vmMain`, like the original engine. This fixes, on OpenJK:
+  - proxy cvars that were never registered (every model was replaced with `kyle`, every `callvote map_restart` above `0` was refused);
+  - `/myratio`, which never answered;
+  - the levitation and roll angle fixes, which had no effect;
+  - the startup log;
+  - the welcome message, now sent when the player enters the game (OpenJK dropped it on connect);
+  - a retail game module, which failed to start.
+- Fixed the gametype check of `/myratio`: it read a `sv_gametype` cvar that does not exist, so it always passed. It now reads `g_gametype`.
+- The proxy no longer adds `sv_fps` and a bogus `sv_gametype` to the serverinfo. On a server that ran an older proxy, they stay in it until the next server restart.
+- Likely fix for the intermittent crash on `rcon map` and `rcon map_restart` (original engine). The out-of-band packet checks (`getstatus`/`getinfo` length, rcon cooldown and `writeconfig`, `ipAuthorize`) now run in one filter at the entry of `SV_PacketEvent`, which returns before the original packet code runs. No proxy code is left on the call stack when the engine unloads the proxy during the map change. The crash was never reproduced, so the fix is not confirmed.
+- Added rate limiting on out-of-band packets (original engine):
+  - rcon: a valid password is never limited. Bad passwords are limited for the whole server to a burst of 10, then 1 per second, so the password can no longer be brute-forced quickly;
+  - `getstatus` / `getinfo`: a burst of 10, then 1 per second per address, and 10 per second in total, so the server can no longer be used to amplify a DDoS;
+  - `getchallenge` / `connect`: the same per-address limit, shared with `getstatus` / `getinfo`, as Quake3e;
+  - with `developer 1`, each dropped request is printed in the server console, as in ioq3 and Quake3e.
+- Fixed the `writeconfig` filter (original engine). It only blocked a 3-letter extension other than `.cfg` in rcon, so `x.so`, a `.pk3`, `../` paths, or the command run through `vstr`/`exec` got through. `writeconfig` itself now refuses anything but a `.cfg` file name, a name with `..`, and `mpdefault.cfg`/`default.cfg`, as in OpenJK.
+- Added the missing bounds checks to the player ghosting fix (`SV_SvEntityForGentity`, original engine), as in JK2MV. The index computed from the entity's address was never checked, and it divided by zero before the game located its entities. With the retail game this was not reachable, since it always passes entities of its own array.
+- Fixed `/netStatus` (original engine): for any client with a ping of `0`, it set the engine's snapshot interval to 1 ms, so a human with a very low ping then received more snapshots than their `snaps` setting asked for, until their next userinfo change. `/netStatus` now only reads the engine state. Bots are detected by their address type instead of their ping, and a human with a ping of `0` now gets real `fps` and `packets` values.
+- Fixed a possible server crash (division by zero) in the `/netStatus` `timeNudge` estimate when `sv_fps` was set to `0` (original engine, with `proxy_sv_enableNetStatus 1`). Setting `sv_fps` requires rcon or the server console.
+- The proxy's per-client data is now reset on every disconnect, also for a client that leaves before entering the game. Before, the next client of the slot could inherit it.
+- Client command fixes now compare command names and arguments whole, as the game does, instead of by prefix. `npc spawn` is now only refused for `ragnos` and `saber_droid`, not for every NPC type that starts with `saber_`, and commands such as `teamvote` or `gcX` are no longer caught by the `team` and `gc` checks. The `jkaDST_` anti-cheat check stays a prefix.
+- `rcon status` checks that the gametype is in range before printing its name. The game already keeps it in range, so this changes nothing in practice.
+- The original game module is now loaded from `fs_basepath` instead of the current working directory. With the default `fs_basepath`, which is the current directory, nothing changes. The path is built with a bounded copy, and the error printed before the server exits now shows the full path that was tried.
+- `/myratio`: the number in parentheses is now always Kills minus Deaths, as shown. In red, it added the suicides back, so it could even be positive: Kills 2, Deaths 3, Suicides 2 showed a red `1`, and now shows a red `-1`. A player whose only death is a suicide after one kill now sees a red `-1` instead of `0`.
+- Fixed the ping shown too low right after a connect (original engine). For the first 32 snapshots (about 1.6 s at 20 snapshots per second), the snapshot slots not used yet counted as a delay of 0. The engine's own calculation already skipped them, so this came from the proxy, also with `proxy_sv_pingFix 0`.
+- Fixed a server crash on `rcon dumpuser` (original engine). A client could put a key or value of 512 characters or more in its userinfo, and `dumpuser` on that client overflowed a buffer of the engine. The engine function that prints these lists (`Info_Print`) is replaced by the ioq3/OpenJK version, which also fixes `serverinfo` and `systeminfo`. A `systeminfo` value can reach that length with `sv_pure 1` and many pk3 files (`sv_paks`, `sv_pakNames`); that case was not reproduced.
+- Linux: `libstdc++` and `libgcc` are now linked into `jampgamei386.so`, so the server no longer needs the 32-bit `libstdc++` installed.
+- Removed `proxy_sv_enableRconCmdCooldown`, replaced by the rcon rate limiting. When set to `1`, its 500 ms cooldown applied to every rcon packet, even with a wrong password, so a flood of rcon packets also blocked the admins' commands. With the default `0`, rcon had no limit at all.
+
 ## 0.19.0 Beta
 
 - Added [`proxy_sv_disableKillCmd`](features.md#proxy_sv_disablekillcmd) (default `0`).
@@ -22,7 +58,7 @@
 
 - Added [`proxy_sv_enableNetStatus`](features.md#proxy_sv_enablenetstatus) (default `0`).
 - Added [`proxy_sv_modelPathLength`](features.md#proxy_sv_modelpathlength) (default `64`).
-- Added [`proxy_sv_enableRconCmdCooldown`](features.md#proxy_sv_enablerconcmdcooldown) (default `0`).
+- Added `proxy_sv_enableRconCmdCooldown` (default `0`).
 - Fixed a padding issue in the `netStatus` output.
 - Fixed truncated output of rcon commands (`rcon status` and others).
 

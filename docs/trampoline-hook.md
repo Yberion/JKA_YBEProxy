@@ -33,7 +33,7 @@ This diagram only shows how the proxy talks with `jampDed` and `jampgame` and in
 
 `GAME_INIT` is also where the proxy patches the engine.
 
-OpenJK replaces these two entry points with tables of function pointers, exchanged through `GetModuleAPI`. The proxy wraps the entries it needs in those tables.
+OpenJK prefers tables of function pointers, exchanged through `GetModuleAPI`. The proxy does not export `GetModuleAPI`, so OpenJK falls back to `dllEntry` and `vmMain` (its legacy game API), and the same code path runs on both engines.
 
 ## 3. Building a trampoline step by step
 
@@ -153,11 +153,11 @@ The proxy only patches the engine when the `version` cvar matches the original 1
 
 ## 5. Pitfalls
 
-- **Relative instructions.** If the copied bytes contain a relative `call`, `jmp` or conditional jump, the copy in the trampoline points to the wrong place. Their operand has to be relocated, or the function cannot be hooked this way. The current code does not check for this, see A1 in [audit/improvements.md](audit/improvements.md).
+- **Relative instructions.** If the copied bytes contain a relative `call`, `jmp` or conditional jump, the copy in the trampoline points to the wrong place. Their operand has to be relocated, or the function cannot be hooked this way. The current code does not check for this, see A1 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
 - **`static` functions.** In the original binaries, the compiler may have inlined a `static` function into its callers, or given it a non-standard calling convention (arguments in registers). Check the disassembly first:
   - The function is standalone, and callers use `call` with the arguments on the stack: a normal trampoline works.
-  - The function is inlined: the inlined call sites never reach its address, so a hook there misses them. Hook the callers instead (copy them into the proxy), or filter in a non-static function higher up the call chain. F1 in [audit/fixes.md](audit/fixes.md) does this for `SVC_RemoteCommand`, `SVC_Status` and `SVC_Info`.
+  - The function is inlined: the inlined call sites never reach its address, so a hook there misses them. Hook the callers instead (copy them into the proxy), or filter in a non-static function higher up the call chain. F1 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md) does this for `SVC_RemoteCommand`, `SVC_Status` and `SVC_Info`.
   - The function uses a non-standard convention: write an assembly stub that reads the arguments where the binary puts them, then calls the C++ function. See `Proxy_Shell.hpp`.
 - **Calling convention.** The replacement function must use exactly the same calling convention and arguments as the original: `cdecl` in general, `QDECL` for variadic functions.
-- **Unloading.** The engine unloads and reloads the game module, which is the proxy, on every map change. If a hook function is still on the call stack at that moment, it returns into unloaded code. This causes the `rcon map` / `rcon map_restart` crash. When a hook can lead to a map change, use a filter that returns, then a `jmp` to the original. See F1 in [audit/fixes.md](audit/fixes.md).
-- **Wrong binary.** The only check is the `version` cvar string. Checking the expected bytes at each address before patching would be safer, see A1 in [audit/improvements.md](audit/improvements.md).
+- **Unloading.** The engine unloads and reloads the game module, which is the proxy, on every map change. If a hook function is still on the call stack at that moment, it returns into unloaded code. This is the likely cause of the `rcon map` / `rcon map_restart` crash. When a hook can lead to a map change, use a filter that returns, then a `jmp` to the original. The proxy does this at the entry of `SV_PacketEvent`, see F1 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
+- **Wrong binary.** The only check is the `version` cvar string. Checking the expected bytes at each address before patching would be safer, see A1 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).

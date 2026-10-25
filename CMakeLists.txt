@@ -198,11 +198,17 @@ elseif (("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU") OR ("${CMAKE_C_COMPILER_ID}" S
 			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpmath=sse")
 		endif()
 
-		if(WIN32)
-			# Link libgcc and libstdc++ statically
+		# Link libgcc and libstdc++ statically
+		# On Linux too: linuxjampded does not use libstdc++, so the server may not have the 32-bit one
+		if(NOT APPLE)
 			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static-libgcc")
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc")
 			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++")
+		endif()
+
+		# Keep their symbols inside the .so: another libstdc++ already loaded in the process (OpenJK) must not replace them
+		if(UNIX AND NOT APPLE)
+			set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--exclude-libs,ALL")
 		endif()
 	elseif("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
 		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")

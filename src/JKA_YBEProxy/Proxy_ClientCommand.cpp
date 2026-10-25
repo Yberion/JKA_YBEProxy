@@ -8,7 +8,7 @@
 Proxy_ClientCommand_MyRatio
 ==================
 */
-static void ratioString(int kill, int death, int suicides, char* ratioString, int sizeRatioString)
+static void ratioString(int kill, int death, char* ratioString, int sizeRatioString)
 {
 	if (kill - death >= 0)
 	{
@@ -16,7 +16,7 @@ static void ratioString(int kill, int death, int suicides, char* ratioString, in
 	}
 	else
 	{
-		Com_sprintf(ratioString, sizeRatioString, "(" S_COLOR_RED "%i" S_COLOR_WHITE ")", kill - (death - suicides));
+		Com_sprintf(ratioString, sizeRatioString, "(" S_COLOR_RED "%i" S_COLOR_WHITE ")", kill - death);
 	}
 }
 
@@ -58,7 +58,7 @@ void Proxy_ClientCommand_MyRatio(int clientNum)
 
 	float ratio = calcRatio(ps->persistant[PERS_SCORE], ps->persistant[PERS_KILLED]);
 
-	ratioString(ps->persistant[PERS_SCORE], ps->persistant[PERS_KILLED], ps->fd.suicides, ratioStringBuffer, sizeof(ratioStringBuffer));
+	ratioString(ps->persistant[PERS_SCORE], ps->persistant[PERS_KILLED], ratioStringBuffer, sizeof(ratioStringBuffer));
 
 	if (proxy.cvars.sv_gametype.integer != GT_DUEL && proxy.cvars.sv_gametype.integer != GT_TEAM && proxy.cvars.sv_gametype.integer != GT_FFA)
 	{

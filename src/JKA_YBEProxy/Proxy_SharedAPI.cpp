@@ -34,18 +34,32 @@ void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* ucmd)
 // EXPORT TABLE
 // ==================================================
 
-void Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
+const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
 {
-	// Doesn't work on the new API
-	if (firstTime && !isBot)
+	// The game reads the userinfo here, before SV_UserinfoChanged and GAME_CLIENT_USERINFO_CHANGED
+	// Bots are skipped: their userinfo comes from the bot files
+	if (!isBot)
 	{
-		proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
+		const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum);
+
+		// Returning the reason refuses the client, never DropClient here (the slot is still CS_FREE)
+		if (reason)
+		{
+			return reason;
+		}
 	}
+
+	// Sent in ClientBegin: OpenJK drops server commands to a client below CS_PRIMED, and the slot is still CS_FREE here
+	proxy.clientData[clientNum].sendWelcomeMessage = firstTime && !isBot;
+
+	return nullptr;
 }
 
 void Proxy_SharedAPI_ClientDisconnect(int clientNum)
 {
-	if (clientNum >= 0 && clientNum < MAX_CLIENTS && proxy.clientData[clientNum].isConnected) {
+	// No isConnected test: it is only set in ClientBegin, so a client that leaves before entering the game
+	// would leave its data (cleanName, sendWelcomeMessage) to the next client of the slot
+	if (clientNum >= 0 && clientNum < MAX_CLIENTS) {
 		// Reset client's data on disconnect
 		std::memset(&proxy.clientData[clientNum], 0, sizeof(*proxy.clientData));
 	}
@@ -55,7 +69,16 @@ void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset)
 {
 	if (clientNum >= 0 && clientNum < MAX_CLIENTS)
 	{
-		proxy.clientData[clientNum].isConnected = true;
+		ClientData_t* currentClientData = &proxy.clientData[clientNum];
+
+		currentClientData->isConnected = true;
+
+		if (currentClientData->sendWelcomeMessage)
+		{
+			currentClientData->sendWelcomeMessage = false;
+
+			proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
+		}
 	}
 }
 
@@ -73,6 +96,9 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 
 	proxy.trap->Argv(0, cmd, sizeof(cmd));
 
+	// The commands and arguments below are compared whole (Q_stricmp), as the game does: a prefix also matched
+	// other commands ("team" matched "teamvote") and other arguments ("saber_droid" only compared "saber_")
+	// jkaDST_ stays a prefix: it catches every command of the cheat
 	if (!Q_stricmpn(cmd, "jkaDST_", 7))
 	{
 		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", currentClientData->cleanName));
@@ -84,7 +110,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	// Todo (not sure): Check in the entier command + args?
 	const char* argsConcat = ConcatArgs(1);
 
-	if (!Q_stricmpn(cmd, "say", 3) || !Q_stricmpn(cmd, "say_team", 8) || !Q_stricmpn(cmd, "tell", 4))
+	if (!Q_stricmp(cmd, "say") || !Q_stricmp(cmd, "say_team") || !Q_stricmp(cmd, "tell"))
 	{
 		sayCmd = qtrue;
 
@@ -104,35 +130,35 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	proxy.trap->Argv(2, cmd_arg2, sizeof(cmd_arg2));
 
 	// Fix: crach gc
-	if (!Q_stricmpn(cmd, "gc", 2) && atoi(cmd_arg1) >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients"))
+	if (!Q_stricmp(cmd, "gc") && atoi(cmd_arg1) >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients"))
 	{
 		return qfalse;
 	}
 
 	// Fix: crash npc spawn
-	if (!Q_stricmpn(cmd, "npc", 3) && !Q_stricmpn(cmd_arg1, "spawn", 5) && (!Q_stricmpn(cmd_arg2, "ragnos", 6) || !Q_stricmpn(cmd_arg2, "saber_droid", 6)))
+	if (!Q_stricmp(cmd, "npc") && !Q_stricmp(cmd_arg1, "spawn") && (!Q_stricmp(cmd_arg2, "ragnos") || !Q_stricmp(cmd_arg2, "saber_droid")))
 	{
 		return qfalse;
 	}
 
 	// Fix: team crash
-	if (!Q_stricmpn(cmd, "team", 4) && (!Q_stricmpn(cmd_arg1, "follow1", 7) || !Q_stricmpn(cmd_arg1, "follow2", 7)))
+	if (!Q_stricmp(cmd, "team") && (!Q_stricmp(cmd_arg1, "follow1") || !Q_stricmp(cmd_arg1, "follow2")))
 	{
 		return qfalse;
 	}
 
 	// Disable: callteamvote, useless in basejka and can lead to a bugged UI on custom client
-	if (!Q_stricmpn(cmd, "callteamvote", 12))
+	if (!Q_stricmp(cmd, "callteamvote"))
 	{
 		return qfalse;
 	}
 
-	if (proxy.cvars.proxy_sv_disableKillCmd.integer && !Q_stricmpn(cmd, "kill", 4))
+	if (proxy.cvars.proxy_sv_disableKillCmd.integer && !Q_stricmp(cmd, "kill"))
 	{
 		return qfalse;
 	}
 
-	if (!Q_stricmpn(cmd, "callvote", 8))
+	if (!Q_stricmp(cmd, "callvote"))
 	{
 		const int cmdArg2NumberValue = atoi(cmd_arg2);
 
@@ -147,7 +173,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		}
 
 		// Fix: callvote capturelimit with wrong values
-		if (!Q_stricmpn(cmd_arg1, "capturelimit", 12))
+		if (!Q_stricmp(cmd_arg1, "capturelimit"))
 		{
 			minArg2Value = 0;
 			maxArg2Value = 0x7FFFFFFF;
@@ -155,7 +181,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		}
 
 		// Fix: callvote fraglimit with wrong values
-		if (!Q_stricmpn(cmd_arg1, "fraglimit", 9))
+		if (!Q_stricmp(cmd_arg1, "fraglimit"))
 		{
 			minArg2Value = 0;
 			maxArg2Value = 0x7FFFFFFF;
@@ -163,7 +189,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		}
 
 		// Fix: callvote g_doWarmup with wrong values
-		if (!Q_stricmpn(cmd_arg1, "g_doWarmup", 10))
+		if (!Q_stricmp(cmd_arg1, "g_doWarmup"))
 		{
 			minArg2Value = 0;
 			maxArg2Value = 1;
@@ -171,7 +197,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		}
 
 		// Fix: callvote map_restart with wrong values
-		if (!Q_stricmpn(cmd_arg1, "map_restart", 11))
+		if (!Q_stricmp(cmd_arg1, "map_restart"))
 		{
 			minArg2Value = 0;
 			maxArg2Value = proxy.cvars.proxy_sv_maxCallVoteMapRestartValue.integer;
@@ -179,7 +205,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		}
 
 		// Fix: callvote timelimit with wrong values
-		if (!Q_stricmpn(cmd_arg1, "timelimit", 9))
+		if (!Q_stricmp(cmd_arg1, "timelimit"))
 		{
 			minArg2Value = 0;
 			maxArg2Value = 35790;
@@ -202,7 +228,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 		return qfalse;
 	}
 
-	if (!Q_stricmpn(cmd, "myratio", 7))
+	if (!Q_stricmp(cmd, "myratio"))
 	{
 		Proxy_ClientCommand_MyRatio(clientNum);
 
@@ -212,7 +238,7 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	// Only work on default engine since it require memory hook
 	if (proxy.isOriginalEngine)
 	{
-		if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer && (!Q_stricmpn(cmd, "netStatus", 9) || !Q_stricmpn(cmd, "showNet", 7)))
+		if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer && (!Q_stricmp(cmd, "netStatus") || !Q_stricmp(cmd, "showNet")))
 		{
 			Proxy_Engine_ClientCommand_NetStatus(clientNum);
 
@@ -229,15 +255,30 @@ void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd)
 {}
 */
 
-void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
+qboolean Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
+{
+	const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum);
+
+	if (reason)
+	{
+		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData[clientNum].cleanName));
+		proxy.trap->DropClient(clientNum, reason);
+
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum)
 {
 	char userinfo[MAX_INFO_STRING];
-	
+
 	proxy.trap->GetUserinfo(clientNum, userinfo, sizeof(userinfo));
 
 	if (std::strlen(userinfo) == 0)
 	{
-		return;
+		return nullptr;
 	}
 
 	std::size_t len = 0;
@@ -260,16 +301,15 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	{
 		len = std::strlen(val);
 
-		if (!Q_stricmpn(val, "darksidetools", len))
+		if (!Q_stricmpn(val, "darksidetools", 13))
 		{
-			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", currentClientData->cleanName));
-			proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
+			return "(Anti-Cheat system) you got kicked cause of cheating";
 		}
 
-		if ((!Q_stricmpn(val, "jedi_", 5) && (!Q_stricmpn(val, "jedi_/red", len) ||
-			!Q_stricmpn(val, "jedi_/blue", len))) ||
-			!Q_stricmpn(val, "rancor", len) ||
-			!Q_stricmpn(val, "wampa", len) ||
+		if (!val[0] ||
+			!Q_stricmp(val, "jedi_") || !Q_stricmpn(val, "jedi_/", 6) ||
+			!Q_stricmpn(val, "rancor", 6) ||
+			!Q_stricmpn(val, "wampa", 5) ||
 			!Q_IsValidAsciiStr(val) ||
 			len >= /*MAX_QPATH*/ (std::size_t)proxy.cvars.proxy_sv_modelPathLength.integer)
 		{
@@ -335,5 +375,5 @@ void Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 
 	proxy.trap->SetUserinfo(clientNum, userinfo);
 
-	return;
+	return nullptr;
 }

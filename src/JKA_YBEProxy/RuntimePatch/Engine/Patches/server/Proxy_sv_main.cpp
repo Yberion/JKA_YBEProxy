@@ -3,6 +3,7 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
 #include "sdk/game/g_public.hpp"
 #include "Proxy_sv_main.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_RateLimit.hpp"
 
 /*
 ===================
@@ -47,7 +48,9 @@ void Proxy_SV_CalcPings(void)
 		{
 			// Proxy -------------->
 			// if (cl->frames[j].messageAcked <= 0)
-			if (cl->frames[j].messageAcked == -1)
+			// Not "<= 0": with proxy_sv_pingFix the times come from Sys_Milliseconds, negative after about 24.8 days of uptime
+			// -1: sent, not acknowledged yet. Both 0: never sent since the client slot was cleared on connect
+			if (cl->frames[j].messageAcked == -1 || (cl->frames[j].messageSent == 0 && cl->frames[j].messageAcked == 0))
 			// Proxy <--------------
 			{
 				continue;
@@ -86,187 +89,66 @@ void Proxy_SV_CalcPings(void)
 	}
 }
 
-void (*Original_SVC_Status)(netadr_t);
-void Proxy_SVC_Status(netadr_t from) {
-	// Proxy -------------->
-	// Fix q3infoboom
-	// In Info_SetValueForKey if the infostring is too big then it will drop the server
-	if (std::strlen(server.common.functions.Cmd_Argv(1)) > 128)
-	{
-		return;
-	}
-	// Proxy <--------------
-
-	Original_SVC_Status(from);
-}
-
-void (*Original_SVC_Info)(netadr_t);
-void Proxy_SVC_Info(netadr_t from) {
-	// Proxy -------------->
-	// Fix q3infoboom
-	// In Info_SetValueForKey if the infostring is too big then it will drop the server
-	if (std::strlen(server.common.functions.Cmd_Argv(1)) > 128)
-	{
-		return;
-	}
-	// Proxy <--------------
-
-	Original_SVC_Info(from);
-}
-
-/*
-===============
-SVC_RemoteCommand
-
-An rcon packet arrived from the network.
-Shift down the remaining args
-Redirect all printfs
-===============
-*/
-void (*Original_SVC_RemoteCommand)(netadr_t, msg_t*);
-void Proxy_SVC_RemoteCommand(netadr_t from, msg_t* msg) {
-	static unsigned int commandCoolDown = 0;
-
-	if (proxy.originalEngineCvars.proxy_sv_enableRconCmdCooldown.integer && (unsigned int)server.svs->time < commandCoolDown + 500) {
-		return;
-	}
-
-	commandCoolDown = (unsigned int)server.svs->time;
-	
-	// Only allow writeconfig on cfg files
-	if (!Q_stricmpn(server.common.functions.Cmd_Argv(2), "writeconfig", 11)) {
-		const char* arg3 = server.common.functions.Cmd_Argv(3);
-		const std::size_t arg3Len = std::strlen(arg3);
-		
-		if (arg3Len >= 5 && arg3[arg3Len - 4] == '.' && Q_stricmpn(&arg3[arg3Len - 4], ".cfg", 4)) {
-			return;
-		}
-	}
-
-	Original_SVC_RemoteCommand(from, msg);
-}
-
 /*
 =================
-SV_ConnectionlessPacket
+SV_PacketEvent filter
 
-A connectionless packet has four leading 0xff
-characters to distinguish it from a game channel.
-Clients that are in the game can still send
-connectionless packets.
-=================
-*/
-void (*Original_SV_ConnectionlessPacket)(netadr_t, msg_t*);
-void Proxy_SV_ConnectionlessPacket(netadr_t from, msg_t* msg) {
-	char* s;
-	char* c;
-
-	server.common.functions.MSG_BeginReadingOOB(msg);
-	server.common.functions.MSG_ReadLong(msg);		// skip the -1 marker
-
-	if (!Q_strncmp("connect", (const char*)&msg->data[4], 7)) {
-		server.common.functions.Huff_Decompress(msg, 12);
-	}
-
-	s = server.common.functions.MSG_ReadStringLine(msg);
-	server.common.functions.Cmd_TokenizeString(s);
-
-	c = server.common.functions.Cmd_Argv(0);
-
-	if (server.common.cvars.com_developer->integer) {
-		server.common.functions.Com_Printf("SV packet %s : %s\n", server.common.functions.NET_AdrToString(from), c);
-	}
-
-	if (!Q_stricmp(c, "getstatus")) {
-		server.functions.SVC_Status(from);
-	}
-	else if (!Q_stricmp(c, "getinfo")) {
-		server.functions.SVC_Info(from);
-	}
-	else if (!Q_stricmp(c, "getchallenge")) {
-		server.functions.SV_GetChallenge(from);
-	}
-	else if (!Q_stricmp(c, "connect")) {
-		server.functions.SV_DirectConnect(from);
-	}
-	else if (!Q_stricmp(c, "ipAuthorize")) {
-		//SV_AuthorizeIpPacket(from);
-	}
-	else if (!Q_stricmp(c, "rcon")) {
-		server.functions.SVC_RemoteCommand(from, msg);
-	}
-	else if (!Q_stricmp(c, "disconnect")) {
-		// if a client starts up a local server, we may see some spurious
-		// server disconnect messages when their new server sees our final
-		// sequenced messages to the old client
-	}
-	else {
-		if (server.common.cvars.com_developer->integer) {
-			server.common.functions.Com_Printf("bad connectionless packet from %s:\n%s\n",
-				server.common.functions.NET_AdrToString(from), s);
-		}
-	}
-}
-
-/*
-=================
-SV_ReadPackets
+Called from the stub at the entry of SV_PacketEvent (see Proxy_Engine_Patch.cpp), with a copy of the arguments.
+Returns qfalse to drop the packet. Otherwise the original SV_PacketEvent runs with no proxy frame on the stack:
+an rcon map change unloads the proxy from inside the packet code.
 =================
 */
 void (*Original_SV_PacketEvent)(netadr_t, msg_t*);
-void Proxy_SV_PacketEvent(netadr_t from, msg_t* msg) {
-	int			i;
-	client_t* cl;
-	int			qport;
-
-	// check for connectionless packet (0xffffffff) first
-	if (msg->cursize >= 4 && *(int*)msg->data == -1) {
-		server.functions.SV_ConnectionlessPacket(from, msg);
-		return;
+qboolean QDECL Proxy_SV_PacketEvent_Filter(netadr_t from, msg_t* msg)
+{
+	// Sequenced game packet: nothing to filter
+	if (msg->cursize < 4 || *(int*)msg->data != -1)
+	{
+		return qtrue;
 	}
 
-	// read the qport out of the message so we can fix up
-	// stupid address translating routers
+	// connect is Huffman-compressed and the original decompresses it in place: leave it alone
+	if (!Q_strncmp("connect", (const char*)&msg->data[4], 7))
+	{
+		// Per address only, as Quake3e: reads nothing but the address
+		return Proxy_Engine_RateLimit_AddressAllowed(from, "connect") ? qtrue : qfalse;
+	}
+
+	// Same reading as the original SV_ConnectionlessPacket, which reads and tokenizes again afterwards
 	server.common.functions.MSG_BeginReadingOOB(msg);
-	server.common.functions.MSG_ReadLong(msg);				// sequence number
-	qport = server.common.functions.MSG_ReadShort(msg) & 0xffff;
+	server.common.functions.MSG_ReadLong(msg); // skip the -1 marker
+	server.common.functions.Cmd_TokenizeString(server.common.functions.MSG_ReadStringLine(msg));
 
-	// find which client the message is from
-	for (i = 0, cl = server.svs->clients; i < server.cvars.sv_maxclients->integer; i++, cl++) {
-		if (cl->state == CS_FREE) {
-			continue;
-		}
-		if (!server.common.functions.NET_CompareBaseAdr(from, cl->netchan.remoteAddress)) {
-			continue;
-		}
-		// it is possible to have multiple clients from a single IP
-		// address, so they are differentiated by the qport variable
-		if (cl->netchan.qport != qport) {
-			continue;
+	const char* c = server.common.functions.Cmd_Argv(0);
+
+	if (!Q_stricmp(c, "getstatus") || !Q_stricmp(c, "getinfo"))
+	{
+		// Fix q3infoboom
+		// In Info_SetValueForKey if the infostring is too big then it will drop the server
+		if (std::strlen(server.common.functions.Cmd_Argv(1)) > 128)
+		{
+			return qfalse;
 		}
 
-		// the IP port can't be used to differentiate them, because
-		// some address translating routers periodically change UDP
-		// port assignments
-		if (cl->netchan.remoteAddress.port != from.port) {
-			server.common.functions.Com_Printf("SV_ReadPackets: fixing up a translated port\n");
-			cl->netchan.remoteAddress.port = from.port;
-		}
-
-		// make sure it is a valid, in sequence packet
-		if (server.functions.SV_Netchan_Process(cl, msg)) {
-			// zombie clients still need to do the Netchan_Process
-			// to make sure they don't need to retransmit the final
-			// reliable message, but they don't do any other processing
-			if (cl->state != CS_ZOMBIE) {
-				cl->lastPacketTime = server.svs->time;	// don't timeout
-				server.functions.SV_ExecuteClientMessage(cl, msg);
-			}
-		}
-		return;
+		return Proxy_Engine_RateLimit_StatusAllowed(from, c) ? qtrue : qfalse;
 	}
 
-	// if we received a sequenced packet from an address we don't recognize,
-	// send an out of band disconnect packet to it
-	server.common.functions.NET_OutOfBandPrint(NS_SERVER, from, "disconnect");
+	// Per address only, as Quake3e: a global bucket would let a getstatus flood block every connection
+	if (!Q_stricmp(c, "getchallenge"))
+	{
+		return Proxy_Engine_RateLimit_AddressAllowed(from, c) ? qtrue : qfalse;
+	}
+
+	if (!Q_stricmp(c, "rcon"))
+	{
+		return Proxy_Engine_RateLimit_RconAllowed() ? qtrue : qfalse;
+	}
+
+	// The original only answers the old authorize server, but prints a line for every other sender
+	if (!Q_stricmp(c, "ipAuthorize"))
+	{
+		return qfalse;
+	}
+
+	return qtrue;
 }

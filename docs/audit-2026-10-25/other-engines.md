@@ -31,7 +31,7 @@ These proxy fixes match another engine.
 | `/netStatus` packets and FPS columns | JK2MV, per the comment in [Proxy_Engine_Client.cpp:16](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.cpp#L16) |
 | `SV_SvEntityForGentity` from the address | JK2MV `mv_fixplayerghosting` ([`src/server/sv_game.cpp:71-90`](https://github.com/mvdevs/jk2mv/blob/7d601454c3db68492289d4d4e3dc30bff39e4246/src/server/sv_game.cpp#L71-L90), commit [`88c4603`](https://github.com/mvdevs/jk2mv/commit/88c4603)), without its bounds checks (F8). TaystJK calls it "skinglitch" (`SVFIXES_ALLOW_GHOSTED_PLAYERS`). |
 | Usercmd: levitation and invalid `forcesel` reset, roll set to 0 | OpenJK `sv_legacyFixes` ([`codemp/server/sv_client.cpp:1375-1383`](https://github.com/JACoders/OpenJK/blob/260c59c2907187af555a676fe0cc798893bf7757/codemp/server/sv_client.cpp#L1375-L1383), commits [`d455743c`](https://github.com/JACoders/OpenJK/commit/d455743c), [`8b07e58c`](https://github.com/JACoders/OpenJK/commit/8b07e58c)) |
-| `gc`, `npc spawn ragnos`, `team follow1/2`, `callteamvote`, long `say`, model checks | TaystJK `sv_legacyFixes` ([`codemp/server/sv_client.cpp:1470-1505`](https://github.com/taysta/TaystJK/blob/7d99efb4a77a174d1a7853f2a8024daf78fa47b7/codemp/server/sv_client.cpp#L1470-L1505), [`server.h:349-362`](https://github.com/taysta/TaystJK/blob/7d99efb4a77a174d1a7853f2a8024daf78fa47b7/codemp/server/server.h#L349-L362)), commits of 2019-05-03 and 2019-05-04. Same code as the proxy, including the same prefix comparisons (F3, F10). |
+| `gc`, `npc spawn ragnos`, `team follow1/2`, `callteamvote`, long `say`, model checks | TaystJK `sv_legacyFixes` ([`codemp/server/sv_client.cpp:1470-1505`](https://github.com/taysta/TaystJK/blob/7d99efb4a77a174d1a7853f2a8024daf78fa47b7/codemp/server/sv_client.cpp#L1470-L1505), [`server.h:349-362`](https://github.com/taysta/TaystJK/blob/7d99efb4a77a174d1a7853f2a8024daf78fa47b7/codemp/server/server.h#L349-L362)), commits of 2019-05-03 and 2019-05-04. Same code as the proxy, including the same prefix comparisons (F3, F10.4). |
 | Negative `fraglimit`/`timelimit` votes | TaystJK `SVFIXES_ALLOW_NEGATIVE_CALLVOTES`. The proxy covers it with its 0 minimum. |
 | Name cleaning | OpenJK `ClientCleanName`. TaystJK runs the same function in the engine's `SV_UserinfoChanged`. |
 | `\r`, `\n` and `;` in client commands | OpenJK `sv_filterCommands` (`SV_ExecuteClientCommand`), which replaces the characters, where the proxy drops the command |
@@ -47,7 +47,7 @@ These proxy fixes match another engine.
 | --- | --- | --- |
 | [O1](#o1-the-ip-userinfo-key-is-not-maintained-high) | High | `ip` userinfo key not maintained: IP bans can be avoided |
 | [O2](#o2-rate-limiting-of-out-of-band-packets-high) | High | Rate limiting, see F6 |
-| [O3](#o3-userinfo-sanitised-before-the-game-sees-it-on-connect-critical) | Critical | Userinfo on connect, see F2 |
+| [O3](#o3-userinfo-sanitised-before-the-game-sees-it-on-connect-high) | High | Userinfo on connect, see F2 |
 | [O4](#o4-writeconfig-medium) | Medium | `writeconfig`, see F7 |
 | [O5](#o5-connections-per-ip-address-medium-optional) | Medium, optional | Connections per IP address |
 | [O6](#o6-server-commands-longer-than-1022-characters-do-not-port-corrected) | Do not port | Server commands longer than 1022 characters |
@@ -104,7 +104,7 @@ Info_SetValueForKey(cl->userinfo, "ip", ip);
 
 Same as F6 in [fixes.md](fixes.md), which compares the engines. Quake3e also limits `getchallenge` and `connect` per address ([`code/server/sv_client.c:130, 502`](https://github.com/ec-/Quake3e/blob/3173cef096dd0cb2fea26d91bce71049061f5a13/code/server/sv_client.c#L130)). JK2MV [`ee07c4b`](https://github.com/mvdevs/jk2mv/commit/ee07c4b) and OpenJK also expire buckets when the time wraps (`interval < 0`): keep that test when porting.
 
-### O3. Userinfo sanitised before the game sees it on connect (Critical)
+### O3. Userinfo sanitised before the game sees it on connect (High)
 
 Same as F2 in [fixes.md](fixes.md). JK2MV and Quake3e call `SV_UserinfoChanged` before `GAME_CLIENT_CONNECT`.
 

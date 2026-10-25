@@ -36,6 +36,10 @@ Fix:
 
 x86 only: on 64-bit, the trampoline may be too far for a 32-bit offset.
 
+Missing from the sketch above: `Detach` restores the engine bytes by copying them back from the trampoline ([HookUtils.hpp:133](../../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp#L133)). Once a rel32 is relocated in the trampoline, that copy would write the shifted offset into the engine. Keep a copy of the original bytes in `HookEntry` at `Attach`, and restore from it.
+
+F7 no longer needs this: its hook rewrites the whole function and never runs the trampoline (see F7 in [fixes.md](fixes.md)).
+
 ### Partial failure
 
 Status: **corrected**. There is no null call.
@@ -153,3 +157,57 @@ Comes out of the F1 discussion: a pinned loader that holds the hooks and trampol
 - **Refuted.** [Proxy_Engine_ClientCommand.cpp:76](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp#L76): "a name containing `\"` can break the `print` command".
   - The tokenizer ends a token at `"` ([Proxy_cmd.cpp:73-99](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp#L73-L99)). Neither the connect packet nor the `userinfo` command can put a `"` in the userinfo, and `cl->name` comes from the userinfo.
   - A quoted token can contain a newline. A name with a newline only breaks the layout of the `netStatus` table. Cosmetic.
+
+## A8. Cvar to disable the welcome message
+
+Request of the author. Today every human player gets the proxy name and version on their first connection, with no way to turn it off.
+
+New cvar `proxy_sv_disableWelcomeMessage`: archived, any engine, default `0` (message sent, as today), `1` disables it.
+
+- [Proxy_Header.hpp](../../src/JKA_YBEProxy/Proxy_Header.hpp), `Proxy_CVars_t`: add `vmCvar_t proxy_sv_disableWelcomeMessage;`.
+- [Proxy_CVars.cpp](../../src/JKA_YBEProxy/Proxy_CVars.cpp), `proxyCVarTable`: add `{ &proxy.cvars.proxy_sv_disableWelcomeMessage, "proxy_sv_disableWelcomeMessage", "0", CVAR_ARCHIVE, 0, qfalse },`.
+- [Proxy_SharedAPI.cpp](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp), `Proxy_SharedAPI_ClientBegin`: still clear `sendWelcomeMessage`, but only send the message when the cvar is `0`:
+
+  ```cpp
+  if (currentClientData->sendWelcomeMessage)
+  {
+  	currentClientData->sendWelcomeMessage = false;
+
+  	if (!proxy.cvars.proxy_sv_disableWelcomeMessage.integer)
+  	{
+  		proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
+  	}
+  }
+  ```
+
+- Document the cvar in [features.md](../features.md), next to the other cvars and in the "Welcome message" section.
+
+Proxy cvars are read about once per second (`Proxy_UpdateAllCvars` in `GAME_RUN_FRAME`), which is enough here.
+
+## A9. Stateless challenges (optional)
+
+Not required: the F6 rate limiting covers the floods that come from one address. This only matters for a flood of spoofed `getchallenge` packets from many different addresses.
+
+The problem, in the retail engine ([`server/sv_client.cpp:31-73`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L31-L73)):
+
+- `SV_GetChallenge` stores each new address in `svs.challenges`, 1024 slots, and overwrites the oldest one when the table is full.
+- `SV_DirectConnect` only accepts a `connect` whose challenge is still in the table.
+- A spoofed flood of more than about 1024 new addresses in the time a player takes between `getchallenge` and `connect` evicts the player's challenge: the player gets `No or bad challenge for address.`. The F6 per-address limit does not help, since every spoofed packet comes from a new address.
+
+What the other engines do:
+
+| Engine | Challenges |
+| --- | --- |
+| ioq3, JK2MV | Table of 2048 slots, and one address cannot take more than half of them (`MAX_CHALLENGES_MULTI`). Harder to flood, still possible. |
+| OpenJK, TaystJK | Stateless: the challenge is an HMAC-MD5 of the address and of a timestamp that changes every 16.384 s, with a secret key from the OS random generator. Nothing is stored, so nothing can be evicted ([`codemp/server/sv_challenge.cpp`](https://github.com/JACoders/OpenJK/blob/260c59c2907187af555a676fe0cc798893bf7757/codemp/server/sv_challenge.cpp), PR [#832](https://github.com/JACoders/OpenJK/pull/832)). |
+| Quake3e | Stateless, backported from OpenJK ([`code/server/sv_client.c:30-80`](https://github.com/ec-/Quake3e/blob/3173cef096dd0cb2fea26d91bce71049061f5a13/code/server/sv_client.c#L30-L80)). |
+
+Sketch for the proxy, in the F1 filter, without rewriting `SV_DirectConnect`:
+
+1. `getchallenge`: the filter answers `challengeResponse <HMAC challenge>` itself, then drops the packet. The retail client sends no argument and only reads the challenge number.
+2. `connect`: the filter decompresses a **copy** of the packet (the original decompresses it in place, see the F1 pitfalls), reads `challenge` from the userinfo, and checks the HMAC for the current and the previous timestamp. When it is valid, it writes the entry into `svs.challenges` (address, challenge, `connected = qfalse`, times) just before the original `SV_DirectConnect` runs and looks it up.
+3. Things to keep: the ping measured between the challenge and the connect (`challenge->pingTime`), which `SV_DirectConnect` uses for `sv_minPing` / `sv_maxPing`. A stateless challenge loses it, so the time must travel in the timestamp or be measured another way.
+4. Needs an MD5/HMAC implementation (OpenJK's `qcommon/md5.cpp`) and a random secret per server start.
+5. LAN addresses: the retail `SV_GetChallenge` answers them at once, keep that.
+
+Cost: no new hook, but a non-trivial change on the connection path, to test with the retail client on both platforms.

@@ -2,6 +2,7 @@
 #include "Proxy_Engine_Patch.hpp"
 #include "Proxy_Engine_Wrappers.hpp"
 #include "Patches/qcommon/Proxy_cmd.hpp"
+#include "Patches/qcommon/Proxy_common.hpp"
 #include "Patches/qcommon/Proxy_files.hpp"
 #include "Patches/server/Proxy_sv_ccmds.hpp"
 #include "Patches/server/Proxy_sv_client.hpp"
@@ -13,18 +14,18 @@
 
 static std::variant<
 	HookUtils::HookEntry<decltype(Proxy_Com_Printf)>,
-	HookUtils::HookEntry<decltype(Proxy_Cmd_TokenizeString)>,
+	HookUtils::HookEntry<decltype(Proxy_Cmd_TokenizeString)>, // HookEntry<decltype(&Proxy_Info_Print)>,
 	HookUtils::HookEntry<decltype(Proxy_SV_SendMessageToClient)>,
-	HookUtils::HookEntry<decltype(Proxy_SV_CalcPings)>, // HookEntry<decltype(&Proxy_SV_Status_f)>,
+	HookUtils::HookEntry<decltype(Proxy_SV_CalcPings)>, // HookEntry<decltype(&Proxy_SV_Status_f)>, HookEntry<decltype(&Proxy_Com_WriteConfig_f)>,
 	HookUtils::HookEntry<decltype(Proxy_SV_SvEntityForGentity)>,
 	HookUtils::HookEntry<decltype(Proxy_SV_SendClientGameState)>, // HookEntry<decltype(&Proxy_SV_UserinfoChanged)>, HookEntry<decltype(&Proxy_SV_BeginDownload_f)>, HookEntry<decltype(&Proxy_SV_DoneDownload_f)>,
-	HookUtils::HookEntry<decltype(Proxy_SV_ExecuteClientMessage)>,
-	HookUtils::HookEntry<decltype(Proxy_SVC_Status)>, // HookEntry<decltype(&Proxy_SVC_Info)>,
-	HookUtils::HookEntry<decltype(Proxy_SV_PacketEvent)>, // HookEntry<decltype(&Proxy_SV_ConnectionlessPacket)>, HookEntry<decltype(&Proxy_SVC_RemoteCommand)>, HookEntry<decltype(&Proxy_SV_WriteDownloadToClient)>,
+	HookUtils::HookEntry<decltype(Proxy_SV_ExecuteClientMessage)>, // HookEntry<decltype(&Proxy_SV_WriteDownloadToClient)>,
 	HookUtils::HookEntry<decltype(Proxy_SV_ExecuteClientCommand)>
 > hookEntries[] = {
 	HookUtils::HookEntry("Com_Printf", (unsigned char*)func_Com_Printf_addr[PROXY_PLATFORM], &Original_Com_Printf, &Proxy_Com_Printf, 0),
 	HookUtils::HookEntry("Cmd_TokenizeString", (unsigned char*)func_Cmd_TokenizeString_addr[PROXY_PLATFORM], &Original_Cmd_TokenizeString, &Proxy_Cmd_TokenizeString, 0),
+	HookUtils::HookEntry("Com_WriteConfig_f", (unsigned char*)func_Com_WriteConfig_f_addr[PROXY_PLATFORM], &Original_Com_WriteConfig_f, &Proxy_Com_WriteConfig_f, 0),
+	HookUtils::HookEntry("Info_Print", (unsigned char*)func_Info_Print_addr[PROXY_PLATFORM], &Original_Info_Print, &Proxy_Info_Print, 0),
 	HookUtils::HookEntry("SV_SendMessageToClient", (unsigned char*)func_SV_SendMessageToClient_addr[PROXY_PLATFORM], &Original_SV_SendMessageToClient, &Proxy_SV_SendMessageToClient, 0),
 	HookUtils::HookEntry("SV_CalcPings", (unsigned char*)func_SV_CalcPings_addr[PROXY_PLATFORM], &Original_SV_CalcPings, &Proxy_SV_CalcPings, 0),
 	HookUtils::HookEntry("SV_SvEntityForGentity", (unsigned char*)func_SV_SvEntityForGentity_addr[PROXY_PLATFORM], &Original_SV_SvEntityForGentity, &Proxy_SV_SvEntityForGentity, 0),
@@ -32,16 +33,118 @@ static std::variant<
 	HookUtils::HookEntry("SV_ExecuteClientMessage", (unsigned char*)func_SV_ExecuteClientMessage_addr[PROXY_PLATFORM], &Original_SV_ExecuteClientMessage, &Proxy_SV_ExecuteClientMessage, 0),
 	HookUtils::HookEntry("SV_UserinfoChanged", (unsigned char*)func_SV_UserinfoChanged_addr[PROXY_PLATFORM], &Original_SV_UserinfoChanged, &Proxy_SV_UserinfoChanged, 0),
 	HookUtils::HookEntry("SV_Status_f", (unsigned char*)func_SV_Status_f_addr[PROXY_PLATFORM], &Original_SV_Status_f, &Proxy_SV_Status_f, 0),
-	HookUtils::HookEntry("SVC_Status", (unsigned char*)func_SVC_Status_addr[PROXY_PLATFORM], &Original_SVC_Status, &Proxy_SVC_Status, 0),
-	HookUtils::HookEntry("SVC_Info", (unsigned char*)func_SVC_Info_addr[PROXY_PLATFORM], &Original_SVC_Info, &Proxy_SVC_Info, 0),
-	HookUtils::HookEntry("SV_PacketEvent", (unsigned char*)func_SV_PacketEvent_addr[PROXY_PLATFORM], &Original_SV_PacketEvent, &Proxy_SV_PacketEvent, 0),
-	HookUtils::HookEntry("SV_ConnectionlessPacket", (unsigned char*)func_SV_ConnectionlessPacket_addr[PROXY_PLATFORM], &Original_SV_ConnectionlessPacket, &Proxy_SV_ConnectionlessPacket, 0),
-	HookUtils::HookEntry("SVC_RemoteCommand", (unsigned char*)func_SVC_RemoteCommand_addr[PROXY_PLATFORM], &Original_SVC_RemoteCommand, &Proxy_SVC_RemoteCommand, 0),
 	HookUtils::HookEntry("SV_BeginDownload_f", (unsigned char*)func_SV_BeginDownload_f_addr[PROXY_PLATFORM], &Original_SV_BeginDownload_f, &Proxy_SV_BeginDownload_f, 0),
 	HookUtils::HookEntry("SV_DoneDownload_f", (unsigned char*)func_SV_DoneDownload_f_addr[PROXY_PLATFORM], &Original_SV_DoneDownload_f, &Proxy_SV_DoneDownload_f, 0),
 	HookUtils::HookEntry("SV_ExecuteClientCommand", (unsigned char*)func_SV_ExecuteClientCommand_addr[PROXY_PLATFORM], &Original_SV_ExecuteClientCommand, &Proxy_SV_ExecuteClientCommand, 0),
 	HookUtils::HookEntry("SV_WriteDownloadToClient", (unsigned char*)func_SV_WriteDownloadToClient_addr[PROXY_PLATFORM], &Original_SV_WriteDownloadToClient, &Proxy_SV_WriteDownloadToClient, 0)
 };
+
+// ==================================================
+// SV_PacketEvent filter stub
+// --------------------------------------------------
+// The engine unloads the proxy on every map change, and
+// an rcon "map" runs from inside the packet code. So no
+// proxy frame may be on the stack while the original
+// packet code runs: SV_PacketEvent jumps to this stub,
+// which calls the filter, then either returns (drop) or
+// jumps to the trampoline. x86 cdecl only, checked on
+// jampDed.exe and linuxjampded: [esp] return address,
+// [esp+4] netadr_t (20 bytes), [esp+24] msg.
+// ==================================================
+
+// The filter gets its own copy of the arguments: under cdecl a callee may overwrite its argument slots,
+// and here those slots are the engine's return address and the arguments the trampoline reads next
+// The stub hardcodes 24 bytes of arguments (6 pushes, add esp 24, [esp+24]): netadr_t (20) + msg (4)
+// The filter is compiled with the SDK netadr_t: if its size changes, the filter would read msg at the wrong place
+static_assert(sizeof(netadr_t) == 20, "the stub copies 24 bytes of arguments");
+
+// Size of the stub in bytes: 6 * 4 (push) + 5 (call) + 3 (add) + 2 (test) + 2 (jnz) + 1 (ret) + 5 (jmp)
+// Also gives the allocation size and the offset of the jmp rel32 written after Attach
+static constexpr std::size_t filterStubLength = 42;
+// Target of the jmp written at the entry of SV_PacketEvent, freed in GAME_SHUTDOWN. nullptr: not attached
+static unsigned char* packetEventFilterStub = nullptr;
+
+// Not in hookEntries: its target is the stub, only known at runtime, and it needs steps the generic loop doesn't do
+// (build the stub before Attach, write the jmp rel32 after, free the stub after Detach)
+// If the stub can't be allocated, this hook is not attached at all, instead of a jmp to nullptr
+static HookUtils::HookEntry<void(netadr_t, msg_t*)> packetEventHookEntry("SV_PacketEvent", (unsigned char*)func_SV_PacketEvent_addr[PROXY_PLATFORM], &Original_SV_PacketEvent, nullptr, 0);
+
+// The last rel32 (jmp trampoline) is written once Attach has created the trampoline
+static unsigned char* Proxy_MakeFilterStub(void* filter)
+{
+	// AllocateMemory adds 5 bytes for the jmp of a trampoline: - 5 gives exactly filterStubLength
+	unsigned char* stub = HookUtils::AllocateMemory(filterStubLength - 5);
+
+	if (!stub)
+	{
+		return nullptr;
+	}
+
+	unsigned char* p = stub;
+
+	for (int i = 0; i < 6; ++i)
+	{
+		*p++ = 0xFF; *p++ = 0x74; *p++ = 0x24; *p++ = 0x18;                               // push dword [esp+24]: copies msg, then from, last dword first
+	}
+
+	*p++ = 0xE8; *(int32_t*)p = (int32_t)((uintptr_t)filter - (uintptr_t)(p + 4)); p += 4;  // call filter
+	*p++ = 0x83; *p++ = 0xC4; *p++ = 0x18;                                                // add esp, 24
+	*p++ = 0x85; *p++ = 0xC0;                                                             // test eax, eax
+	*p++ = 0x75; *p++ = 0x01;                                                             // jnz +1
+	*p++ = 0xC3;                                                                          // ret: drop the packet
+	*p++ = 0xE9; *(int32_t*)p = 0;                                                        // jmp trampoline
+
+	return stub;
+}
+
+static void Proxy_Attach_PacketEventFilter(void)
+{
+	packetEventFilterStub = Proxy_MakeFilterStub((void*)&Proxy_SV_PacketEvent_Filter);
+
+	if (!packetEventFilterStub)
+	{
+		proxy.trap->Print("----- Proxy: Could not allocate memory for the filter stub '%s'\n", packetEventHookEntry.hookName);
+
+		return;
+	}
+
+	packetEventHookEntry.proxyFunctionPtr = (decltype(packetEventHookEntry.proxyFunctionPtr))packetEventFilterStub;
+
+	if (!HookUtils::Attach(packetEventHookEntry))
+	{
+		proxy.trap->Print("----- Proxy: Could not allocate memory for the trampoline '%s'\n", packetEventHookEntry.hookName);
+
+		// Same length as the allocation: ReleaseMemory adds 5 too, and munmap needs the mmap length on Linux
+		HookUtils::ReleaseMemory(packetEventFilterStub, filterStubLength - 5);
+		packetEventFilterStub = nullptr;
+
+		return;
+	}
+
+	// The jmp rel32 is the last 4 bytes of the stub. It can only be written now that Attach created the trampoline
+	// The server is single-threaded: no packet can reach the stub before this write
+	unsigned char* jmpRel32 = packetEventFilterStub + filterStubLength - 4;
+
+	*(int32_t*)jmpRel32 = (int32_t)((uintptr_t)Original_SV_PacketEvent - (uintptr_t)(jmpRel32 + 4));
+}
+
+// Safe during GAME_SHUTDOWN: neither the stub nor the trampoline leaves a return address on the stack
+static void Proxy_Detach_PacketEventFilter(void)
+{
+	if (!packetEventFilterStub)
+	{
+		return;
+	}
+
+	if (!HookUtils::Detach(packetEventHookEntry))
+	{
+		proxy.trap->Print("----- Proxy: Could not release memory for the trampoline '%s'\n", packetEventHookEntry.hookName);
+	}
+
+	// Same length as the allocation, see Proxy_Attach_PacketEventFilter
+	HookUtils::ReleaseMemory(packetEventFilterStub, filterStubLength - 5);
+	packetEventFilterStub = nullptr;
+}
 
 // ==================================================
 // Proxy_Patch_Attach
@@ -62,6 +165,8 @@ void Proxy_Engine_Attach_Patches(void)
 			}
 		}, hookEntry);
 	}
+
+	Proxy_Attach_PacketEventFilter();
 }
 
 // ==================================================
@@ -83,6 +188,8 @@ void Proxy_Engine_Detach_Patches(void)
 			}
 		}, hookEntry);
 	}
+
+	Proxy_Detach_PacketEventFilter();
 }
 
 // ==================================================

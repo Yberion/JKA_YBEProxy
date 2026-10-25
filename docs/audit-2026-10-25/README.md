@@ -4,8 +4,8 @@ Audit done on 2026-10-24 against version `0.19.0 Beta` (commit [`57d9a59`](https
 
 ## Files
 
-- [fixes.md](fixes.md): bugs and security issues to fix, ranked by severity (F1 to F11).
-- [improvements.md](improvements.md): robustness, simplification, full OpenJK support, build (A1 to A7).
+- [fixes.md](fixes.md): bugs and security issues to fix, ranked by severity (F1 to F11). All applied: each section ends with what was applied and the choices made.
+- [improvements.md](improvements.md): robustness, simplification, full OpenJK support, build (A1 to A9).
 - [other-engines.md](other-engines.md): comparison with Quake 3, ioquake3, Quake3e, OpenJK, JK2MV and TaystJK (EternalJK). Fixes missing from the proxy (O1 to O11), and differences that need nothing.
 - [feeling.md](feeling.md): why a recompiled engine (`linuxjampded`) or game module (`jampgame`) changes the combat "feeling", leads and a method to find the cause.
 
@@ -38,7 +38,7 @@ Retail binaries (`jampDed.exe` and `linuxjampded`, read with capstone, nothing e
 - The packet path makes real calls (`SV_PacketEvent` → `SV_ConnectionlessPacket` → `SVC_RemoteCommand`/`SVC_Status`/`SVC_Info`, and `SV_ExecuteClientMessage`).
 - `SV_PacketEvent` is cdecl, with the 20-byte `netadr_t` on the stack, and no relative instruction in its first bytes.
 - None of the 18 current hooks copies a relative instruction into its trampoline.
-- `Com_WriteConfig_f` is at `0x410680` (Windows) and `0x8074d64` (Linux). The Windows one starts with a relative `call`, which needs the A1 relocation before hooking.
+- `Com_WriteConfig_f` is at `0x410680` (Windows) and `0x8074d64` (Linux). The Windows one starts with a relative `call`, which needs the A1 relocation before hooking, unless the hook never runs its trampoline (what F7 does).
 
 Engine (jediacademy):
 
@@ -57,7 +57,7 @@ Engine (jediacademy):
 Game (jediacademy):
 
 - The forcepowers crash is server-side: `BG_LegalizedForcePowers` uses uninitialised `final_Powers[]` entries as an array index ([`game/bg_misc.c:439-563`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/bg_misc.c#L439-L563)).
-- The game compares the command names and arguments that the proxy filters whole, with `Q_stricmp` (see F10).
+- The game compares the command names and arguments that the proxy filters whole, with `Q_stricmp` (see F10.4).
 - `target_level_change` runs `map` with `EXEC_NOW` from inside the game ([`game/g_target.c:949`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_target.c#L949)).
 
 Other repositories:
@@ -75,11 +75,17 @@ The approach is the right one. Going through `vmMain` and the syscalls keeps the
 The risk sits in two places:
 
 - the engine-patching layer (hooks and rewritten engine functions), which causes the `rcon map` crash;
-- the connection path, where the game sees the client's userinfo before any proxy check. Any client can crash the server through it (F2).
+- the connection path, where the game sees the client's userinfo before any proxy check, which bypasses the name, model and `forcepowers` fixes (F2).
+
+## Progress
+
+- [fixes.md](fixes.md): F1 to F11 are applied. F10.1 is refuted, so there was nothing to do.
+- [other-engines.md](other-engines.md): O2, O3 and O4 are done through F6, F2 and F7. O6 must not be ported. Left: O1, O5, O7 (with A4), O8, O9, O10 and O11.
+- [improvements.md](improvements.md): A2 is no longer needed, because of F4 option A. Left: A1, A3 to A5, A8, and A9 (optional). A6 is a larger redesign, and A7 lists minor observations.
 
 ## Suggested order
 
-1. F2, then F3: userinfo sanitised on connect, and the anti-cheat fixed in the same function. Small changes. F2 closes a server crash that any client can trigger. Add the checks of O8 (duplicate keys, failed `Info_SetValueForKey`) and O1 (`ip`) at the same time: without O8, a long userinfo still gets through.
+1. F2, then F3: userinfo sanitised on connect, and the anti-cheat fixed in the same function. Small changes. F2 closes the bypass of the name, model and `forcepowers` fixes on connect. Add the checks of O8 (duplicate keys, failed `Info_SetValueForKey`) and O1 (`ip`) at the same time: without O8, a long userinfo still gets through.
 2. F9: a local variable in `netStatus`, and one test deleted in `Proxy_SV_UserMove`. Today a display command changes the snapshot rate of real players.
 3. F1: `rcon map` crash. Both checks on the binaries are done: the design works as is.
 4. F6, with F7: rcon and getstatus/getinfo rate limiting in the F1 filter, and `writeconfig`.
@@ -95,7 +101,9 @@ The risk sits in two places:
 - F4: OpenJK must keep working, including an OpenJK jampgame on an OpenJK server. Option A covers it.
 - F5: the proxy only reads `g_gametype` and `sv_fps`: register them with flags 0.
 - F3: the wider rule for `rancor`, `wampa` and `jedi_` is accepted.
-- F10 `/myratio`: the current rule is intended (color from `kill - death`, a suicide shows `0` in red). Only clamp the red number to 0.
+- F10.6: keep `exit()` when the original game module cannot be loaded, as the engine stops on a game module it cannot load. An `ERR_DROP` version left the server up with no map and no working rcon.
+- F10.7 `/myratio`: show `kill - death` in both colors. This replaces the first decision (keep `kill - (death - suicides)` in red, clamped to 0): Kills 2, Deaths 3, Suicides 2 must show `-1` in red.
+- F11: option 2 only, hook `Info_Print` with the ioq3/OpenJK buffer sizes (original engine). It also covers `serverinfo` and `systeminfo`, and drops no client. Option 1 is not applied.
 - O9: fix it. The author knows the bug and has reproduced it.
 - O5: add a `proxy_sv_maxClientsPerIP` cvar (default 3, 0 disables).
 - O8: port OpenJK's whole userinfo validation, compatible with the retail client (checked against its userinfo cvars).

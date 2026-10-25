@@ -35,6 +35,8 @@ constexpr intptr_t func_SVC_RemoteCommand_Com_BeginRedirect_SV_OUTPUTBUF_LENGTH_
 // --------------------------------
 
 constexpr intptr_t func_Com_Printf_addr[] = 				{ 0x40fbe0, 0x8072ca4 };
+constexpr intptr_t func_Com_WriteConfig_f_addr[] = 			{ 0x410680, 0x8074d64 };
+constexpr intptr_t func_Info_Print_addr[] = 				{ 0x410ce0, 0x8073504 };
 constexpr intptr_t func_SV_CalcPings_addr[] = 				{ 0x444220, 0x8057204 };
 constexpr intptr_t func_SV_SendMessageToClient_addr[] = 	{ 0x444dc0, 0x8058c84 };
 constexpr intptr_t func_SV_SendClientGameState_addr[] = 	{ 0x43ae70, 0x804cee4 };
@@ -72,6 +74,7 @@ constexpr intptr_t func_SV_SendClientSnapshot_addr[] = 				{ 0x4455c0, 0x8058e04
 constexpr intptr_t func_Com_DPrintf_addr[] = 						{ 0x40fdb0, 0x8072ed4 };
 constexpr intptr_t func_Com_HashKey_addr[] = 						{ 0x410370, 0x8073b14 };
 constexpr intptr_t func_Com_BeginRedirect_addr[] = 					{ 0x40fb70, 0x8072c34 };
+constexpr intptr_t func_Com_WriteConfigToFile_addr[] = 				{ 0x410630, 0x8074cb4 };
 // There's no function on Windows version as it was optimized, so do a proxy function
 // Use the define on Windows as the function address won't be accessible at compile time
 #define Proxy_Windows_Com_EndRedirect_ptr &Proxy_Windows_Com_EndRedirect
@@ -233,6 +236,7 @@ struct Functions_t
 	void			(QDECL *Com_Printf)								(const char*, ...);
 	void			(*Com_BeginRedirect)							(char*, int, void (*)(char*));
 	void			(*Com_EndRedirect)								(void);
+	void			(*Com_WriteConfigToFile)						(const char*);
 	char*			(*Cvar_VariableString)							(const char*);
 	float			(*Cvar_VariableValue)							(const char*);
 	fileHandle_t	(*FS_FOpenFileWrite)							(const char*);

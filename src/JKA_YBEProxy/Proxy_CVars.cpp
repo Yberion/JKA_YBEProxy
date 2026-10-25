@@ -4,7 +4,6 @@
 static cvarTable_t proxyOriginalEngineCVarTable[] =
 {
 	{ &proxy.originalEngineCvars.proxy_sv_pingFix, "proxy_sv_pingFix", "0", CVAR_ARCHIVE, 0, qfalse },
-	{ &proxy.originalEngineCvars.proxy_sv_enableRconCmdCooldown, "proxy_sv_enableRconCmdCooldown", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.originalEngineCvars.proxy_sv_enableNetStatus, "proxy_sv_enableNetStatus", "0", CVAR_ARCHIVE, 0, qfalse },
 };
 static constexpr std::size_t proxyOriginalEngineCVarTableSize = ARRAY_LEN(proxyOriginalEngineCVarTable);
@@ -17,8 +16,10 @@ static cvarTable_t proxyCVarTable[] =
 	{ &proxy.cvars.proxy_sv_disableKillCmd, "proxy_sv_disableKillCmd", "0", CVAR_ARCHIVE, 0, qfalse },
 
 	// get cvars
-	{ &proxy.cvars.sv_fps, "sv_fps", "20", CVAR_SERVERINFO, 0, qfalse },
-	{ &proxy.cvars.sv_gametype, "sv_gametype", "0", CVAR_SERVERINFO, 0, qfalse }
+	// Flags 0: Cvar_Get ORs the flags into the engine's cvar
+	{ &proxy.cvars.sv_fps, "sv_fps", "20", 0, 0, qfalse },
+	// The engine's sv_gametype variable is the "g_gametype" cvar
+	{ &proxy.cvars.sv_gametype, "g_gametype", "0", 0, 0, qfalse }
 };
 static constexpr std::size_t proxyCVarTableSize = ARRAY_LEN(proxyCVarTable);
 

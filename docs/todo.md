@@ -1,7 +1,7 @@
 # Todo
 
 > [!NOTE]
-> Bugs and improvements found during the audit are tracked separately in [audit/](audit/README.md). Items below that the audit covers link to it.
+> Bugs and improvements found during the audit are tracked separately in [audit-2026-10-25/](audit-2026-10-25/README.md). Items below that the audit covers link to it.
 
 ## Open
 
@@ -46,27 +46,23 @@
     ```
 
     </details>
-- Log to the server console when the OpenJK API is used, as with the original API. Cause: `InitGame` is not wrapped, see F4 in [audit/fixes.md](audit/fixes.md).
-- Fix `/myratio` on the OpenJK API. Cause: the `RunFrame` wrapper never updates `svsTime`, see F4 in [audit/fixes.md](audit/fixes.md).
-- **Redo the CMake project.** See also A5 in [audit/improvements.md](audit/improvements.md). Possible templates:
+- **Redo the CMake project.** See also A5 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md). Possible templates:
   - https://github.com/cpp-best-practices/cmake_conan_boilerplate_template
   - https://github.com/cpp-best-practices/cmake_template (newer)
-- **Create a plugin system.** See A6 in [audit/improvements.md](audit/improvements.md).
+- **Create a plugin system.** See A6 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
 - Store player IPs, as OpenJK does.
 - Patch `NET_SendPacket` to log packets. Maybe only packets under about 300 bytes, because some packets, such as info responses, are large.
 - Add a mute system (look at `SV_SendServerCommand`).
 - Make `dumpuser` accept a client number.
 - Make `/rcon forceteam -1 spectator` move everyone to spectators (catch the call with `GAME_CONSOLE_COMMAND`).
-- ffa3 crash exploit with events (look at `SV_AddEntitiesVisibleFromPoint`). Needs a high FPS. EternalJK fixed it, see O9 in [audit/other-engines.md](audit/other-engines.md).
+- ffa3 crash exploit with events (look at `SV_AddEntitiesVisibleFromPoint`). Needs a high FPS. EternalJK fixed it, see O9 in [audit-2026-10-25/other-engines.md](audit-2026-10-25/other-engines.md).
 - Rate policy.
 - Snaps policy.
-- Rate limiter (anti-DDoS). See F6 in [audit/fixes.md](audit/fixes.md).
-- Improve the OpenJK API support. There is no fallback to the original API yet, so make it possible to disable it (JSON or INI file?). See F4 in [audit/fixes.md](audit/fixes.md) and A2 in [audit/improvements.md](audit/improvements.md).
 - Only apply hooks on x86 (check the defines).
 
 ### Bugs
 
-- `rcon map mp/ffa3` (any map) and `rcon map_restart 0` sometimes crash the server since the hooked `SVC_RemoteCommand` was added. It happened more often with Discord running on the server machine. The likely cause is identified, not reproduced yet, see F1 in [audit/fixes.md](audit/fixes.md).
+None known.
 
 ### Ban system
 
@@ -86,6 +82,8 @@ Wanted behaviour: banning `152.0` bans `152.0.*.*` only, and player B can still 
 - Features from JKA_Anti-cheat: https://hackmd.io/CtIPZON0QHKuqjdxXRw8uw
 
 ## Done
+
+### Features and fixes
 
 - `donedl` exploit.
 - q3infoboom.
@@ -116,6 +114,12 @@ Wanted behaviour: banning `152.0` bans `152.0.*.*` only, and player B can still 
 - `netstatus` not working when a bot is on the server.
 - Debug build not working: the `msg` parameter in `Proxy_SV_UserMove()` seemed invalid.
 - Better README.
+- OpenJK: the proxy no longer exports `GetModuleAPI`, so OpenJK loads it through `dllEntry` and `vmMain`. Fixes the console log, the cvars and `/myratio` on OpenJK, see F4 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
+- Rate limiter (anti-DDoS): rcon bad passwords, `getstatus` and `getinfo`, see F6 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
+
+### Bugs
+
+- `rcon map mp/ffa3` (any map) and `rcon map_restart 0` sometimes crashed the server since the hooked `SVC_RemoteCommand` was added, more often with Discord running on the server machine. Proxy hook functions were still on the call stack when the engine unloaded the proxy. The packet checks now run in a filter at the entry of `SV_PacketEvent`, which returns before the original code runs, see F1 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
 
 ## Won't do
 

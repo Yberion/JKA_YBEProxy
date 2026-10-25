@@ -181,11 +181,8 @@ static void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 		server.functions.SV_ClientThink(client, &cmds[i]);
 
 		// Proxy -------------->
-		if (client->ping < 1)
-		{
-			continue;
-		}
-
+		// No ping test: bots never reach SV_UserMove (their usercmds go through BOTLIB_USER_COMMAND),
+		// and a human with a ping of 0 needs its stats too
 		if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer)
 		{
 			Proxy_Engine_Client_UpdateUcmdStats(getClientNumFromAddr(client), &cmds[i], packetIndex);
@@ -462,8 +459,8 @@ void Proxy_SV_UserinfoChanged(client_t* cl) {
 	val = Info_ValueForKey(cl->userinfo, "model");
 
 	// Fix model length crash on some custom clients
-	// This check is needed here first on the connection, before it goes to SV_UpdateUserinfo_f -> ClientUserinfoChanged
-	// There's also a check done in ClientUserinfoChanged
+	// On a connection this runs after GAME_CLIENT_CONNECT, on a userinfo command before GAME_CLIENT_USERINFO_CHANGED
+	// There's also a check done in Proxy_SharedAPI_SanitizeUserinfo, which runs on both
 	if (val)
 	{
 		const std::size_t modelLen = std::strlen(val);

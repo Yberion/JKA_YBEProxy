@@ -24,10 +24,10 @@ This is an educational project.
 | --- | --- | --- |
 | Original Windows `jampDed.exe` 1.01 | `(internal)JAmp: v1.0.1.0 win-x86 Oct 30 2003` | Game module layer and engine patches |
 | Original Linux `linuxjampded` 1.01 | `JAmp: v1.0.1.1 linux-i386 Nov 10 2003` | Game module layer and engine patches |
-| OpenJK | Not checked | Game module layer only, through the OpenJK API (`GetModuleAPI`) |
+| OpenJK | Not checked | Game module layer only, through `dllEntry` and `vmMain` (OpenJK's legacy game API) |
 
 > [!WARNING]
-> OpenJK support has known issues: proxy cvars are never registered, and OpenJK with the retail game module fails to start. See F4 in [docs/audit/fixes.md](docs/audit/fixes.md) and A2 in [docs/audit/improvements.md](docs/audit/improvements.md).
+> OpenJK support is not tested yet, neither with the retail game module nor with OpenJK's.
 
 The original engine and the retail game module are 32-bit, so use the 32-bit (x86) build of the proxy with them.
 
@@ -35,7 +35,8 @@ The original engine and the retail game module are 32-bit, so use the 32-bit (x8
 
 The proxy loads the original game module from `<fs_game>/JKA_YBEProxy.<ext>`, or `base/JKA_YBEProxy.<ext>` when `fs_game` is empty.
 
-- This path is relative to the server's current working directory, not to `fs_basepath` / `fs_homepath`. Start the server from the game's root folder.
+- This path is relative to `fs_basepath`, not to `fs_homepath`. By default `fs_basepath` is the server's current working directory, so start the server from the game's root folder, or set `fs_basepath`.
+- If the file cannot be opened, the server exits and prints the full path it tried.
 - The original game module must be a plain file at that path, not inside a pk3.
 
 ### Windows
@@ -70,23 +71,50 @@ The engine reloads the game module on every map change.
 
 ## Building
 
-Requirements: CMake 3.12 or later and a C++20 compiler (Visual Studio 2022, GCC or Clang). Without an explicit build type, CMake builds in Release.
+Requirements: CMake 3.12 or later and a C++20 compiler (Visual Studio 2026, GCC or Clang). Without an explicit build type, CMake builds in Release.
 
 ### Windows
 
-Run `CreateVisualStudio2022Projects_x86.bat`. It generates a Visual Studio 2022 solution in `build/` (Win32, static runtime):
+Requirements: Visual Studio 2026 and CMake 4.2 or later, the first version with the Visual Studio 2026 generator.
+
+Run `CreateVisualStudio2026Projects_x86.bat`. It generates a Visual Studio 2026 solution in `build/` (Win32, static runtime):
 
 ```
-cmake -G "Visual Studio 17" -A Win32 -T host=x86 -D MSVC_RUNTIME=static ..
+cmake -G "Visual Studio 18 2026" -A Win32 -T host=x86 -D MSVC_RUNTIME=static ..
 ```
 
-Open `build/JKA_YBEProxy.sln` and build the Release configuration. The output is `build/Release/jampgamex86.dll`.
+If `build/` was generated for another Visual Studio version, delete it first: CMake does not change the generator of an existing build folder.
 
-`CreateVisualStudio2022Projects_x64.bat` produces a 64-bit build. It is only useful with a 64-bit OpenJK server, not with the original engine.
+Open the `JKA_YBEProxy` solution in `build/` and build the Release configuration. The output is `build/Release/jampgamex86.dll`.
+
+`CreateVisualStudio2026Projects_x64.bat` produces a 64-bit build. It is only useful with a 64-bit OpenJK server, not with the original engine.
 
 ### Linux
 
-To build the 32-bit version on a 64-bit distribution, pass `-DTARGET_ARCH=x86` (this needs 32-bit compiler support, for example `gcc-multilib` and `g++-multilib`):
+The original engine is 32-bit, so on a 64-bit distribution the proxy is built in 32-bit (`-DTARGET_ARCH=x86`). This needs the 32-bit C library and the 32-bit C++ library for GCC.
+
+Debian, Ubuntu (`apt`):
+
+```
+sudo apt install build-essential cmake git gcc-multilib g++-multilib
+```
+
+- `build-essential`: `gcc`, `g++`, `make` and the C library headers.
+- `gcc-multilib`, `g++-multilib`: the 32-bit C and C++ libraries for `-m32`, static C++ library included.
+
+Fedora, RHEL, Rocky Linux, AlmaLinux (`dnf`):
+
+```
+sudo dnf install gcc gcc-c++ make cmake git glibc-devel.i686 libstdc++-devel.x86_64 libstdc++-devel.i686 libstdc++-static.i686 libatomic.i686
+```
+
+- `glibc-devel.i686`: the 32-bit C library.
+- `libstdc++-devel.x86_64`: the C++ headers, including the 32-bit `bits/c++config.h` that `g++ -m32` uses (`x86_64-redhat-linux/32`). Name it explicitly: `libstdc++-devel.i686` alone satisfies the dependency of `gcc-c++`, and then `-m32` fails with `bits/c++config.h: No such file or directory`.
+- `libstdc++-devel.i686`: the 32-bit C++ library.
+- `libstdc++-static.i686`: the 32-bit static C++ library, linked into the `.so`.
+- `libatomic.i686`: since GCC 16, `g++` always passes `-latomic` to the linker (`--as-needed`), so the 32-bit one must exist. Without it: `cannot find /usr/lib/libatomic.so.1.2.0`.
+
+Build:
 
 ```
 mkdir build && cd build
@@ -94,7 +122,9 @@ cmake .. -DTARGET_ARCH=x86
 make
 ```
 
-The output is `jampgamei386.so`.
+The output is `build/src/jampgamei386.so`. `file src/jampgamei386.so` must show `ELF 32-bit LSB shared object, Intel 80386`.
+
+`libstdc++` and `libgcc` are linked into the `.so`, so the server needs no C++ library. It still needs a glibc at least as recent as the one the `.so` was built with, otherwise the server cannot load it (`version 'GLIBC_2.xx' not found`). Build on the server itself, or on a distribution that is not newer than the server's.
 
 ## Documentation
 
@@ -102,12 +132,12 @@ The output is `jampgamei386.so`.
 - [Patch notes](docs/patchnotes.md)
 - [Todo](docs/todo.md)
 - [Trampoline hooks](docs/trampoline-hook.md): how the engine hooks work.
-- [Audit](docs/audit/README.md): known bugs, improvements, and the combat "feeling" investigation.
+- [Audit](docs/audit-2026-10-25/README.md): known bugs, improvements, and the combat "feeling" investigation.
 
 ## Developer notes
 
 - Check the disassembly before hooking a `static` function of the original binaries. The compiler may have inlined it into its callers, or given it a non-standard calling convention, and in both cases a plain trampoline hook does not work. See the pitfalls in [docs/trampoline-hook.md](docs/trampoline-hook.md#5-pitfalls).
-- Known crash: `rcon map <map>` and `rcon map_restart 0` sometimes crash the server, which was observed more often with Discord running on the server machine. The likely cause is identified, not reproduced yet: hook functions are still on the call stack when the engine unloads the proxy. The fix is described in F1 of [docs/audit/fixes.md](docs/audit/fixes.md).
+- Crash on `rcon map <map>` and `rcon map_restart 0`, observed more often with Discord running on the server machine. The likely cause: hook functions were still on the call stack when the engine unloaded the proxy. The out-of-band packet checks now run in a filter at the entry of `SV_PacketEvent`, which returns before the original code runs (F1 in [docs/audit-2026-10-25/fixes.md](docs/audit-2026-10-25/fixes.md)). The crash was never reproduced, so the fix is not confirmed yet.
 
 ## Credits
 

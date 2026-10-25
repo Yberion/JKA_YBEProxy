@@ -119,6 +119,7 @@ struct LocatedGameData_t
 struct ClientData_t
 {
 	bool				isConnected;
+	bool				sendWelcomeMessage;
 	char				cleanName[MAX_NETNAME];
 
 	timenudgeData_t		timenudgeData;
@@ -135,7 +136,6 @@ struct Proxy_OriginalEngine_CVars_t
 {
 	// New cvars
 	vmCvar_t proxy_sv_pingFix;
-	vmCvar_t proxy_sv_enableRconCmdCooldown;
 	vmCvar_t proxy_sv_enableNetStatus;
 };
 
@@ -162,12 +162,6 @@ struct Proxy_t
 	intptr_t				originalVmMainResponse;
 
 	gameImport_t*			trap;
-
-	gameImport_t*			originalOpenJKAPIGameImportTable;
-	gameExport_t*			originalOpenJKAPIGameExportTable;
-
-	gameImport_t*			copyOpenJKAPIGameImportTable;
-	gameExport_t*			copyOpenJKAPIGameExportTable;
 
 	bool					isOriginalEngine;
 
