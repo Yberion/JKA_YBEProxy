@@ -1,8 +1,10 @@
 macro(ybeproxy_setup_options)
-  # Off by default, unlike the template: this DLL patches the engine's code at runtime, and none of these has been
-  # tested with the hooks (stack protector and CET prologues change function bodies, LTO can inline or merge them).
+  # Off by default, unlike the template: this DLL patches the engine's code at runtime, and the stack protector and
+  # CET prologues change function bodies. Not tested with the hooks.
   option(ybeproxy_ENABLE_HARDENING "Enable hardening" OFF)
-  option(ybeproxy_ENABLE_IPO "Enable IPO/LTO" OFF)
+  # Off by default, unlike the template: works with the hooks, but makes the GCC build about 40% bigger and no gain
+  # was measured.
+  option(ybeproxy_ENABLE_IPO "Enable IPO/LTO (Release builds only)" OFF)
   option(ybeproxy_WARNINGS_AS_ERRORS "Treat Warnings As Errors" OFF)
   option(ybeproxy_ENABLE_CLANG_TIDY "Enable clang-tidy" OFF)
   option(ybeproxy_ENABLE_CPPCHECK "Enable cpp-check analysis" OFF)
