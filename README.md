@@ -165,6 +165,7 @@ Set with `-D<name>=ON` on the configure command. All are off by default, except 
 - Assembly shell system by Deathspike and BobaFett, with Sil's fix.
 - [OpenJK](https://github.com/JACoders/OpenJK): several fixes and parts of the code.
 - [jk2mv](https://github.com/mvdevs/jk2mv) and fau: packet and FPS statistics, ping fix.
+- [Quake3e](https://github.com/ec-/Quake3e) by ec-: the per-address rate limiting of out-of-band packets, and the limit of connections per IP address ([`proxy_sv_maxClientsPerIP`](docs/features.md#proxy_sv_maxclientsperip)).
 - [Zydis](https://github.com/zyantific/zydis) by Florian Bernd and Joel Honer (MIT): instruction decoder used by the hook utilities. It replaced the Hacker Disassembler Engine (HDE32/HDE64) by Vyacheslav Patkov.
 - Original game source code: [jediacademy](https://github.com/jedis/jediacademy) by Raven Software and Activision.
 - Build system: based on [cpp-best-practices/cmake_template](https://github.com/cpp-best-practices/cmake_template) (public domain, Unlicense), without its tests, dependencies, WebAssembly, sanitizers, packaging and fuzzing parts.

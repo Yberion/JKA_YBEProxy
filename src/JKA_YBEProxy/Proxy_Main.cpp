@@ -7,6 +7,7 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
 #include "JKA_YBEProxy/Proxy_CVars.hpp"
 #include "JKA_YBEProxy/Proxy_Files.hpp"
+#include "JKA_YBEProxy/Proxy_Bans.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 #include "JKA_YBEProxy/Proxy_SharedAPI.hpp"
@@ -99,6 +100,9 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 				proxy.trap->Print("----- Proxy: Engine properly patched\n");
 			}
 
+			// Before the game loads its ban list from g_banIPs
+			Proxy_Bans_BeforeGameInit();
+
 			break;
 		}
 		//==================================================
@@ -146,7 +150,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		// of our own active functions.
 		// ==================================================
 		{
-			Proxy_UpdateAllCvars();
+			Proxy_UpdateAllCvars((int)arg0);
 			proxy.proxyData.svsTime = (int)arg0;
 
 			break;
@@ -163,7 +167,15 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 				return (intptr_t)reason;
 			}
 
-			break;
+			const intptr_t response = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+
+			// The game returns a reason when it refuses the client
+			if (!response)
+			{
+				Proxy_SharedAPI_ClientConnected((int)arg0, (qboolean)arg2);
+			}
+
+			return response;
 		}
 		//==================================================
 		case GAME_CLIENT_DISCONNECT: // (int clientNum, qboolean firstTime, qboolean isBot)
@@ -204,6 +216,17 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 			return response;
 		}
 		*/
+		//==================================================
+		case GAME_CONSOLE_COMMAND: // (void)
+		//==================================================
+		{
+			if (Proxy_SharedAPI_ConsoleCommand())
+			{
+				return qtrue;
+			}
+
+			break;
+		}
 		//==================================================
 		case GAME_CLIENT_USERINFO_CHANGED: // (int clientNum)
 		//==================================================

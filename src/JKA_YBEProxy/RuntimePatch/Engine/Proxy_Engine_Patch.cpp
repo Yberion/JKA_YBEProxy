@@ -4,6 +4,7 @@
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_common.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_files.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_msg.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_game.hpp"
@@ -24,6 +25,7 @@
 
 static std::variant<
 	HookUtils::HookEntry<decltype(Proxy_Com_Printf)>,
+	HookUtils::HookEntry<decltype(Proxy_MSG_ReadBits)>,
 	HookUtils::HookEntry<decltype(Proxy_Cmd_TokenizeString)>, // HookEntry<decltype(&Proxy_Info_Print)>,
 	HookUtils::HookEntry<decltype(Proxy_SV_SendMessageToClient)>,
 	HookUtils::HookEntry<decltype(Proxy_SV_CalcPings)>, // HookEntry<decltype(&Proxy_SV_Status_f)>, HookEntry<decltype(&Proxy_Com_WriteConfig_f)>,
@@ -33,6 +35,7 @@ static std::variant<
 	HookUtils::HookEntry<decltype(Proxy_SV_ExecuteClientCommand)>
 > hookEntries[] = {
 	HookUtils::HookEntry("Com_Printf", (unsigned char*)func_Com_Printf_addr[PROXY_PLATFORM], &Original_Com_Printf, &Proxy_Com_Printf),
+	HookUtils::HookEntry("MSG_ReadBits", (unsigned char*)func_MSG_ReadBits_addr[PROXY_PLATFORM], &Original_MSG_ReadBits, &Proxy_MSG_ReadBits),
 	HookUtils::HookEntry("Cmd_TokenizeString", (unsigned char*)func_Cmd_TokenizeString_addr[PROXY_PLATFORM], &Original_Cmd_TokenizeString, &Proxy_Cmd_TokenizeString),
 	HookUtils::HookEntry("Com_WriteConfig_f", (unsigned char*)func_Com_WriteConfig_f_addr[PROXY_PLATFORM], &Original_Com_WriteConfig_f, &Proxy_Com_WriteConfig_f),
 	HookUtils::HookEntry("Info_Print", (unsigned char*)func_Info_Print_addr[PROXY_PLATFORM], &Original_Info_Print, &Proxy_Info_Print),
@@ -42,6 +45,7 @@ static std::variant<
 	HookUtils::HookEntry("SV_SendClientGameState", (unsigned char*)func_SV_SendClientGameState_addr[PROXY_PLATFORM], &Original_SV_SendClientGameState, &Proxy_SV_SendClientGameState),
 	HookUtils::HookEntry("SV_ExecuteClientMessage", (unsigned char*)func_SV_ExecuteClientMessage_addr[PROXY_PLATFORM], &Original_SV_ExecuteClientMessage, &Proxy_SV_ExecuteClientMessage),
 	HookUtils::HookEntry("SV_UserinfoChanged", (unsigned char*)func_SV_UserinfoChanged_addr[PROXY_PLATFORM], &Original_SV_UserinfoChanged, &Proxy_SV_UserinfoChanged),
+	HookUtils::HookEntry("SV_DumpUser_f", (unsigned char*)func_SV_DumpUser_f_addr[PROXY_PLATFORM], &Original_SV_DumpUser_f, &Proxy_SV_DumpUser_f),
 	HookUtils::HookEntry("SV_Status_f", (unsigned char*)func_SV_Status_f_addr[PROXY_PLATFORM], &Original_SV_Status_f, &Proxy_SV_Status_f),
 	HookUtils::HookEntry("SV_BeginDownload_f", (unsigned char*)func_SV_BeginDownload_f_addr[PROXY_PLATFORM], &Original_SV_BeginDownload_f, &Proxy_SV_BeginDownload_f),
 	HookUtils::HookEntry("SV_DoneDownload_f", (unsigned char*)func_SV_DoneDownload_f_addr[PROXY_PLATFORM], &Original_SV_DoneDownload_f, &Proxy_SV_DoneDownload_f),
@@ -219,5 +223,16 @@ void Proxy_Engine_Inline_Patches(void)
 	if (!HookUtils::Patch((unsigned char*)func_SVC_RemoteCommand_Com_BeginRedirect_SV_OUTPUTBUF_LENGTH_addr[PROXY_PLATFORM], 0x03))
 	{
 		Proxy_FatalHookError("SVC_RemoteCommand Com_BeginRedirect", HookUtils::Status::ProtectionFailed);
+	}
+	// "jbe" to "jb": a userinfo that reaches exactly 1024 characters (or a big info string, 8192) must be refused, not
+	// written with its NUL one byte past the buffer. The connect packet gets there through SV_DirectConnect's "ip" key
+	if (!HookUtils::Patch((unsigned char*)func_Info_SetValueForKey_length_jbe_addr[PROXY_PLATFORM], 0x72))
+	{
+		Proxy_FatalHookError("Info_SetValueForKey length", HookUtils::Status::ProtectionFailed);
+	}
+
+	if (!HookUtils::Patch((unsigned char*)func_Info_SetValueForKey_Big_length_jbe_addr[PROXY_PLATFORM], 0x72))
+	{
+		Proxy_FatalHookError("Info_SetValueForKey_Big length", HookUtils::Status::ProtectionFailed);
 	}
 }

@@ -30,6 +30,12 @@ constexpr std::size_t func_SVC_RemoteCommand_timer_NOP_amount[] = { 25, 25 };
 // the address to the byte that will allow use to change the value from 49136 to 1008
 constexpr intptr_t func_SVC_RemoteCommand_Com_BeginRedirect_SV_OUTPUTBUF_LENGTH_addr[] = { 0x443de8, 0x8056c7d };
 
+// Info_SetValueForKey and Info_SetValueForKey_Big of the engine test "length > MAX" (cmp, jbe), so a result of exactly
+// MAX_INFO_STRING / BIG_INFO_STRING passes and its terminating NUL is written one byte past the buffer. The jbe (0x76)
+// becomes jb (0x72), which is ">=" as in ioq3 and JK2MV
+constexpr intptr_t func_Info_SetValueForKey_length_jbe_addr[] =		{ 0x41beb2, 0x807fe24 };
+constexpr intptr_t func_Info_SetValueForKey_Big_length_jbe_addr[] =	{ 0x41c091, 0x8080024 };
+
 // --------------------------------
 // Function address to hook
 // --------------------------------
@@ -40,6 +46,7 @@ constexpr intptr_t func_Info_Print_addr[] = 				{ 0x410ce0, 0x8073504 };
 constexpr intptr_t func_SV_CalcPings_addr[] = 				{ 0x444220, 0x8057204 };
 constexpr intptr_t func_SV_SendMessageToClient_addr[] = 	{ 0x444dc0, 0x8058c84 };
 constexpr intptr_t func_SV_SendClientGameState_addr[] = 	{ 0x43ae70, 0x804cee4 };
+constexpr intptr_t func_SV_DumpUser_f_addr[] =				{ 0x43a8c0, 0x804fd74 };
 constexpr intptr_t func_SV_Status_f_addr[] = 				{ 0x43a4a0, 0x804f7f4 };
 constexpr intptr_t func_SV_SvEntityForGentity_addr[] = 		{ 0x43cd80, 0x804ffb4 };
 constexpr intptr_t func_SV_ConnectionlessPacket_addr[] = 	{ 0x443f00, 0x8056d64 };
@@ -96,6 +103,7 @@ constexpr intptr_t func_NET_AdrToString_addr[] = 					{ 0x419f10, 0x807b314 };
 constexpr intptr_t func_NET_OutOfBandPrint_addr[] = 				{ 0x41a230, 0x807b744 };
 constexpr intptr_t func_NET_CompareBaseAdr_addr[] = 				{ 0x419e90, 0x807b284 };
 constexpr intptr_t func_MSG_Init_addr[] = 							{ 0x419d00, 0x80774a4 };
+constexpr intptr_t func_MSG_ReadBits_addr[] = 						{ 0x4186d0, 0x8077834 };
 constexpr intptr_t func_MSG_ReadByte_addr[] = 						{ 0x4189f0, 0x8077df4 };
 constexpr intptr_t func_MSG_ReadDeltaUsercmdKey_addr[] = 			{ 0x418b50, 0x8078b34 };
 constexpr intptr_t func_MSG_ReadShort_addr[] = 						{ 0x418a20, 0x8077e34 };

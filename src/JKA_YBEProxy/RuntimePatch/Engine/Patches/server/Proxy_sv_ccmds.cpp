@@ -2,6 +2,7 @@
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 #include "sdk/qcommon/game_version.hpp"
 #include "JKA_YBEProxy/Imports/server/sv_game.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_common.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_files.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.hpp"
 
@@ -122,4 +123,46 @@ const char* Proxy_SV_GetStringEdString(const char* /*refSection*/, const char* r
 	static char text[1024] = { 0 };
 	Com_sprintf(text, sizeof(text), "@@@%s", refName);
 	return text;
+}
+
+/*
+================
+SV_DumpUser_f
+
+The original only finds a player by name. A client number now works too, as in ioq3, OpenJK and Quake3e
+(SV_GetPlayerByHandle). Anything else, a name or a bad number, goes to the original command
+================
+*/
+
+void (*Original_SV_DumpUser_f)(void);
+void Proxy_SV_DumpUser_f(void)
+{
+	if (server.common.cvars.com_sv_running->integer && *server.common.vars.cmd_argc == 2)
+	{
+		const char* arg = server.common.functions.Cmd_Argv(1);
+		const char* c = arg;
+
+		while (*c >= '0' && *c <= '9')
+		{
+			++c;
+		}
+
+		// An empty argument is not a number
+		if (c != arg && !*c)
+		{
+			const int clientNum = atoi(arg);
+
+			// A number too long for an int is not a client number: the original then looks for a player of that name
+			if (c - arg <= 4 && clientNum < server.cvars.sv_maxclients->integer && server.svs->clients[clientNum].state)
+			{
+				server.common.functions.Com_Printf("userinfo\n");
+				server.common.functions.Com_Printf("--------\n");
+				Proxy_Info_Print(server.svs->clients[clientNum].userinfo);
+
+				return;
+			}
+		}
+	}
+
+	Original_SV_DumpUser_f();
 }

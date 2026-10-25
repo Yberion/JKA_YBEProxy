@@ -6,7 +6,7 @@ Not bugs as such: robustness, simplification, missing features and build hygiene
 
 ### Signature check
 
-Status: confirmed. The only check before patching is the `version` cvar string ([Proxy_Main.cpp:83](../../src/JKA_YBEProxy/Proxy_Main.cpp#L83)).
+Status: confirmed, **not done**: the author considers that the `version` check is enough (a signature check, a generated table of the first bytes of every address from the retail binaries, and a stop on a difference were written, then removed). The only check before patching is the `version` cvar string ([Proxy_Main.cpp:83](../../src/JKA_YBEProxy/Proxy_Main.cpp#L83)).
 
 Fix:
 
@@ -52,7 +52,7 @@ Left, optional:
 
 ### Struct layout
 
-Status: confirmed. There is no `static_assert` on the engine structures, although the addresses of the fields are written as comments, Windows then Linux ([server.hpp:186-195](../../src/sdk/server/server.hpp#L186-L195)).
+Status: confirmed, **not done**, by decision of the author (`sizeof(client_t)` is `0x51478` in both retail engines, if it is ever wanted). There is no `static_assert` on the engine structures, although the addresses of the fields are written as comments, Windows then Linux ([server.hpp:186-195](../../src/sdk/server/server.hpp#L186-L195)).
 
 Fix: turn them into offsets. For example, `serverStatic_t` starts at `0x606218` and `clients` is at `0x606224`, so:
 
@@ -99,9 +99,13 @@ Status: confirmed.
 
   Fix: one `static void Proxy_RegisterCvarTable(cvarTable_t* table, std::size_t size)` and one `static void Proxy_UpdateCvarTable(cvarTable_t* table, std::size_t size)`, called with each table.
 
+#### Applied
+
+Status: **applied**. The F1 and F4 parts were removed with F1 and F4. The two cvar tables now go through `Proxy_RegisterCvarTable` and `Proxy_UpdateCvarTable` in [Proxy_CVars.cpp](../../src/JKA_YBEProxy/Proxy_CVars.cpp). The two prints of the original-engine registration are kept. No behaviour change, so no entry in the patch notes. Not compiled when written.
+
 ## A4. Tokenizer hardening
 
-Status: confirmed.
+Status: **applied**, see O7 in [other-engines.md](other-engines.md).
 
 [Proxy_cmd.cpp:34-36](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp#L34-L36) copies `text_in` into `cmd_cmd`, then tokenizes `text_in`, which is unbounded, instead of the bounded copy. The output buffer `cmd_tokenized` is `BIG_INFO_STRING + MAX_STRING_TOKENS` bytes ([`qcommon/cmd_common.cpp:292`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/cmd_common.cpp#L292)). Tokenizing `cmd_cmd` guarantees no overflow.
 
@@ -171,6 +175,10 @@ Comes out of the F1 discussion: a pinned loader that holds the hooks and trampol
   - The tokenizer ends a token at `"` ([Proxy_cmd.cpp:73-99](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp#L73-L99)). Neither the connect packet nor the `userinfo` command can put a `"` in the userinfo, and `cl->name` comes from the userinfo.
   - A quoted token can contain a newline. A name with a newline only breaks the layout of the `netStatus` table. Cosmetic.
 
+#### Applied
+
+Status: **partly applied**. Only the "lost %i clientCommands" count was changed: it prints `seq - lastClientCommand - 1`, as Quake3e does. The retail source, ioq3, OpenJK, JK2MV, TaystJK, CleanJK and Quake III Arena all keep the `+ 1`. The other items need nothing: the `currentVM` case only matters with a second VM (a listen server, which the proxy does not support), and the `Proxy_SV_VerifyPaks_f` loop is bounded by the server's pak count. Not compiled when written.
+
 ## A8. Cvar to disable the welcome message
 
 Request of the author. Today every human player gets the proxy name and version on their first connection, with no way to turn it off.
@@ -196,6 +204,10 @@ New cvar `proxy_sv_disableWelcomeMessage`: archived, any engine, default `0` (me
 - Document the cvar in [features.md](../features.md), next to the other cvars and in the "Welcome message" section.
 
 Proxy cvars are read about once per second (`Proxy_UpdateAllCvars` in `GAME_RUN_FRAME`), which is enough here.
+
+#### Applied
+
+Status: **applied**, as described above. Not compiled when written.
 
 ## A9. Stateless challenges (optional)
 

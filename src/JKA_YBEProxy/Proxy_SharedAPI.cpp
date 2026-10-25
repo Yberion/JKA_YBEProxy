@@ -3,6 +3,7 @@
 #include "JKA_YBEProxy/Proxy_ClientCommand.hpp"
 #include "sdk/server/sv_client.hpp"
 #include "JKA_YBEProxy/Proxy_SharedAPI.hpp"
+#include "JKA_YBEProxy/Proxy_Bans.hpp"
 #include "JKA_YBEProxy/Imports/game/g_cmds.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.hpp"
 
@@ -28,11 +29,50 @@ void Proxy_SharedAPI_GetUsercmd(int /*clientNum*/, usercmd_t* ucmd)
 	}
 
 	ucmd->angles[ROLL] = 0;
+
+	// A signed char reaches -128 but only +127: a negative move would be one unit longer than the longest positive one
+	// (ioq3 bug 5273, OpenJK, Quake3e and TaystJK do it when they read the usercmd)
+	if (ucmd->forwardmove == -128)
+	{
+		ucmd->forwardmove = -127;
+	}
+
+	if (ucmd->rightmove == -128)
+	{
+		ucmd->rightmove = -127;
+	}
+
+	if (ucmd->upmove == -128)
+	{
+		ucmd->upmove = -127;
+	}
 }
 
 // ==================================================
 // EXPORT TABLE
 // ==================================================
+
+// The userinfo of a bot comes from the bot files, and has no forcepowers key
+static bool Proxy_IsBot(int clientNum)
+{
+	if (!proxy.locatedGameData.g_entities)
+	{
+		return false;
+	}
+
+	const sharedEntity_t* ent = (const sharedEntity_t*)((const unsigned char*)proxy.locatedGameData.g_entities + (std::size_t)proxy.locatedGameData.g_entitySize * (std::size_t)clientNum);
+
+	return (ent->r.svFlags & SVF_BOT) != 0;
+}
+
+// "1.2.3.4:29070" -> "1.2.3.4"
+static void Proxy_GetBaseAddress(const char* ip, char* out, std::size_t outSize)
+{
+	const char* port = std::strrchr(ip, ':');
+	const std::size_t len = port ? (std::size_t)(port - ip) : std::strlen(ip);
+
+	Q_strncpyz(out, ip, (outSize < len + 1) ? outSize : len + 1);
+}
 
 const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
 {
@@ -40,7 +80,46 @@ const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qbo
 	// Bots are skipped: their userinfo comes from the bot files
 	if (!isBot)
 	{
-		const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum);
+		// SV_DirectConnect adds the "ip" key that the game's ban check reads. When the userinfo was too long to receive it,
+		// the key is missing, and a banned address would pass
+		char userinfo[MAX_INFO_STRING];
+
+		proxy.trap->GetUserinfo(clientNum, userinfo, sizeof(userinfo));
+
+		if (!Info_ValueForKey(userinfo, "ip")[0])
+		{
+			// Same message as ioq3, JK2MV and OpenJK give when the connection is refused for that reason
+			return "Userinfo string length exceeded.  Try removing setu cvars from your config.";
+		}
+
+		// The ban list is the proxy's, the game's own is empty (see Proxy_Bans.cpp). Same reason as the game's
+		if (Proxy_Bans_IsBanned(Info_ValueForKey(userinfo, "ip")))
+		{
+			return "Banned.";
+		}
+
+		// Limit of clients per IP address, from Quake3e's sv_maxclientsPerIP (SV_DirectConnect): a new connection is refused
+		// when the other clients of the address already reach the limit
+		// Several players can share one address (LAN, carrier NAT): the limit is a setting. Only for a new connection: at
+		// each map change the engine connects again the clients that are already in
+		if (firstTime && proxy.cvars.proxy_sv_maxClientsPerIP.integer > 0)
+		{
+			char address[sizeof(proxy.clientData[0].address)];
+			int count = 0;
+
+			Proxy_GetBaseAddress(Info_ValueForKey(userinfo, "ip"), address, sizeof(address));
+
+			for (int i = 0; i < MAX_CLIENTS; ++i)
+			{
+				// The address of a slot is empty for a bot, and until the game accepted its client
+				if (i != clientNum && !std::strcmp(proxy.clientData[i].address, address) && ++count >= proxy.cvars.proxy_sv_maxClientsPerIP.integer)
+				{
+					return "Too many connections from your IP address.";
+				}
+			}
+		}
+
+		const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum, true, nullptr);
 
 		// Returning the reason refuses the client, never DropClient here (the slot is still CS_FREE)
 		if (reason)
@@ -53,6 +132,19 @@ const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qbo
 	proxy.clientData[clientNum].sendWelcomeMessage = firstTime && !isBot;
 
 	return nullptr;
+}
+
+void Proxy_SharedAPI_ClientConnected(int clientNum, qboolean isBot)
+{
+	if (isBot)
+	{
+		return;
+	}
+
+	char userinfo[MAX_INFO_STRING];
+
+	proxy.trap->GetUserinfo(clientNum, userinfo, sizeof(userinfo));
+	Proxy_GetBaseAddress(Info_ValueForKey(userinfo, "ip"), proxy.clientData[clientNum].address, sizeof(proxy.clientData[clientNum].address));
 }
 
 void Proxy_SharedAPI_ClientDisconnect(int clientNum)
@@ -77,9 +169,105 @@ void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean /*allowTeamReset*/)
 		{
 			currentClientData->sendWelcomeMessage = false;
 
-			proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
+			if (!proxy.cvars.proxy_sv_disableWelcomeMessage.integer)
+			{
+				proxy.trap->SendServerCommand(clientNum, va("print \"^5%s (^7%s^5) %s^7\n\"", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR));
+			}
 		}
 	}
+}
+
+// "forceteam -1 <team>": the game only takes a client number or a name, "-1" is looked up as a name and fails
+// Every client in the game gets the game's own "forceteam <number> <team>", so SetTeam runs with its usual checks
+// The commands are appended, not executed now: the game must not run console commands from inside one
+static void Proxy_ForceTeamEveryone(const char* team)
+{
+	// The team goes into command text: it must not be able to end the command and start another
+	if (!team[0] || std::strpbrk(team, ";\"\n\r"))
+	{
+		proxy.trap->Print("Usage: forceteam -1 <team>\n");
+
+		return;
+	}
+
+	const int maxClients = proxy.trap->Cvar_VariableIntegerValue("sv_maxclients");
+
+	for (int i = 0; i < MAX_CLIENTS && i < maxClients; ++i)
+	{
+		if (proxy.clientData[i].isConnected)
+		{
+			proxy.trap->SendConsoleCommand(EXEC_APPEND, va("forceteam %i \"%s\"\n", i, team));
+		}
+	}
+}
+
+// "mute <client number>" and "unmute <client number>", from the server console or rcon
+// The game has no such command, so GAME_CONSOLE_COMMAND reaches the proxy for it
+qboolean Proxy_SharedAPI_ConsoleCommand(void)
+{
+	char cmd[MAX_TOKEN_CHARS];
+
+	proxy.trap->Argv(0, cmd, sizeof(cmd));
+
+	if (Proxy_Bans_ConsoleCommand(cmd))
+	{
+		return qtrue;
+	}
+
+	if (!Q_stricmp(cmd, "forceteam"))
+	{
+		char arg1[MAX_TOKEN_CHARS];
+		char arg2[MAX_TOKEN_CHARS];
+
+		proxy.trap->Argv(1, arg1, sizeof(arg1));
+		proxy.trap->Argv(2, arg2, sizeof(arg2));
+
+		if (std::strcmp(arg1, "-1"))
+		{
+			return qfalse;
+		}
+
+		Proxy_ForceTeamEveryone(arg2);
+
+		return qtrue;
+	}
+
+	const bool mute = !Q_stricmp(cmd, "mute");
+
+	if (!mute && Q_stricmp(cmd, "unmute"))
+	{
+		return qfalse;
+	}
+
+	char arg[MAX_TOKEN_CHARS];
+
+	proxy.trap->Argv(1, arg, sizeof(arg));
+
+	// Digits only: atoi would read "1abc" as 1, and the empty argument as 0
+	bool isNumber = arg[0] != '\0';
+
+	for (const char* c = arg; *c; ++c)
+	{
+		isNumber = isNumber && *c >= '0' && *c <= '9';
+	}
+
+	const int clientNum = isNumber ? atoi(arg) : -1;
+
+	if (clientNum < 0 || clientNum >= MAX_CLIENTS || clientNum >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients") || !proxy.clientData[clientNum].isConnected)
+	{
+		proxy.trap->Print("Usage: %s <client number>, of a player in the game (see status)\n", mute ? "mute" : "unmute");
+
+		return qtrue;
+	}
+
+	ClientData_t* clientData = &proxy.clientData[clientNum];
+
+	clientData->muted = mute;
+
+	proxy.trap->Print("%s ^7%s\n", clientData->cleanName, mute ? "is muted" : "is no longer muted");
+	proxy.trap->SendServerCommand(clientNum, mute ? "print \"You have been muted.\n\"" : "print \"You are no longer muted.\n\"");
+
+	return qtrue;
 }
 
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
@@ -103,6 +291,14 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 	{
 		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", currentClientData->cleanName));
 		proxy.trap->DropClient(clientNum, "(Anti-Cheat system) you got kicked cause of cheating");
+
+		return qfalse;
+	}
+
+	// The muted client gets told, so it does not think the server lost its message
+	if (currentClientData->muted && (!Q_stricmp(cmd, "say") || !Q_stricmp(cmd, "say_team") || !Q_stricmp(cmd, "tell") || !Q_stricmp(cmd, "voice_cmd")))
+	{
+		proxy.trap->SendServerCommand(clientNum, "print \"You are muted.\n\"");
 
 		return qfalse;
 	}
@@ -257,11 +453,16 @@ void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd)
 
 qboolean Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 {
-	const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum);
+	bool isAntiCheat = false;
+	const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum, !Proxy_IsBot(clientNum), &isAntiCheat);
 
 	if (reason)
 	{
-		proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData[clientNum].cleanName));
+		if (isAntiCheat)
+		{
+			proxy.trap->SendServerCommand(-1, va("chat \"^3(Anti-Cheat system) ^7%s^3 got kicked cause of cheating^7\"", proxy.clientData[clientNum].cleanName));
+		}
+
 		proxy.trap->DropClient(clientNum, reason);
 
 		return qfalse;
@@ -270,11 +471,164 @@ qboolean Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 	return qtrue;
 }
 
-const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum)
+// ==================================================
+// Userinfo validation
+// --------------------------------------------------
+// Port of OpenJK's G_ValidateUserinfo (codemp/game/g_client.c), with its default settings (g_userinfoValidate): size,
+// slashes, control characters, and the number of each known key counted without case. Extended ASCII is not checked.
+// The info functions of the game read a key without case, but remove only a key with the same case: a userinfo with a
+// key twice, or with another case, would let a bad value through the checks below
+// The retail client sends every key that is required here, with its default settings
+// ==================================================
+
+struct UserinfoField_t
 {
+	const char*		name;
+	unsigned int	minCount;
+	unsigned int	maxCount;
+};
+
+static const UserinfoField_t userinfoFields[] =
+{
+	{ "cl_guid",		0, 0 }, // not allowed, q3fill protection
+	{ "cl_punkbuster",	0, 0 }, // not allowed, q3fill protection
+	{ "ip",				0, 1 }, // the engine adds this
+	{ "name",			1, 1 },
+	{ "rate",			1, 1 },
+	{ "snaps",			1, 1 },
+	{ "model",			1, 1 },
+	{ "forcepowers",	1, 1 },
+	{ "color1",			1, 1 },
+	{ "color2",			1, 1 },
+	{ "handicap",		1, 1 },
+	{ "sex",			0, 1 },
+	{ "cg_predictItems",1, 1 },
+	{ "saber1",			1, 1 },
+	{ "saber2",			1, 1 },
+	{ "char_color_red",	1, 1 },
+	{ "char_color_green",1, 1 },
+	{ "char_color_blue",1, 1 },
+	{ "teamtask",		0, 1 }, // optional
+	{ "password",		0, 1 }, // optional
+	{ "teamoverlay",	0, 1 }, // only registered in cgame, not sent when connecting
+};
+
+// Returns nullptr, or why the userinfo is not valid. The text of the reason is only valid until the next call
+static const char* Proxy_ValidateUserinfo(const char* userinfo)
+{
+	static char reason[64];
+	const std::size_t length = std::strlen(userinfo);
+
+	if (length < 1)
+	{
+		return "Userinfo too short";
+	}
+
+	if (length >= MAX_INFO_STRING)
+	{
+		return "Userinfo too long";
+	}
+
+	// there must be a leading slash
+	if (userinfo[0] != '\\')
+	{
+		return "Missing leading slash";
+	}
+
+	// no trailing slash allowed, the engine adds ip\ip:port in front
+	if (userinfo[length - 1] == '\\')
+	{
+		return "Trailing slash";
+	}
+
+	// the format is \key\value, so there must be an even number of slashes
+	std::size_t slashes = 0;
+
+	for (std::size_t i = 0; i < length; ++i)
+	{
+		if (userinfo[i] == '\\')
+		{
+			++slashes;
+		}
+	}
+
+	if (slashes & 1)
+	{
+		return "Bad number of slashes";
+	}
+
+	// disallow \n \r ; and \"
+	if (Q_strchrs(userinfo, "\n\r;\""))
+	{
+		return "Invalid characters found";
+	}
+
+	unsigned int fieldCount[ARRAY_LEN(userinfoFields)] = {};
+	char key[MAX_INFO_KEY];
+	char value[MAX_INFO_VALUE];
+	const char* s = userinfo;
+
+	while (s)
+	{
+		Info_NextPair(&s, key, value);
+
+		if (!key[0])
+		{
+			break;
+		}
+
+		for (std::size_t i = 0; i < ARRAY_LEN(userinfoFields); ++i)
+		{
+			if (!Q_stricmp(key, userinfoFields[i].name))
+			{
+				++fieldCount[i];
+			}
+		}
+	}
+
+	for (std::size_t i = 0; i < ARRAY_LEN(userinfoFields); ++i)
+	{
+		if (userinfoFields[i].minCount && !fieldCount[i])
+		{
+			Com_sprintf(reason, sizeof(reason), "%s field not found", userinfoFields[i].name);
+
+			return reason;
+		}
+
+		if (fieldCount[i] > userinfoFields[i].maxCount)
+		{
+			Com_sprintf(reason, sizeof(reason), "Too many %s fields (%u/%u)", userinfoFields[i].name, fieldCount[i], userinfoFields[i].maxCount);
+
+			return reason;
+		}
+	}
+
+	return nullptr;
+}
+
+const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum, bool validate, bool* isAntiCheat)
+{
+	static char reason[96];
 	char userinfo[MAX_INFO_STRING];
 
 	proxy.trap->GetUserinfo(clientNum, userinfo, sizeof(userinfo));
+
+	if (isAntiCheat)
+	{
+		*isAntiCheat = false;
+	}
+
+	if (validate)
+	{
+		const char* invalid = Proxy_ValidateUserinfo(userinfo);
+
+		if (invalid)
+		{
+			Com_sprintf(reason, sizeof(reason), "Failed userinfo validation: %s", invalid);
+
+			return reason;
+		}
+	}
 
 	if (std::strlen(userinfo) == 0)
 	{
@@ -290,7 +644,12 @@ const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum)
 
 	// Fix bad names
 	Proxy_ClientCleanName(val, currentClientData->cleanName, sizeof(currentClientData->cleanName));
-	Info_SetValueForKey(userinfo, "name", currentClientData->cleanName);
+
+	// Info_SetValueForKey adds nothing when the userinfo has no room left: the old value would stay, and the game would read it
+	if (!Info_SetValueForKey(userinfo, "name", currentClientData->cleanName))
+	{
+		return "Userinfo string length exceeded.";
+	}
 
 	val = Info_ValueForKey(userinfo, "model");
 
@@ -303,6 +662,11 @@ const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum)
 
 		if (!Q_stricmpn(val, "darksidetools", 13))
 		{
+			if (isAntiCheat)
+			{
+				*isAntiCheat = true;
+			}
+
 			return "(Anti-Cheat system) you got kicked cause of cheating";
 		}
 
@@ -313,7 +677,10 @@ const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum)
 			!Q_IsValidAsciiStr(val) ||
 			len >= /*MAX_QPATH*/ (std::size_t)proxy.cvars.proxy_sv_modelPathLength.integer)
 		{
-			Info_SetValueForKey(userinfo, "model", "kyle");
+			if (!Info_SetValueForKey(userinfo, "model", "kyle"))
+			{
+				return "Userinfo string length exceeded.";
+			}
 		}
 	}
 
@@ -371,7 +738,10 @@ const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum)
 		Q_strncpyz(forcePowers, "7-1-030000000000003332", sizeof(forcePowers));
 	}
 
-	Info_SetValueForKey(userinfo, "forcepowers", forcePowers);
+	if (!Info_SetValueForKey(userinfo, "forcepowers", forcePowers))
+	{
+		return "Userinfo string length exceeded.";
+	}
 
 	proxy.trap->SetUserinfo(clientNum, userinfo);
 
