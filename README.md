@@ -6,6 +6,14 @@ The proxy sits between the server engine (`jampDed.exe` / `linuxjampded`) and th
 
 This is an educational project.
 
+## Documentation
+
+- [Features](docs/features.md): cvars, commands and every automatic fix.
+- [Patch notes](docs/patchnotes.md)
+- [Todo](docs/todo.md)
+- [Trampoline hooks](docs/trampoline-hook.md): how the engine hooks work.
+- [Audit](docs/audit-2026-10-25/README.md): known bugs, improvements, and the combat "feeling" investigation.
+
 ## How it works
 
 - The engine loads the proxy as if it were the game module (`jampgamex86.dll` / `jampgamei386.so`).
@@ -125,14 +133,6 @@ make
 The output is `build/src/jampgamei386.so`. `file src/jampgamei386.so` must show `ELF 32-bit LSB shared object, Intel 80386`.
 
 `libstdc++` and `libgcc` are linked into the `.so`, so the server needs no C++ library. It still needs a glibc at least as recent as the one the `.so` was built with, otherwise the server cannot load it (`version 'GLIBC_2.xx' not found`). Build on the server itself, or on a distribution that is not newer than the server's.
-
-## Documentation
-
-- [Features](docs/features.md): cvars, commands and every automatic fix.
-- [Patch notes](docs/patchnotes.md)
-- [Todo](docs/todo.md)
-- [Trampoline hooks](docs/trampoline-hook.md): how the engine hooks work.
-- [Audit](docs/audit-2026-10-25/README.md): known bugs, improvements, and the combat "feeling" investigation.
 
 ## Developer notes
 
