@@ -8,47 +8,7 @@
 ### Short term
 
 - Persist bans across server restarts, in a file.
-- Extend the `jedi_/red` model check to every `jedi_*` model. Only the base Jedi models should be allowed; anything else becomes `kyle`.
-  - <details><summary>Reference implementation: base Jedi model list</summary>
-
-    ```c
-    static const char *baseJediModels[] = {
-        // NOTE: tailing slash is required
-        "jedi_hf/",
-        "jedi_hm/",
-        "jedi_kdm/",
-        "jedi_rm/",
-        "jedi_tf/",
-        "jedi_zf/",
-    };
-    ```
-
-    </details>
-  - <details><summary>Reference implementation: check</summary>
-
-    ```c
-    if ( g_blockUnknownJediModelsInTeamGametypes.integer && g_gametype.integer >= GT_TEAM && !Q_stricmpn(model, "jedi_", strlen("jedi_")) )
-    {
-        int i;
-        qboolean isBaseJediModel = qfalse;
-        for ( i = 0; i < ARRAY_LEN(baseJediModels); i++ )
-        { // Check if it's one of the known base jedi models
-            if ( !Q_stricmpn(model, baseJediModels[i], strlen(baseJediModels[i])) )
-            {
-                isBaseJediModel = qtrue;
-                break;
-            }
-        }
-        // Set to kyle if it's not a known model
-        if ( !isBaseJediModel ) Q_strncpyz( model, "kyle/default", sizeof(model) ); // Gets adjusted to red/blue later
-    }
-    ```
-
-    </details>
 - **Create a plugin system.** See A6 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
-- ffa3 exploit with movement events (a player with a high FPS lags every player in view). EternalJK fixes it in the engine. Postponed: two designs were written then removed, they are kept in O9 in [audit-2026-10-25/other-engines.md](audit-2026-10-25/other-engines.md).
-- Store player IPs, as OpenJK does.
-- Patch `NET_SendPacket` to log packets. Maybe only packets under about 300 bytes, because some packets, such as info responses, are large.
 - Add a mute system (look at `SV_SendServerCommand`).
 - Make `dumpuser` accept a client number.
 - Make `/rcon forceteam -1 spectator` move everyone to spectators (catch the call with `GAME_CONSOLE_COMMAND`).
@@ -77,10 +37,15 @@ Wanted behaviour: banning `152.0` bans `152.0.*.*` only, and player B can still 
 
 - Features from JKA_Anti-cheat: https://hackmd.io/CtIPZON0QHKuqjdxXRw8uw
 
+## Maybe
+
+- ffa3 exploit with movement events (a player with a high FPS lags every player in view). EternalJK fixes it in the engine. Postponed: two designs were written then removed, they are kept in O9 in [audit-2026-10-25/other-engines.md](audit-2026-10-25/other-engines.md).
+
 ## Done
 
 ### Features and fixes
 
+- Store player IPs, as OpenJK does: the proxy keeps the address of each client (without the port) from the `ip` key of its userinfo, set by the engine and kept up to date by the proxy. It is used by `proxy_sv_maxClientsPerIP`. OpenJK also uses its stored IP in the game logs, which the proxy cannot add to.
 - `donedl` exploit.
 - q3infoboom.
 - rcon disabler, with `proxy_sv_enableRconCmdCooldown` to bring the timer back.
@@ -122,3 +87,5 @@ Wanted behaviour: banning `152.0` bans `152.0.*.*` only, and player B can still 
 ## Won't do
 
 - Uptime in the new `rcon status`: it would need a hook on `SV_Init()`, which is not possible.
+- Extend the `jedi_/red` model check to every `jedi_*` model, as EternalJK does (`g_blockUnknownJediModelsInTeamGametypes`): only the six base Jedi models (`jedi_hf`, `jedi_hm`, `jedi_kdm`, `jedi_rm`, `jedi_tf`, `jedi_zf`) would be allowed in team gametypes, anything else becomes `kyle`. The proxy already replaces `jedi_` without a species. The rest is a server policy that would also block valid custom `jedi_*` models, and nobody asked for it.
+- Patch `NET_SendPacket` to log packets. Maybe only packets under about 300 bytes, because some packets, such as info responses, are large.
