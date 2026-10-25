@@ -36,6 +36,10 @@ Fix:
 
 x86 only: on 64-bit, the trampoline may be too far for a 32-bit offset.
 
+Missing from the sketch above: `Detach` restores the engine bytes by copying them back from the trampoline ([HookUtils.hpp:133](../../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp#L133)). Once a rel32 is relocated in the trampoline, that copy would write the shifted offset into the engine. Keep a copy of the original bytes in `HookEntry` at `Attach`, and restore from it.
+
+F7 no longer needs this: its hook rewrites the whole function and never runs the trampoline (see F7 in [fixes.md](fixes.md)).
+
 ### Partial failure
 
 Status: **corrected**. There is no null call.

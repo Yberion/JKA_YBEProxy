@@ -2,6 +2,7 @@
 #include "Proxy_Engine_Patch.hpp"
 #include "Proxy_Engine_Wrappers.hpp"
 #include "Patches/qcommon/Proxy_cmd.hpp"
+#include "Patches/qcommon/Proxy_common.hpp"
 #include "Patches/qcommon/Proxy_files.hpp"
 #include "Patches/server/Proxy_sv_ccmds.hpp"
 #include "Patches/server/Proxy_sv_client.hpp"
@@ -15,7 +16,7 @@ static std::variant<
 	HookUtils::HookEntry<decltype(Proxy_Com_Printf)>,
 	HookUtils::HookEntry<decltype(Proxy_Cmd_TokenizeString)>,
 	HookUtils::HookEntry<decltype(Proxy_SV_SendMessageToClient)>,
-	HookUtils::HookEntry<decltype(Proxy_SV_CalcPings)>, // HookEntry<decltype(&Proxy_SV_Status_f)>,
+	HookUtils::HookEntry<decltype(Proxy_SV_CalcPings)>, // HookEntry<decltype(&Proxy_SV_Status_f)>, HookEntry<decltype(&Proxy_Com_WriteConfig_f)>,
 	HookUtils::HookEntry<decltype(Proxy_SV_SvEntityForGentity)>,
 	HookUtils::HookEntry<decltype(Proxy_SV_SendClientGameState)>, // HookEntry<decltype(&Proxy_SV_UserinfoChanged)>, HookEntry<decltype(&Proxy_SV_BeginDownload_f)>, HookEntry<decltype(&Proxy_SV_DoneDownload_f)>,
 	HookUtils::HookEntry<decltype(Proxy_SV_ExecuteClientMessage)>, // HookEntry<decltype(&Proxy_SV_WriteDownloadToClient)>,
@@ -23,6 +24,7 @@ static std::variant<
 > hookEntries[] = {
 	HookUtils::HookEntry("Com_Printf", (unsigned char*)func_Com_Printf_addr[PROXY_PLATFORM], &Original_Com_Printf, &Proxy_Com_Printf, 0),
 	HookUtils::HookEntry("Cmd_TokenizeString", (unsigned char*)func_Cmd_TokenizeString_addr[PROXY_PLATFORM], &Original_Cmd_TokenizeString, &Proxy_Cmd_TokenizeString, 0),
+	HookUtils::HookEntry("Com_WriteConfig_f", (unsigned char*)func_Com_WriteConfig_f_addr[PROXY_PLATFORM], &Original_Com_WriteConfig_f, &Proxy_Com_WriteConfig_f, 0),
 	HookUtils::HookEntry("SV_SendMessageToClient", (unsigned char*)func_SV_SendMessageToClient_addr[PROXY_PLATFORM], &Original_SV_SendMessageToClient, &Proxy_SV_SendMessageToClient, 0),
 	HookUtils::HookEntry("SV_CalcPings", (unsigned char*)func_SV_CalcPings_addr[PROXY_PLATFORM], &Original_SV_CalcPings, &Proxy_SV_CalcPings, 0),
 	HookUtils::HookEntry("SV_SvEntityForGentity", (unsigned char*)func_SV_SvEntityForGentity_addr[PROXY_PLATFORM], &Original_SV_SvEntityForGentity, &Proxy_SV_SvEntityForGentity, 0),

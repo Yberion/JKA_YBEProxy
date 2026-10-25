@@ -38,7 +38,7 @@ Retail binaries (`jampDed.exe` and `linuxjampded`, read with capstone, nothing e
 - The packet path makes real calls (`SV_PacketEvent` → `SV_ConnectionlessPacket` → `SVC_RemoteCommand`/`SVC_Status`/`SVC_Info`, and `SV_ExecuteClientMessage`).
 - `SV_PacketEvent` is cdecl, with the 20-byte `netadr_t` on the stack, and no relative instruction in its first bytes.
 - None of the 18 current hooks copies a relative instruction into its trampoline.
-- `Com_WriteConfig_f` is at `0x410680` (Windows) and `0x8074d64` (Linux). The Windows one starts with a relative `call`, which needs the A1 relocation before hooking.
+- `Com_WriteConfig_f` is at `0x410680` (Windows) and `0x8074d64` (Linux). The Windows one starts with a relative `call`, which needs the A1 relocation before hooking, unless the hook never runs its trampoline (what F7 does).
 
 Engine (jediacademy):
 

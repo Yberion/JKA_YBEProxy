@@ -74,6 +74,7 @@ void Proxy_Engine_Initialize_MemoryLayer(void)
 	server.common.functions.Com_HashKey = (decltype(server.common.functions.Com_HashKey))func_Com_HashKey_addr[PROXY_PLATFORM];
 	server.common.functions.Com_Printf = (decltype(server.common.functions.Com_Printf))func_Com_Printf_addr[PROXY_PLATFORM]; // It will call the fixed one in Proxy_files
 	server.common.functions.Com_BeginRedirect = (decltype(server.common.functions.Com_BeginRedirect))func_Com_BeginRedirect_addr[PROXY_PLATFORM];
+	server.common.functions.Com_WriteConfigToFile = (decltype(server.common.functions.Com_WriteConfigToFile))func_Com_WriteConfigToFile_addr[PROXY_PLATFORM];
 	
 	// There's no function on Windows version as it was optimized, so do a proxy function
 	// Use the define on Windows as the function address won't be accessible at compile time

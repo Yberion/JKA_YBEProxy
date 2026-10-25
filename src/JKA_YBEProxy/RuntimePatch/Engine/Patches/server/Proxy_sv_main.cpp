@@ -139,24 +139,7 @@ qboolean QDECL Proxy_SV_PacketEvent_Filter(netadr_t from, msg_t* msg)
 
 	if (!Q_stricmp(c, "rcon"))
 	{
-		if (!Proxy_Engine_RateLimit_RconAllowed())
-		{
-			return qfalse;
-		}
-
-		// Only allow writeconfig on cfg files
-		if (!Q_stricmpn(server.common.functions.Cmd_Argv(2), "writeconfig", 11))
-		{
-			const char* arg3 = server.common.functions.Cmd_Argv(3);
-			const std::size_t arg3Len = std::strlen(arg3);
-
-			if (arg3Len >= 5 && arg3[arg3Len - 4] == '.' && Q_stricmpn(&arg3[arg3Len - 4], ".cfg", 4))
-			{
-				return qfalse;
-			}
-		}
-
-		return qtrue;
+		return Proxy_Engine_RateLimit_RconAllowed() ? qtrue : qfalse;
 	}
 
 	// The original only answers the old authorize server, but prints a line for every other sender

@@ -25,6 +25,7 @@
   - `getstatus` / `getinfo`: a burst of 10, then 1 per second per address, and 10 per second in total, so the server can no longer be used to amplify a DDoS;
   - `getchallenge` / `connect`: the same per-address limit, shared with `getstatus` / `getinfo`, as Quake3e;
   - with `developer 1`, each dropped request is printed in the server console, as in ioq3 and Quake3e.
+- Fixed the `writeconfig` filter (original engine). It only blocked a 3-letter extension other than `.cfg` in rcon, so `x.so`, a `.pk3`, `../` paths, or the command run through `vstr`/`exec` got through. `writeconfig` itself now refuses anything but a `.cfg` file name, a name with `..`, and `mpdefault.cfg`/`default.cfg`, as in OpenJK.
 - Removed `proxy_sv_enableRconCmdCooldown`, replaced by the rcon rate limiting. When set to `1`, its 500 ms cooldown applied to every rcon packet, even with a wrong password, so a flood of rcon packets also blocked the admins' commands. With the default `0`, rcon had no limit at all.
 
 ## 0.19.0 Beta

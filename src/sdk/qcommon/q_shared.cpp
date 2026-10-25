@@ -28,6 +28,47 @@ char *QDECL va(const char* format, ...)
 }
 
 /*
+============
+COM_CompareExtension
+
+string compare the end of the strings and return qtrue if strings match
+From OpenJK codemp/qcommon/q_shared.c
+============
+*/
+qboolean COM_CompareExtension(const char *in, const char *ext)
+{
+	const std::size_t inlen = std::strlen(in);
+	const std::size_t extlen = std::strlen(ext);
+
+	if (extlen <= inlen)
+	{
+		in += inlen - extlen;
+
+		if (!Q_stricmp(in, ext))
+			return qtrue;
+	}
+
+	return qfalse;
+}
+
+/*
+==================
+COM_DefaultExtension
+
+if path doesn't have a .EXT, append extension (extension should include the .)
+From OpenJK codemp/qcommon/q_shared.c
+==================
+*/
+void COM_DefaultExtension( char *path, int maxSize, const char *extension )
+{
+	const char *dot = std::strrchr(path, '.'), *slash;
+	if (dot && (!(slash = std::strrchr(path, '/')) || slash < dot))
+		return;
+	else
+		Q_strcat(path, maxSize, extension);
+}
+
+/*
 ===============
 Info_ValueForKey
 

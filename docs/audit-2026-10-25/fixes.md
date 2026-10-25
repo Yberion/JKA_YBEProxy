@@ -651,6 +651,8 @@ void Proxy_Com_WriteConfig_f(void)
 
 Fallback without a new address: put the same test in the F1 filter, on `Cmd_Argv(3)` when `Cmd_Argv(2)` is `writeconfig`, and accept that `vstr`/`exec` bypass it.
 
+Done without A1: `Proxy_Com_WriteConfig_f` rewrites the whole function and calls `Com_WriteConfigToFile` itself (`0x410630` / `0x8074cb4`, read on both binaries: a cdecl function with one argument, which starts with `FS_FOpenFileWrite`). The trampoline, whose Windows copy holds the unrelocated `call Cmd_Argc`, is never run. `Detach` copies the original bytes back from it unchanged, so unpatching stays correct.
+
 ## F8. Unbounded index in `SV_SvEntityForGentity` (Low, was Medium)
 
 Status: **confirmed** in the proxy code. The risk is corrected: theoretical with the retail game.

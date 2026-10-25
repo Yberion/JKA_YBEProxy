@@ -199,8 +199,8 @@ Engine: Original.
   - the engine's 500 ms timer is removed. It was global and checked before the password, so anyone could lock the admins out (rcon disabler fix);
   - a valid password is never limited, even during a flood with spoofed addresses;
   - bad passwords are limited for the whole server, whatever the addresses: a burst of 10, then 1 per second. Packets beyond that are ignored without a reply;
-  - rcon output is sent in chunks of 1008 bytes, so long output such as `rcon status` is no longer truncated;
-  - `writeconfig` refuses a file name with a 3-letter extension other than `.cfg`. Shorter extensions such as `.so` get through, and `vstr`/`exec` bypass the check, see F7 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
+  - rcon output is sent in chunks of 1008 bytes, so long output such as `rcon status` is no longer truncated.
+- `writeconfig` only writes `.cfg` files. A name without an extension still gets `.cfg`. It refuses any other extension, a name with `..`, and the reserved names `mpdefault.cfg` and `default.cfg`. The check is in the command itself, so it applies to rcon, the server console, `vstr` and `exec`.
 - `status` is rewritten:
   - it shows the hostname, address, OS, version, gamedir, map, gametype, and the number of humans and bots;
   - the name is printed last, so it is never truncated.
