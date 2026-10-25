@@ -90,25 +90,23 @@ void Proxy_CVars_Registration(void)
 // ==================================================
 // Proxy_UpdateAllCvars
 // --------------------------------------------------
-// Updates all the variables once per second~.
+// Updates all the variables once per second of server time.
 // ==================================================
 
-void Proxy_UpdateAllCvars(void)
+void Proxy_UpdateAllCvars(int levelTime)
 {
-	// TODO: won't be once per second on sv_fps change
-	static unsigned int frame = 0;
+	// The server time restarts at 0 on a map change, so a time before the last update means a new map
+	static int lastUpdateTime = 0;
 
-	if (frame == (unsigned int)proxy.cvars.sv_fps.integer)
+	if (levelTime < lastUpdateTime || levelTime - lastUpdateTime >= 1000)
 	{
+		lastUpdateTime = levelTime;
+
 		Proxy_UpdateCvarTable(proxyCVarTable, proxyCVarTableSize);
 
 		if (proxy.isOriginalEngine)
 		{
 			Proxy_UpdateCvarTable(proxyOriginalEngineCVarTable, proxyOriginalEngineCVarTableSize);
 		}
-
-		frame = 0;
 	}
-
-	frame++;
 }

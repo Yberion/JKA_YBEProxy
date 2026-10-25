@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The proxy cvars are read once per second of server time. It was once every `sv_fps` frames, so a changed `sv_fps` also changed the delay.
 - Added [`proxy_sv_disableWelcomeMessage`](features.md#proxy_sv_disablewelcomemessage) (default `0`, `1` disables the message): the welcome message sent to human players when they enter the game can be turned off. Any engine.
 - Original engine: the message `Client <name> lost <n> clientCommands` in the server console printed 2 more than the real number of lost commands. Cosmetic.
 - Original engine: reading a client message stops at its end, as ioq3 and OpenJK do (CVE-2017-11721). The original `MSG_ReadBits` kept reading the bytes after the end of a short or truncated message, and gave them as values. A read past the end now gives `0`. Hardening: the callers already stopped on an overflow, and the buffer is on the stack, so nothing past it could be read.
