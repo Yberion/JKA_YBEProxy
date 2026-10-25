@@ -57,7 +57,7 @@ Engine (jediacademy):
 Game (jediacademy):
 
 - The forcepowers crash is server-side: `BG_LegalizedForcePowers` uses uninitialised `final_Powers[]` entries as an array index ([`game/bg_misc.c:439-563`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/bg_misc.c#L439-L563)).
-- The game compares the command names and arguments that the proxy filters whole, with `Q_stricmp` (see F10).
+- The game compares the command names and arguments that the proxy filters whole, with `Q_stricmp` (see F10.4).
 - `target_level_change` runs `map` with `EXEC_NOW` from inside the game ([`game/g_target.c:949`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_target.c#L949)).
 
 Other repositories:
@@ -95,7 +95,7 @@ The risk sits in two places:
 - F4: OpenJK must keep working, including an OpenJK jampgame on an OpenJK server. Option A covers it.
 - F5: the proxy only reads `g_gametype` and `sv_fps`: register them with flags 0.
 - F3: the wider rule for `rancor`, `wampa` and `jedi_` is accepted.
-- F10 `/myratio`: the current rule is intended (color from `kill - death`, a suicide shows `0` in red). Only clamp the red number to 0.
+- F10.7 `/myratio`: the current rule is intended (color from `kill - death`, a suicide shows `0` in red). Only clamp the red number to 0.
 - O9: fix it. The author knows the bug and has reproduced it.
 - O5: add a `proxy_sv_maxClientsPerIP` cvar (default 3, 0 disables).
 - O8: port OpenJK's whole userinfo validation, compatible with the retail client (checked against its userinfo cvars).

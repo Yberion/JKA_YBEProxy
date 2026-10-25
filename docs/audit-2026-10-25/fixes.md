@@ -757,35 +757,35 @@ With both changes, a human with a ping of 0 gets real `fps` and `packets` values
 
 Status per point:
 
-- **Refuted.** [Proxy_CVars.cpp:148](../../src/JKA_YBEProxy/Proxy_CVars.cpp#L148), `frame == sv_fps`: "if `sv_fps` is lowered below the frame counter, the cvars are never updated again".
+- **F10.1. Refuted.** [Proxy_CVars.cpp:148](../../src/JKA_YBEProxy/Proxy_CVars.cpp#L148), `frame == sv_fps`: "if `sv_fps` is lowered below the frame counter, the cvars are never updated again".
   - `proxy.cvars.sv_fps` is a vmCvar. It only changes inside `Proxy_UpdateCvars`, which runs when `frame == sv_fps`, and then `frame` restarts from 1.
   - The new value is at least 1: the engine resets an `sv_fps` below 1 to 10 at the start of `SV_Frame` ([`server/sv_main.cpp:847-848`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_main.cpp#L847-L848)), before `GAME_RUN_FRAME`.
   - The counter always reaches the new value. No fix needed.
-- **Source only.** [Proxy_Engine_Client.cpp:111](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.cpp#L111): `1000 / svFps` divides by zero if `sv_fps` is set to 0.
+- **F10.2. Source only.** [Proxy_Engine_Client.cpp:111](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.cpp#L111): `1000 / svFps` divides by zero if `sv_fps` is set to 0.
   - The engine resets it only at the start of the next `SV_Frame`, and the packets of the same event loop are processed before that.
   - Only an rcon user can set `sv_fps 0`.
   - Fix: `+ (svFps > 0 ? 1000 / svFps : 0)`, or return early when `svFps <= 0`.
-- **Corrected.** [Proxy_SharedAPI.cpp:46-52](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L46-L52): `ClientDisconnect` only resets the client data if `isConnected` is set, and that flag is only set in `ClientBegin`.
+- **F10.3. Corrected.** [Proxy_SharedAPI.cpp:46-52](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L46-L52): `ClientDisconnect` only resets the client data if `isConnected` is set, and that flag is only set in `ClientBegin`.
   - Only `cleanName` can be stale. The usercmd statistics and the timers are only written after `ClientBegin`: `SV_UserMove` enters the world (`GAME_CLIENT_BEGIN`) before it processes the first usercmd.
   - The next client in the slot gets a new `cleanName` on its first userinfo change, or on connect once F2 is done.
   - Fix: drop the `isConnected` test and always reset.
-- **Confirmed, harmless today.** [Proxy_SharedAPI.cpp:87-133](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L87-L133): command names are compared by prefix.
+- **F10.4. Confirmed, harmless today.** [Proxy_SharedAPI.cpp:87-133](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L87-L133): command names are compared by prefix.
   - `"team",4` also matches `teamvote`, `"say",3` already covers `say_team`, and `"gc",2` matches anything that starts with `gc`.
   - Each over-matched command also needs the argument condition (`follow1`, a client number…). `teamvote follow1` is dropped, but it means nothing to the game anyway.
   - The arguments are compared by prefix too. `!Q_stricmpn(cmd_arg2, "saber_droid", 6)` ([Proxy_SharedAPI.cpp:113](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L113)) only compares `saber_`, so `npc spawn` is refused for every NPC type that starts with `saber_`, not only `saber_droid`. Whether base has other `saber_*` NPC types was not checked.
   - The game compares all these names whole, with `Q_stricmp`: the commands (`game/g_cmds.c`, `ClientCommand`), `spawn` ([`game/NPC_spawn.c:4197`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/NPC_spawn.c#L4197)), the NPC type ([`game/NPC_stats.c:1123`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/NPC_stats.c#L1123)), `follow1`/`follow2` ([`game/g_cmds.c:771-775`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_cmds.c#L771-L775)) and the vote names ([`game/g_cmds.c:2015-2023`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_cmds.c#L2015-L2023)). An exact comparison in the proxy therefore blocks everything the game would act on, and nothing more.
   - Fix: `Q_stricmp` on the command names and on these arguments, except `jkaDST_`, which must stay a prefix.
-- **Refuted.** [Proxy_sv_ccmds.cpp:71](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.cpp#L71), `gametypeNames[sv_gametype->integer]`: "the clamp only sets the latched value".
+- **F10.5. Refuted.** [Proxy_sv_ccmds.cpp:71](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.cpp#L71), `gametypeNames[sv_gametype->integer]`: "the clamp only sets the latched value".
   - `trap_Cvar_Set` goes through `Cvar_Set`, which is `Cvar_Set2(..., force = qtrue)` ([`server/sv_game.cpp:535-537`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_game.cpp#L535-L537), [`qcommon/cvar.cpp:402-404`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/cvar.cpp#L402-L404)). That skips the latch and sets the value at once.
   - `G_InitGame` clamps `g_gametype` to `[0, GT_MAX_GAME_TYPE)` right after registering it ([`game/g_main.c:824-841`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_main.c#L824-L841)), and `gametypeNames` has `GT_MAX_GAME_TYPE` (10) entries.
   - `rcon g_gametype 99` is latched, then clamped at the next `GAME_INIT`, before `status` can run.
   - A bound check costs one line and the code comment already asks for it. Optional.
-- **Corrected.** [Proxy_Files.cpp:24-38](../../src/JKA_YBEProxy/Proxy_Files.cpp#L24-L38):
+- **F10.6. Corrected.** [Proxy_Files.cpp:24-38](../../src/JKA_YBEProxy/Proxy_Files.cpp#L24-L38):
   - The `memcpy` is not bounded. Windows only: `MAX_OSPATH` is 256 there, and `PATH_MAX` (4096) on Linux. `fs_game` has `CVAR_INIT`, so only the command line can set it.
   - The path is relative to the current directory instead of `fs_basepath`/`fs_homepath`.
   - A failure calls `exit()`.
   - Fix: build the path with `Com_sprintf` into a `MAX_OSPATH` buffer, from `fs_basepath`, and fail with `proxy.trap->Error(...)` (`G_ERROR`, an `ERR_DROP`) instead of `exit()`.
-- **Corrected: intended, one edge case.** [Proxy_ClientCommand.cpp:13-20](../../src/JKA_YBEProxy/Proxy_ClientCommand.cpp#L13-L20): `ratioString` uses `kill - death` in the green branch and `kill - (death - suicides)` in the red one.
+- **F10.7. Corrected: intended, one edge case.** [Proxy_ClientCommand.cpp:13-20](../../src/JKA_YBEProxy/Proxy_ClientCommand.cpp#L13-L20): `ratioString` uses `kill - death` in the green branch and `kill - (death - suicides)` in the red one.
   - Intent, per the author (with screenshots): "Kills" is `PERS_SCORE`, which loses 1 point per suicide, and "Deaths" (`PERS_KILLED`) counts the suicide too ([`game/g_combat.c:2571-2630`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_combat.c#L2571-L2630)). The color comes from `kill - death`. A player who is behind only because of a suicide shows `0` in red, not `-1`.
     - 1 kill: Kills 1, Deaths 0 gives `+1` in green.
     - 1 kill, then 1 suicide: Kills 0, Deaths 1, Suicides 1 gives `0` in red.
@@ -799,7 +799,7 @@ Status per point:
     Com_sprintf(ratioString, sizeRatioString, "(" S_COLOR_RED "%i" S_COLOR_WHITE ")", std::min(0, kill - (death - suicides)));
     ```
 
-- **Corrected: `== -1` is intended.** [Proxy_sv_main.cpp:50](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp#L50): `SV_CalcPings` skips `messageAcked == -1` instead of `<= 0` ([`server/sv_main.cpp:684`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_main.cpp#L684)).
+- **F10.8. Corrected: `== -1` is intended.** [Proxy_sv_main.cpp:50](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp#L50): `SV_CalcPings` skips `messageAcked == -1` instead of `<= 0` ([`server/sv_main.cpp:684`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_main.cpp#L684)).
   - Origin: `proxy_sv_pingFix` is a port of JK2MV's `sv_pingFix`. JK2MV changed `<= 0` to `== -1` on purpose, in commit [`0301bea`](https://github.com/mvdevs/jk2mv/commit/0301bea) "Fix sv_pingFix on servers running for more than 25 days" (JK2MV [`src/server/sv_main.cpp:946`](https://github.com/mvdevs/jk2mv/blob/7d601454c3db68492289d4d4e3dc30bff39e4246/src/server/sv_main.cpp#L946)).
   - With `proxy_sv_pingFix 1`, the timestamps come from `Sys_Milliseconds`, a signed `int` that turns negative after about 24.8 days of uptime. `<= 0` would then skip every frame, and every ping would show 999. Do not revert it.
   - What remains: a frame not acknowledged yet holds -1 ([`server/sv_snapshot.cpp:668`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_snapshot.cpp#L668)), but a frame never used since the client was cleared on connect holds 0, and counts as a delay of 0. That only lasts for the first 32 snapshots (`PACKET_BACKUP`), about 1.6 s at 20 snapshots per second, just after a connect. JK2MV has the same transient. Quake3e avoids it by using 0 as the "not acknowledged" marker ([`code/server/sv_snapshot.c:694`](https://github.com/ec-/Quake3e/blob/3173cef096dd0cb2fea26d91bce71049061f5a13/code/server/sv_snapshot.c#L694), [`sv_main.c:1064`](https://github.com/ec-/Quake3e/blob/3173cef096dd0cb2fea26d91bce71049061f5a13/code/server/sv_main.c#L1064)).
