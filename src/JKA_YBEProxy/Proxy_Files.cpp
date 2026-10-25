@@ -3,36 +3,48 @@
 
 void Proxy_LoadGameLibrary(void)
 {
-	// Todo: Check for fs_basegame
-	char fs_gameBuffer[MAX_OSPATH];
-	std::size_t pathLength = 0;
-	std::size_t tmpLength = 0;
+	char basePath[MAX_OSPATH] = { 0 };
+	char gameDir[MAX_OSPATH] = { 0 };
+	char libraryPath[MAX_OSPATH];
+	int libraryPathLength = 0;
 
-	fs_gameBuffer[0] = 0;
+	proxy.trap->Cvar_VariableStringBuffer("fs_basepath", basePath, sizeof(basePath));
+	proxy.trap->Cvar_VariableStringBuffer(FS_GAME_CVAR, gameDir, sizeof(gameDir));
 
-	proxy.trap->Cvar_VariableStringBuffer(FS_GAME_CVAR, fs_gameBuffer, sizeof(fs_gameBuffer));
-
-	pathLength = std::strlen(fs_gameBuffer);
-
-	// length 0 means that fs_game is set to the default value which is the default base game folder name
-	if (pathLength == 0)
+	// empty means that fs_game is set to the default value which is the default base game folder name
+	if (!gameDir[0])
 	{
-		pathLength += std::strlen(DEFAULT_BASE_GAME_FOLDER_NAME);
-		std::memcpy(fs_gameBuffer, DEFAULT_BASE_GAME_FOLDER_NAME, pathLength);
+		Q_strncpyz(gameDir, DEFAULT_BASE_GAME_FOLDER_NAME, sizeof(gameDir));
 	}
 
-	tmpLength = std::strlen(PROXY_LIBRARY);
-	std::memcpy(fs_gameBuffer + pathLength, PROXY_LIBRARY, tmpLength);
-	pathLength += tmpLength;
+	// From fs_basepath, as the engine does for the game module on Linux. fs_basepath defaults to the
+	// current directory, so with the default value this is the same file as before
+	if (basePath[0])
+	{
+		libraryPathLength = Com_sprintf(libraryPath, sizeof(libraryPath), "%s/%s%s", basePath, gameDir, PROXY_LIBRARY);
+	}
+	else
+	{
+		libraryPathLength = Com_sprintf(libraryPath, sizeof(libraryPath), "%s%s", gameDir, PROXY_LIBRARY);
+	}
 
-	fs_gameBuffer[pathLength] = '\0';
+	// A truncated path would open another file
+	if (libraryPathLength < 0 || libraryPathLength >= (int)sizeof(libraryPath))
+	{
+		proxy.trap->Print("================================================================\n");
+		proxy.trap->Print("----- Proxy: The path of %s is too long, exiting\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
+		proxy.trap->Print("================================================================\n");
 
-	proxy.jampgameHandle = YBEProxy_OpenLibrary(fs_gameBuffer);
+		exit(EXIT_FAILURE);
+	}
 
+	proxy.jampgameHandle = YBEProxy_OpenLibrary(libraryPath);
+
+	// exit() as the engine does when it can't load a game module (ERR_FATAL): no map can run without it
 	if (proxy.jampgameHandle == NULL)
 	{
 		proxy.trap->Print("================================================================\n");
-		proxy.trap->Print("----- Proxy: Failed to open %s, exiting\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
+		proxy.trap->Print("----- Proxy: Failed to open %s, exiting\n", libraryPath);
 		proxy.trap->Print("================================================================\n");
 
 		exit(EXIT_FAILURE);

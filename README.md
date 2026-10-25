@@ -35,7 +35,8 @@ The original engine and the retail game module are 32-bit, so use the 32-bit (x8
 
 The proxy loads the original game module from `<fs_game>/JKA_YBEProxy.<ext>`, or `base/JKA_YBEProxy.<ext>` when `fs_game` is empty.
 
-- This path is relative to the server's current working directory, not to `fs_basepath` / `fs_homepath`. Start the server from the game's root folder.
+- This path is relative to `fs_basepath`, not to `fs_homepath`. By default `fs_basepath` is the server's current working directory, so start the server from the game's root folder, or set `fs_basepath`.
+- If the file cannot be opened, the server exits and prints the full path it tried.
 - The original game module must be a plain file at that path, not inside a pk3.
 
 ### Windows
