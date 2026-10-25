@@ -151,7 +151,7 @@ Set with `-D<name>=ON` on the configure command. All are off by default, except 
 
 - `ybeproxy_WARNINGS_AS_ERRORS`: `-Werror` / `/WX`.
 - `ybeproxy_ENABLE_HARDENING`: stack protector, CET, `_FORTIFY_SOURCE`, `/sdl`, `/guard:cf`. Not tested with the runtime hooks.
-- `ybeproxy_ENABLE_IPO`: link-time optimization. Not tested with the runtime hooks.
+- `ybeproxy_ENABLE_IPO`: link-time optimization, Release builds only. The hooks work with it, but the GCC build is about 40% bigger.
 - `ybeproxy_ENABLE_CLANG_TIDY`, `ybeproxy_ENABLE_CPPCHECK`: static analysis.
 
 ## Developer notes
