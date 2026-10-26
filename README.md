@@ -94,6 +94,8 @@ The engine reloads the game module on every map change.
 
 Requirements: CMake 3.25 or later and a C++20 compiler (Visual Studio 2026, GCC or Clang). The disassembler [Zydis](https://github.com/zyantific/zydis) is a git submodule written in C, in `external/zydis`: clone with `git clone --recurse-submodules`, or run `git submodule update --init --recursive` in an existing clone. The build is described by [CMakePresets.json](CMakePresets.json); list the presets with `cmake --list-presets`. Without an explicit build type, CMake builds in Release. The module is written to `build/<preset>/bin/`.
 
+For a clean build, add `--clean-first` to the build command (`cmake --build --preset <preset> --clean-first`): it runs the `clean` target, then builds. To also reset the CMake configuration, run the configure step again with `--fresh` (`cmake --preset <preset> --fresh`), or delete `build/<preset>/`.
+
 ### Windows
 
 Requirements: Visual Studio 2026 and CMake 4.2 or later, the first version with the Visual Studio 2026 generator.
