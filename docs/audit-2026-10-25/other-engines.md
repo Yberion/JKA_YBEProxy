@@ -110,7 +110,6 @@ Status: **applied**. Compared again with ioq3 ([`code/server/sv_client.c:389-400
 - The `ip` value the original engine sets on connect is `NET_AdrToString`, even for a loopback address (`loopback`), where the engines above use `localhost`. That differs only for a client inside the server process, which a dedicated server never has.
 - The drop can only happen on a `userinfo` command: on connect the check above has already refused a client that has no room for `ip`.
 - OpenJK engine: it already maintains `ip` (the code above), so the proxy only adds the check on connect.
-- Not compiled when written.
 
 ### O2. Rate limiting of out-of-band packets (High)
 
@@ -143,7 +142,6 @@ Status: **applied**, in the game's connect path, so it works on any engine. Comp
 - The game module is unloaded at each map change, so the table is empty at the start of a map: the engine connects every client again (`firstTime = qfalse`), and each one is recorded then. No new connection can come in between.
 - Difference with Quake3e: the refusal comes after the challenge, not before. A client that completes the challenge gets a slot for the length of the check, and the engine frees it as soon as the connect is refused. The proxy's rate limiting of `connect` packets (F6) still applies before.
 - A limit of `0` disables it (Quake3e does not accept `0`).
-- Not compiled when written.
 
 ### O6. Server commands longer than 1022 characters: do not port (corrected)
 
@@ -157,7 +155,7 @@ Status: **source only**.
 
 Same as A4 in [improvements.md](improvements.md). Quake3e does it.
 
-Status: **applied**. Checked again in ioq3, JK2MV, OpenJK and TaystJK: they all tokenize `text_in` after copying it into `cmd_cmd`, as JKA does. Only Quake3e reads from the copy (`text = cmd_cmd; // read from safe-length buffer`), and that is what [Proxy_cmd.cpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp) does now. Quake3e also empties `cmd_cmd` when the text is null; not done, it is unrelated to the overflow. Not compiled when written.
+Status: **applied**. Checked again in ioq3, JK2MV, OpenJK and TaystJK: they all tokenize `text_in` after copying it into `cmd_cmd`, as JKA does. Only Quake3e reads from the copy (`text = cmd_cmd; // read from safe-length buffer`), and that is what [Proxy_cmd.cpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp) does now. Quake3e also empties `cmd_cmd` when the text is null; not done, it is unrelated to the overflow.
 
 ### O8. Userinfo sanitisation bypassed by a long userinfo (High)
 
@@ -204,7 +202,6 @@ Status: **applied**, both parts, on any engine. Compared again with OpenJK, Tays
 - Part 2 of the fix: `Info_SetValueForKey` of the SDK returns `qboolean`, as JK2MV's does (`qfalse` for a forbidden character or when there is no room left). The sanitiser refuses the client (`Userinfo string length exceeded.`) when it fails to write the name, the model or `forcepowers`, and `Proxy_SV_UserinfoChanged` drops the client when it fails to write the model, as JK2MV does.
 - The validation alone would not close the hole: OpenJK counts `Forcepowers` as the `forcepowers` field, so a single capitalised key near the size limit passes it, and `Info_SetValueForKey` then removes nothing (`Info_RemoveKey` compares with case) and adds nothing (no room). The second part catches that case.
 - Checked against the retail client in the jediacademy source (see above): it sends every required key with its default settings. A player who empties a required cvar is refused.
-- Not compiled when written.
 
 ### O9. Movement events that lag every player around (Medium)
 
@@ -250,7 +247,6 @@ The fix turns `forwardmove`, `rightmove` and `upmove` of -128 into -127, so that
 Status: **applied**, on any engine. Compared again with the local clones, all at the upstream head: ioq3 (`87a99d18`), Quake3e, OpenJK (`260c59c2`), TaystJK and CleanJK have the same three tests in `MSG_ReadDeltaUsercmdKey`, after the read of each field and only in the branch where the usercmd changed. JK2MV, the retail source and Quake III Arena do not have them. No engine does it anywhere else, and none has a cvar for it.
 
 - The proxy does it in `Proxy_SharedAPI_GetUsercmd` ([Proxy_SharedAPI.cpp](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp)) instead of in the engine read, so it needs no hook and works on OpenJK. The game reads the usercmd only through that call, so the result is the same: the engine keeps `-128` in its own copy, and the game never sees it. A bot builds its usercmd with a clamp at ±127, so it is not affected.
-- Not compiled when written.
 
 ### O11. `MSG_ReadBits` reads past the message (Low)
 
@@ -265,7 +261,6 @@ Status: **applied**, original engine only (the hook needs the engine's addresses
 - The bounds of ioq3 and OpenJK are the ones used: `readcount > cursize` gives `0`; in out-of-band mode `readcount + bits/8 > cursize` sets `readcount = cursize + 1` and gives `0`; in Huffman mode `bit + bits%8 > cursize*8` does the same, and so does `bit > cursize*8` after the read.
 - One part is not ported: the bound passed to `Huff_offsetReceive` (`maxoffset`, a 5th argument in ioq3). The retail function has 4 arguments and is also called from elsewhere, so it is not changed. Instead the proxy hook is a wrapper around the original `MSG_ReadBits` ([Proxy_msg.cpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_msg.cpp)): it tests before the call and after it. One read can go up to a few bytes past the end (a Huffman symbol has no fixed length). The receive buffer is a local array of `MAX_MSGLEN`, so that stays inside it unless the message fills the buffer, and the value is replaced by `0`. No second hook, and the Huffman functions are not touched.
 - `MSG_ReadBits` is at `0x4186d0` in `jampDed.exe` and `0x8077834` in `linuxjampded` (cdecl on both). The first instructions have no relative instruction: `push ecx; mov eax, [esp+0xc]` (6 bytes with `push ebp`) and `push ebp; mov ebp, esp; sub esp, 0x38`. On Linux there are 41 call sites, so every `MSG_Read*` goes through it.
-- Not compiled when written.
 
 ### O12. `Info_SetValueForKey` writes one byte past the buffer (Medium)
 
@@ -275,7 +270,7 @@ The retail `Info_SetValueForKey` refuses a pair only when `strlen(newi) + strlen
 
 How a client gets there: a `connect` packet with a valid challenge and a 1007-character userinfo. `SV_DirectConnect` copies it into its local `userinfo[1024]` and adds `\ip\1.2.3.4:29070` (17 characters) with this function: 1007 + 17 = 1024.
 
-Fix: the engine tests with `cmp reg, 0x400; jbe`, in both binaries and for both functions. The `jbe` (`0x76`) is changed to `jb` (`0x72`) at `0x41beb2` and `0x41c091` in `jampDed.exe`, `0x807fe24` and `0x8080024` in `linuxjampded` (see `func_Info_SetValueForKey_length_jbe_addr` in [Proxy_Engine_Wrappers.hpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp)), in `Proxy_Engine_Inline_Patches`. Every engine caller is covered, not only `SV_DirectConnect`. The refusal reaches the player through the check of the missing `ip` (F2). Not compiled when written.
+Fix: the engine tests with `cmp reg, 0x400; jbe`, in both binaries and for both functions. The `jbe` (`0x76`) is changed to `jb` (`0x72`) at `0x41beb2` and `0x41c091` in `jampDed.exe`, `0x807fe24` and `0x8080024` in `linuxjampded` (see `func_Info_SetValueForKey_length_jbe_addr` in [Proxy_Engine_Wrappers.hpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp)), in `Proxy_Engine_Inline_Patches`. Every engine caller is covered, not only `SV_DirectConnect`. The refusal reaches the player through the check of the missing `ip` (F2).
 
 ## Q3/JKA differences: nothing to do
 

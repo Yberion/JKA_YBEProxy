@@ -96,7 +96,7 @@ jmp  trampoline       ; the original runs with no proxy frame          E9 rel32
 
 Each `push dword [esp+24]` moves `esp` down by 4, so the same displacement reaches the next lower dword: the six pushes copy the dwords at entry offsets 24, 20, 16, 12, 8 and 4. `netadr_t` is 20 bytes in the SDK ([sys_public.hpp:51-59](../../src/sdk/sys/sys_public.hpp#L51-L59)) and in the source ([`qcommon/qcommon.h:123-130`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/qcommon.h#L123-L130)).
 
-Sketch (x86 only, not compiled):
+Sketch (x86 only):
 
 ```cpp
 // The filter gets its own copy of the arguments: under cdecl a callee may overwrite its argument slots,

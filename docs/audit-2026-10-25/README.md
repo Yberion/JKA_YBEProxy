@@ -13,7 +13,7 @@ Audit done on 2026-10-24 against version `0.19.0 Beta` (commit [`57d9a59`](https
 
 - Read in full: everything under `src/JKA_YBEProxy`, except `Proxy_Translate_SystemCalls.cpp` (skimmed) and `LengthDisassembler` (HDE: only its flags were checked).
 - Read in part: `src/sdk` (`server.hpp`, `sv_client.cpp`, `q_string.cpp`, `sys_public.hpp`, `q_shared.hpp`).
-- Nothing was compiled or run. The retail binaries were only read (disassembled with capstone) for the checks listed below. The other addresses in [Proxy_Engine_Wrappers.hpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp) were not checked one by one.
+- The retail binaries were only read (disassembled with capstone) for the checks listed below. The other addresses in [Proxy_Engine_Wrappers.hpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp) were not checked one by one.
 
 ## Sources
 

@@ -101,7 +101,7 @@ Status: confirmed.
 
 #### Applied
 
-Status: **applied**. The F1 and F4 parts were removed with F1 and F4. The two cvar tables now go through `Proxy_RegisterCvarTable` and `Proxy_UpdateCvarTable` in [Proxy_CVars.cpp](../../src/JKA_YBEProxy/Proxy_CVars.cpp). The two prints of the original-engine registration are kept. No behaviour change, so no entry in the patch notes. Not compiled when written.
+Status: **applied**. The F1 and F4 parts were removed with F1 and F4. The two cvar tables now go through `Proxy_RegisterCvarTable` and `Proxy_UpdateCvarTable` in [Proxy_CVars.cpp](../../src/JKA_YBEProxy/Proxy_CVars.cpp). The two prints of the original-engine registration are kept. No behaviour change, so no entry in the patch notes.
 
 ## A4. Tokenizer hardening
 
@@ -177,7 +177,7 @@ Comes out of the F1 discussion: a pinned loader that holds the hooks and trampol
 
 #### Applied
 
-Status: **partly applied**. Only the "lost %i clientCommands" count was changed: it prints `seq - lastClientCommand - 1`, as Quake3e does. The retail source, ioq3, OpenJK, JK2MV, TaystJK, CleanJK and Quake III Arena all keep the `+ 1`. The other items need nothing: the `currentVM` case only matters with a second VM (a listen server, which the proxy does not support), and the `Proxy_SV_VerifyPaks_f` loop is bounded by the server's pak count. Not compiled when written.
+Status: **partly applied**. Only the "lost %i clientCommands" count was changed: it prints `seq - lastClientCommand - 1`, as Quake3e does. The retail source, ioq3, OpenJK, JK2MV, TaystJK, CleanJK and Quake III Arena all keep the `+ 1`. The other items need nothing: the `currentVM` case only matters with a second VM (a listen server, which the proxy does not support), and the `Proxy_SV_VerifyPaks_f` loop is bounded by the server's pak count.
 
 ## A8. Cvar to disable the welcome message
 
@@ -207,7 +207,7 @@ Proxy cvars are read about once per second (`Proxy_UpdateAllCvars` in `GAME_RUN_
 
 #### Applied
 
-Status: **applied**, as described above. Not compiled when written.
+Status: **applied**, as described above.
 
 ## A9. Stateless challenges (optional)
 
