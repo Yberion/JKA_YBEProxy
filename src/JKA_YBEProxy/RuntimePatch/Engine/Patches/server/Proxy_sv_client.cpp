@@ -1,5 +1,5 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
-#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_NetStatus.hpp"
 #include "JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Utils.hpp"
@@ -152,9 +152,11 @@ static void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 	}
 
 	// Proxy -------------->
-	std::size_t packetIndex;
-
-	packetIndex = proxy.clientData[getClientNumFromAddr(client)].cmdIndex;
+	// Before the loop below: it compares with client->lastUsercmd, which SV_ClientThink then updates
+	if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer)
+	{
+		Proxy_Engine_NetStatus_PacketReceived(client, cmds, cmdCount);
+	}
 	// Proxy <--------------
 
 	// usually, the first couple commands will be duplicates
@@ -179,16 +181,6 @@ static void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 		}
 
 		server.functions.SV_ClientThink(client, &cmds[i]);
-
-		// Proxy -------------->
-		// No ping test: bots never reach SV_UserMove (their usercmds go through BOTLIB_USER_COMMAND),
-		// and a human with a ping of 0 needs its stats too
-		if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer)
-		{
-			Proxy_Engine_Client_UpdateUcmdStats(getClientNumFromAddr(client), &cmds[i], packetIndex);
-			Proxy_Engine_Client_UpdateTimenudge(client, &cmds[i], proxy.trap->Milliseconds());
-		}
-		// Proxy <--------------
 	}
 }
 

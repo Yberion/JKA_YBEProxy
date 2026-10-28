@@ -8,6 +8,7 @@
 #include "JKA_YBEProxy/Proxy_CVars.hpp"
 #include "JKA_YBEProxy/Proxy_Files.hpp"
 #include "JKA_YBEProxy/Proxy_Bans.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_NetStatus.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 #include "JKA_YBEProxy/Proxy_SharedAPI.hpp"
@@ -151,6 +152,12 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		// ==================================================
 		{
 			Proxy_UpdateAllCvars((int)arg0);
+
+			if (proxy.isOriginalEngine && proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer)
+			{
+				Proxy_Engine_NetStatus_FrameClock();
+			}
+
 			proxy.proxyData.svsTime = (int)arg0;
 
 			break;

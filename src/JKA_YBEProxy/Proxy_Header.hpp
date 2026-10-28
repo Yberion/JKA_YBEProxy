@@ -51,6 +51,7 @@ enum Proxy_Platform_e
 #include "sdk/game/g_local.hpp"
 #include "sdk/game/g_public.hpp"
 #include "sdk/qcommon/q_shared.hpp"
+#include "sdk/qcommon/qcommon.hpp"
 
 #include <cstdint>
 #include <cstddef>
@@ -85,21 +86,51 @@ using dllEntryFuncPtr_t = 	void (*)(systemCallFuncPtr_t);
 // STRUCTS
 // ==================================================
 
-struct timenudgeData_t
+// Net ping and timenudge, see Proxy_Engine_NetStatus.cpp
+struct netEstimate_t
 {
-	int             delayCount;
-	int             delaySum;
-	int             pingSum;
-	int             lastTimeTimeNudgeCalculation;
-};
+	static constexpr int RttSamples = 64;
+	static constexpr int WindowSamples = 128;
+	// One second of packets of a client that sends one at every frame (the limit is 1000 frames per second)
+	static constexpr int PacketSamples = 1024;
 
-struct ucmdStat_t
-{
-	int				serverTime;
-	std::size_t		packetIndex;
-};
+	// Real time the snapshot was sent, and its sequence (a slot is reused after PACKET_BACKUP messages)
+	int		sentTime[PACKET_BACKUP];
+	int		sentSequence[PACKET_BACKUP];
+	int		lastAckedSequence;
 
-#define CMD_MASK 1024
+	// Real time and number of new usercmds of each packet received
+	int		packetTime[PacketSamples];
+	int		packetCmds[PacketSamples];
+	int		packetIndex;
+
+	int		lastSnapshotTime;
+	float	snapshotInterval;
+
+	int		rttTime[RttSamples];
+	int		rttValue[RttSamples];
+	int		rttIndex;
+
+	// Samples of the current window of one second: the delay of the newest usercmd of each packet, the time each
+	// snapshot left after its server time, and the client frames seen between two usercmds in a row
+	float	delaySum;
+	int		delayCount;
+	float	lateSum;
+	int		lateCount;
+	int		frameLag[WindowSamples];
+	int		lagCount;
+	int		lastCmdServerTime;
+	int		windowStart;
+	// Inputs and result of the last simulation of the client, run again only when an input changes
+	int		simInterval;
+	int		simFrameMs;
+	int		simFramesPerPacket;
+	float	simulated;
+
+	int		history[3];
+	int		historyIndex;
+	bool	historyFilled;
+};
 
 struct ProxyData_t
 {
@@ -126,14 +157,14 @@ struct ClientData_t
 	// IP address of the connection, without the port. Empty until the game accepted the client, and for bots
 	char				address[32];
 
-	timenudgeData_t		timenudgeData;
-	int					timenudge; // Approximation (+- 7 with stable connection)
+	netEstimate_t		netEstimate;
+	int					netPing;
+	int					timenudge;
+	// False until measured, and when the client gets too few snapshots to tell
+	bool				timenudgeKnown;
 
 	int					lastTimeNetStatus;
 	int					lastTimeMyratioCheck;
-
-	ucmdStat_t			cmdStats[CMD_MASK];
-	std::size_t			cmdIndex;
 };
 
 struct Proxy_OriginalEngine_CVars_t

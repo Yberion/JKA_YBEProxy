@@ -34,9 +34,6 @@ Values:
 - `0` (default): engine ping calculation.
 - `1`: accurate ping calculation.
 
-> [!WARNING]
-> The `timeNudge` column of [`/netStatus`](#netstatus-shownet) needs this fix. With `0`, that column is wrong.
-
 ### `proxy_sv_enableNetStatus`
 
 Engine: Original.
@@ -113,22 +110,22 @@ Prints the network settings of every client:
 | Column | Meaning |
 | --- | --- |
 | `score` | Score |
-| `ping` | Ping (`CON` while connecting, `ZMB` for a zombie client) |
-| `rate` | Client `rate` |
-| `fps` | User commands received during the last second (client FPS, from jk2mv) |
-| `packets` | Packets received during the last second (client `cl_maxpackets`, from jk2mv) |
-| `timeNudge` | Estimate of the client's `cl_timenudge`, about ±7 with a stable connection |
-| `snaps` | Snapshots per second the client receives (capped by `sv_fps`) |
+| `gamePing` | Ping of the engine, the one of the scoreboard and `status` (`CON` while connecting, `ZMB` for a zombie client): the mean time between a message and its acknowledgement, over the last 32 messages. It holds the wait of the client before it sends its next packet (half the time between two packets on average, that its commands wait too) and the jitter. Rounded to the server frame without [`proxy_sv_pingFix 1`](#proxy_sv_pingfix) |
+| `netPing` | Ping of the network: the smallest round trip of the last 4 seconds, measured with real milliseconds, close to the ping of the OS. Without the wait of the client and the jitter |
+| `rate` | Client `rate` (the setting, after `sv_minRate` and `sv_maxRate`) |
+| `fps` | User commands received during the last second (client FPS) |
+| `packets` | Packets received during the last second |
+| `timeNudge` | Estimate of the client's `cl_timenudge` (see below). `-` until it is measured, and for a client that gets fewer than about 10 snapshots per second |
+| `snaps` | Snapshots per second the client asked for (capped by `sv_fps`) |
+| `trueSnaps` | Snapshots per second the server sent in the last second |
 | `id` | Client number |
 | `name` | Name |
 
-A player can run the command at most once every 500 ms. Bots show `0` for `fps` and `packets`. A human whose ping shows `0`, which can happen without [`proxy_sv_pingFix`](#proxy_sv_pingfix), gets real values.
+A player can run the command at most once every 500 ms. Bots show `0` for everything but `snaps`, and `-` for `timeNudge`. All the values of the last second are measured when the command runs, so a client that stopped sending shows `0`, not its last value.
 
-> [!WARNING]
-> The `timeNudge` estimate needs:
->
-> - `proxy_sv_pingFix 1`;
-> - `sv_fps` set to `20` or `30`. The engine caps snapshots at 30 per second, so with a higher `sv_fps` the estimate is not accurate.
+- `packets` is what the server received. It is not `cl_maxpackets`: a client sends a packet at the first frame where `1000 / cl_maxpackets` milliseconds went by since the last one, so at 125 fps and `cl_maxpackets 30` it sends 25 per second, and a client in the same LAN sends one at every frame.
+- `trueSnaps` is lower than `snaps` when the server sends on its frames: a request between two frame rates gets the lower one (`sv_fps 40` and `snaps 30` give 20), and a client that is short of `rate` gets less.
+- `timeNudge` compares the time of the newest usercmd of each packet with the server time (the mean over one second), and subtracts the mean round trip (the mean of the round trips of the last 4 seconds minus the average wait of the client before it sends an acknowledgement, never below `netPing`). Both are means, so the jitter of the path to the server cancels out. It also adds back the time each snapshot waited on the server before it left (the game frame, the snapshots of the other clients), which the client sees as delay: without it, 26 bots raised the estimate by about 3 ms. Where the client settles its time depends on how the snapshots fall on its frames, so the proxy runs the time rules of the client (`CL_SendCmd`, `CL_AdjustTimeDelta`, `CL_SetCGameTime`) with the measured snapshot interval, frame length and frames per packet, and no network delay, and compares. It is the median of three windows of one second, limited to ±100 (the retail client limits `cl_timeNudge` to ±30, other clients allow more). It does not need `proxy_sv_pingFix`, and works with any `sv_fps`. It shows `-` when the snapshots of the client are 95 ms apart or more (for example `snaps` 10 to 19 with `sv_fps 20`, 10 to 14 with `sv_fps 30`): the client is then about 100 ms behind its newest snapshot, moves its time by halves (`CL_AdjustTimeDelta`), and its time wanders by tens of milliseconds. A fixed half frame instead of the simulation was off by -0.3 to -6 ms depending on `sv_fps` and the fps (TaystJK client, Linux server); the simulation gives those errors within 0.7 ms. The jitter of the path from the server adds up to about 2.5 ms (the client settles behind its late snapshots), in a simulation. Measured on a Linux server with a TaystJK client and the retail client: a mean error of +0.2 to +1.0 ms without added delay (+0.6 to +0.8 ms with 26 bots), and up to +3.6 ms with 31 ms of delay from the server (clumsy).
 
 ### `/myratio`
 

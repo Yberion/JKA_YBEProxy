@@ -2,7 +2,7 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 #include "JKA_YBEProxy/Imports/server/sv_game.hpp"
-#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_NetStatus.hpp"
 
 /*
 ==================
@@ -20,60 +20,59 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 		return;
 	}
 
-	char			status[4096];
+	char			status[8192];
 	int				i;
 	client_t* 		cl;
 	playerState_t* 	ps;
-	int				ping;
 	char			state[32];
 
 	status[0] = 0;
 
-	Q_strcat(status, sizeof(status), "score ping rate   fps  packets timeNudge snaps id name \n");
-	Q_strcat(status, sizeof(status), "----- ---- ------ ---- ------- --------- ----- -- ---------------\n");
+	Q_strcat(status, sizeof(status), "score gamePing netPing   rate  fps packets timeNudge snaps trueSnaps id name \n");
+	Q_strcat(status, sizeof(status), "----- -------- ------- ------ ---- ------- --------- ----- --------- -- ---------------\n");
 
 	for (i = 0, cl = server.svs->clients; i < server.cvars.sv_maxclients->integer; i++, cl++)
 	{
-		int			fps = 0;
-		int			packets = 0;
-		int			snaps = 0;
+		NetRates_t	rates = NetRates_t();
 
 		if (!cl->state)
 			continue;
 
 		if (cl->state == CS_CONNECTED)
-			Q_strncpyz(state, "CON ", sizeof(state));
+			Q_strncpyz(state, "     CON", sizeof(state));
 		else if (cl->state == CS_ZOMBIE)
-			Q_strncpyz(state, "ZMB ", sizeof(state));
+			Q_strncpyz(state, "     ZMB", sizeof(state));
 		else
-		{
-			ping = cl->ping < 9999 ? cl->ping : 9999;
-			Com_sprintf(state, sizeof(state), "%4i", ping);
-		}
+			Com_sprintf(state, sizeof(state), "%8i", cl->ping < 9999 ? cl->ping : 9999);
 
 		ps = Proxy_GetPlayerStateByClientNum(i);
-		
+
 		// A bot's snapshotMsec can be 0, which is bad for "1000 / snapshotMsec"
 		// Read-only: writing cl->snapshotMsec changed the real snapshot rate of a human with a ping of 0
 		const int snapshotMsec = cl->snapshotMsec > 0 ? cl->snapshotMsec : 1;
 
+		// The snaps the client asked for, limited by sv_fps. "trueSnaps" below is what the server sent in the last second:
+		// the server sends on its frames, so a request between two frame rates gets the lower one, and a client that
+		// is short of rate gets less
+		const int snaps = (1000 / snapshotMsec > server.cvars.sv_fps->integer) ? server.cvars.sv_fps->integer : 1000 / snapshotMsec;
+
+		// The numbers of a bot stay 0: it has no packets, and its snapshots go nowhere
 		// A ping of 0 is not a bot: a human whose round trip is shorter than one server frame also shows 0
 		if (cl->netchan.remoteAddress.type != NA_BOT)
 		{
-			Proxy_Engine_Client_CalcPacketsAndFPS(i, &packets, &fps);
+			Proxy_Engine_NetStatus_GetRates(cl, &rates);
 		}
 
-		if (1000 / snapshotMsec > server.cvars.sv_fps->integer)
+		// "-" until measured, and for a client with too few snapshots to tell
+		char timeNudge[16] = "-";
+
+		if (proxy.clientData[i].timenudgeKnown)
 		{
-			snaps = server.cvars.sv_fps->integer;
-		}
-		else
-		{
-			snaps = 1000 / snapshotMsec;
+			Com_sprintf(timeNudge, sizeof(timeNudge), "%i", proxy.clientData[i].timenudge);
 		}
 
 		// No need for truncation "feature" if we move name to the end
-		Q_strcat(status, sizeof(status), va("%5i %s %6i %4i %7i %9i %5i %2i %s^7\n", ps->persistant[PERS_SCORE], state, cl->rate, fps, packets, proxy.clientData[i].timenudge, snaps, i, cl->name));
+		Q_strcat(status, sizeof(status), va("%5i %s %7i %6i %4i %7i %9s %5i %9i %2i %s^7\n", ps->persistant[PERS_SCORE], state, proxy.clientData[i].netPing, cl->rate, rates.fps, rates.packets, timeNudge, snaps, rates.snaps, i, cl->name));
 	}
 
 	currentClientData->lastTimeNetStatus = server.svs->time;
