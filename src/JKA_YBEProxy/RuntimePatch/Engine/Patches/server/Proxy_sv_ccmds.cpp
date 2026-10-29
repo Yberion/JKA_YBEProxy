@@ -88,6 +88,8 @@ void Proxy_SV_Status_f(void)
 			Q_strncpyz(state, "CON ", sizeof(state));
 		else if (cl->state == CS_ZOMBIE)
 			Q_strncpyz(state, "ZMB ", sizeof(state));
+		else if (cl->netchan.remoteAddress.type == NA_BOT)
+			Q_strncpyz(state, "BOT ", sizeof(state));
 		else
 		{
 			ping = cl->ping < 9999 ? cl->ping : 9999;

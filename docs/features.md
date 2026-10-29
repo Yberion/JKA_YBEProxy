@@ -122,8 +122,8 @@ Prints the network settings of every client:
 | Column | Meaning |
 | --- | --- |
 | `score` | Score |
-| `gamePing` | Ping of the engine, the one of the scoreboard and `status` (`CON` while connecting, `ZMB` for a zombie client): the mean time between a message and its acknowledgement, over the last 32 messages. It holds the wait of the client before it sends its next packet (half the time between two packets on average, that its commands wait too) and the jitter. Rounded to the server frame without [`proxy_sv_pingFix 1`](#proxy_sv_pingfix) |
-| `netPing` | Ping of the network: the smallest round trip of the last 4 seconds, measured with real milliseconds, close to the ping of the OS. Without the wait of the client and the jitter |
+| `gamePing` | Ping of the engine, the one of the scoreboard and `status` (`CON` while connecting, `ZMB` for a zombie client, `BOT` for a bot): the mean time between a message and its acknowledgement, over the last 32 messages. It holds the wait of the client before it sends its next packet (half the time between two packets on average, that its commands wait too) and the jitter. Rounded to the server frame without [`proxy_sv_pingFix 1`](#proxy_sv_pingfix) |
+| `netPing` | Ping of the network: the smallest round trip of the last 4 seconds, measured with real milliseconds, close to the ping of the OS. Without the wait of the client and the jitter. `BOT` for a bot |
 | `rate` | Client `rate` (the setting, after `sv_minRate` and `sv_maxRate`) |
 | `fps` | User commands received during the last second (client FPS) |
 | `packets` | Packets received during the last second |
@@ -133,7 +133,7 @@ Prints the network settings of every client:
 | `id` | Client number |
 | `name` | Name |
 
-A player can run the command at most once every 500 ms. Bots show `0` for everything but `snaps`, and `-` for `timeNudge`. All the values of the last second are measured when the command runs, so a client that stopped sending shows `0`, not its last value.
+A player can run the command at most once every 500 ms. Bots show `BOT` for `gamePing` and `netPing`, `0` for everything else but `snaps`, and `-` for `timeNudge`. All the values of the last second are measured when the command runs, so a client that stopped sending shows `0`, not its last value.
 
 - `packets` is what the server received. It is not `cl_maxpackets`: a client sends a packet at the first frame where `1000 / cl_maxpackets` milliseconds went by since the last one, so at 125 fps and `cl_maxpackets 30` it sends 25 per second, and a client in the same LAN sends one at every frame.
 - `trueSnaps` is lower than `snaps` when the server sends on its frames: a request between two frame rates gets the lower one (`sv_fps 40` and `snaps 30` give 20), and a client that is short of `rate` gets less.
@@ -285,6 +285,7 @@ Engine: Original.
 - `writeconfig` only writes `.cfg` files. A name without an extension still gets `.cfg`. It refuses any other extension, a name with `..`, and the reserved names `mpdefault.cfg` and `default.cfg`. The check is in the command itself, so it applies to rcon, the server console, `vstr` and `exec`.
 - `status` is rewritten:
   - it shows the hostname, address, OS, version, gamedir, map, gametype, and the number of humans and bots;
-  - the name is printed last, so it is never truncated.
+  - the name is printed last, so it is never truncated;
+  - a bot shows `BOT` instead of its ping.
 - `SV_SvEntityForGentity` computes the entity index from the entity's address instead of trusting `s.number`, like JK2MV's fix for the "player ghosting" bug (players walking through another player). When the address is not an entity of the game's array, it falls back to `s.number`, and an index out of range stops with an error instead of reading outside the array.
 - Ping calculation: bots show `0`, and the accurate mode is available (see [`proxy_sv_pingFix`](#proxy_sv_pingfix)).

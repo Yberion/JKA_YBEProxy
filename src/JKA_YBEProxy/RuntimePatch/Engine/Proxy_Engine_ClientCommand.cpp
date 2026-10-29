@@ -42,6 +42,8 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 			Q_strncpyz(state, "     CON", sizeof(state));
 		else if (cl->state == CS_ZOMBIE)
 			Q_strncpyz(state, "     ZMB", sizeof(state));
+		else if (cl->netchan.remoteAddress.type == NA_BOT)
+			Q_strncpyz(state, "     BOT", sizeof(state));
 		else
 			Com_sprintf(state, sizeof(state), "%8i", cl->ping < 9999 ? cl->ping : 9999);
 
@@ -58,9 +60,12 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 
 		// The numbers of a bot stay 0: it has no packets, and its snapshots go nowhere
 		// A ping of 0 is not a bot: a human whose round trip is shorter than one server frame also shows 0
+		char netPing[16] = "BOT";
+
 		if (cl->netchan.remoteAddress.type != NA_BOT)
 		{
 			Proxy_Engine_NetStatus_GetRates(cl, &rates);
+			Com_sprintf(netPing, sizeof(netPing), "%i", proxy.clientData[i].netPing);
 		}
 
 		// "-" until measured, and for a client with too few snapshots to tell
@@ -72,7 +77,7 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 		}
 
 		// No need for truncation "feature" if we move name to the end
-		Q_strcat(status, sizeof(status), va("%5i %s %7i %6i %4i %7i %9s %5i %9i %2i %s^7\n", ps->persistant[PERS_SCORE], state, proxy.clientData[i].netPing, cl->rate, rates.fps, rates.packets, timeNudge, snaps, rates.snaps, i, cl->name));
+		Q_strcat(status, sizeof(status), va("%5i %s %7s %6i %4i %7i %9s %5i %9i %2i %s^7\n", ps->persistant[PERS_SCORE], state, netPing, cl->rate, rates.fps, rates.packets, timeNudge, snaps, rates.snaps, i, cl->name));
 	}
 
 	currentClientData->lastTimeNetStatus = server.svs->time;
