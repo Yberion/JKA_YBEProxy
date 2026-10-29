@@ -16,7 +16,10 @@ static cvarTable_t proxyCVarTable[] =
 	{ &proxy.cvars.proxy_sv_disableKillCmd, "proxy_sv_disableKillCmd", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.cvars.proxy_sv_maxClientsPerIP, "proxy_sv_maxClientsPerIP", "3", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.cvars.proxy_sv_disableWelcomeMessage, "proxy_sv_disableWelcomeMessage", "0", CVAR_ARCHIVE, 0, qfalse },
+	{ &proxy.cvars.proxy_sv_disableServerInfoVersion, "proxy_sv_disableServerInfoVersion", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.cvars.proxy_sv_banIPs, "proxy_sv_banIPs", "", CVAR_ARCHIVE, 0, qfalse },
+	// The proxy version in the serverinfo (getstatus), set by Proxy_UpdateServerInfoVersion
+	{ nullptr, "YbeProxy", "", CVAR_SERVERINFO | CVAR_ROM, 0, qfalse },
 
 	// get cvars
 	// Flags 0: Cvar_Get ORs the flags into the engine's cvar
@@ -62,6 +65,13 @@ static void Proxy_UpdateCvarTable(cvarTable_t* table, std::size_t size)
 	}
 }
 
+// A forced set: it also replaces the value kept from an older proxy (the cvar survives the reload on a map change) or set in a cfg
+// It does nothing when the value is the same, and the engine leaves a key with an empty value out of the serverinfo
+static void Proxy_UpdateServerInfoVersion(void)
+{
+	proxy.trap->Cvar_Set("YbeProxy", proxy.cvars.proxy_sv_disableServerInfoVersion.integer ? "" : YBEPROXY_VERSION);
+}
+
 // ==================================================
 // Proxy_OriginalEngine_CVars_Registration
 // --------------------------------------------------
@@ -86,6 +96,7 @@ void Proxy_OriginalEngine_CVars_Registration(void)
 void Proxy_CVars_Registration(void)
 {
 	Proxy_RegisterCvarTable(proxyCVarTable, proxyCVarTableSize);
+	Proxy_UpdateServerInfoVersion();
 }
 
 // ==================================================
@@ -104,6 +115,7 @@ void Proxy_UpdateAllCvars(int levelTime)
 		lastUpdateTime = levelTime;
 
 		Proxy_UpdateCvarTable(proxyCVarTable, proxyCVarTableSize);
+		Proxy_UpdateServerInfoVersion();
 
 		if (proxy.isOriginalEngine)
 		{

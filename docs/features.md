@@ -17,6 +17,7 @@ All proxy cvars are archived (`CVAR_ARCHIVE`). The proxy reads them again about 
 | [`proxy_sv_maxClientsPerIP`](#proxy_sv_maxclientsperip) | `3` | Any | Maximum clients from one IP address |
 | [`proxy_sv_disableKillCmd`](#proxy_sv_disablekillcmd) | `0` | Any | Disables `/kill` |
 | [`proxy_sv_disableWelcomeMessage`](#proxy_sv_disablewelcomemessage) | `0` | Any | Disables the welcome message |
+| [`proxy_sv_disableServerInfoVersion`](#proxy_sv_disableserverinfoversion) | `0` | Any | Removes the proxy version from the serverinfo |
 | [`proxy_sv_modelPathLength`](#proxy_sv_modelpathlength) | `64` | Any (partial) | Maximum model name length |
 
 ### `proxy_sv_pingFix`
@@ -85,6 +86,17 @@ Values:
 
 - `0` (default): human players receive the [welcome message](#welcome-message).
 - `1`: the message is not sent.
+
+### `proxy_sv_disableServerInfoVersion`
+
+Engine: Any.
+
+The proxy adds a `YbeProxy` key with its version (for example `0.19.0 Beta`) to the serverinfo. Clients see it in the server info window of the server browser (`getstatus`) and with `rcon serverinfo`. The key is read-only.
+
+Values:
+
+- `0` (default): the `YbeProxy` key is in the serverinfo.
+- `1`: the key is removed from the serverinfo.
 
 ### `proxy_sv_modelPathLength`
 
