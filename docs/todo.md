@@ -8,6 +8,7 @@
 ### Short term
 
 - **Create a plugin system.** See A6 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
+- A command that prints everything about the proxy (name to choose, for example `proxyconfig`): the version, the engine it runs on, and every proxy cvar with its value.
 - Snaps policy.
 
 ### Bugs
