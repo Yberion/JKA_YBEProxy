@@ -8,6 +8,7 @@
 ### Short term
 
 - **Create a plugin system.** See A6 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
+- A command that explains each column of [`/netStatus`](features.md#netstatus-shownet), for the players who run it (name to choose, for example `/explainNetStatus`).
 
 ### Bugs
 
