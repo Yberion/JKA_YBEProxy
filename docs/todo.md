@@ -11,9 +11,7 @@
 
 ### Bugs
 
-- Original engine: the server stays down when a counter is about to wrap. `SV_Frame` calls `SV_Shutdown` then `map_restart 0`, but `map_restart` refuses to run once the server is down ("Server is not running."), so every player is dropped and the server has no map until someone restarts it ([`server/sv_main.cpp:866-878`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_main.cpp#L866-L878), [`server/sv_ccmds.cpp:246`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_ccmds.cpp#L246)). Found by reading the code, not reproduced.
-  - `svs.nextSnapshotEntities` grows by the entities of every snapshot built, and only a map change resets it: a server that stays on one map with many players reaches it in hours (about 19 h with 32 players, 50 entities per snapshot and 20 snaps; half that at 40 snaps). Fix: run `map <current map>` a little before the limit. It is a normal map change, so the players stay connected.
-  - `svs.time` after about 21.7 days: a map change does not reset it, only `SV_Shutdown` does. Fix: keep the shutdown, then `map <current map>` instead of `map_restart 0`, as ioq3 and OpenJK. The players are dropped.
+None known.
 
 ### Long term
 
@@ -75,6 +73,9 @@
 
 ### Bugs
 
+- Original engine: the server stayed down when a counter was about to wrap. `SV_Frame` calls `SV_Shutdown` then `map_restart 0`, but `map_restart` refuses to run once the server is down ("Server is not running."), so every player was dropped and the server had no map until someone restarted it ([`server/sv_main.cpp:866-878`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_main.cpp#L866-L878), [`server/sv_ccmds.cpp:246`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_ccmds.cpp#L246)). Found by reading the code, not reproduced. The proxy now loads the map again a little before the limit:
+  - `svs.nextSnapshotEntities` (it grows by the entities of every snapshot built, and only a map change resets it, so a server that stays on one map with many players reaches it in hours): `map <current map>`, a normal map change, the players stay connected;
+  - `svs.time` (after about 21.7 days, only `SV_Shutdown` resets it): `killserver` then `map <current map>`, as ioq3 and OpenJK. The players are dropped.
 - `rcon map mp/ffa3` (any map) and `rcon map_restart 0` sometimes crashed the server since the hooked `SVC_RemoteCommand` was added, more often with Discord running on the server machine. Proxy hook functions were still on the call stack when the engine unloaded the proxy. The packet checks now run in a filter at the entry of `SV_PacketEvent`, which returns before the original code runs, see F1 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
 
 ## Won't do
