@@ -1,10 +1,13 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
 #include "JKA_YBEProxy/Proxy_CVars.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Rate.hpp"
 
 static cvarTable_t proxyOriginalEngineCVarTable[] =
 {
 	{ &proxy.originalEngineCvars.proxy_sv_pingFix, "proxy_sv_pingFix", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.originalEngineCvars.proxy_sv_enableNetStatus, "proxy_sv_enableNetStatus", "0", CVAR_ARCHIVE, 0, qfalse },
+	// The flags of the engine's sv_maxRate
+	{ &proxy.originalEngineCvars.sv_minRate, "sv_minRate", "0", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
 };
 static constexpr std::size_t proxyOriginalEngineCVarTableSize = ARRAY_LEN(proxyOriginalEngineCVarTable);
 
@@ -118,7 +121,16 @@ void Proxy_UpdateAllCvars(int levelTime)
 
 		if (proxy.isOriginalEngine)
 		{
+			// Reset with the module at each map change: a floor that is set is applied again, which changes nothing
+			static int minRate = 0;
+
 			Proxy_UpdateCvarTable(proxyOriginalEngineCVarTable, proxyOriginalEngineCVarTableSize);
+
+			if (proxy.originalEngineCvars.sv_minRate.integer != minRate)
+			{
+				minRate = proxy.originalEngineCvars.sv_minRate.integer;
+				Proxy_Engine_Rate_MinRateChanged();
+			}
 		}
 	}
 }

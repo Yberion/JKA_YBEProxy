@@ -3,6 +3,7 @@
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp"
 #include "JKA_YBEProxy/Imports/server/sv_game.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_NetStatus.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Rate.hpp"
 
 /*
 ==================
@@ -28,8 +29,8 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 
 	status[0] = 0;
 
-	Q_strcat(status, sizeof(status), "score gamePing netPing   rate  fps packets timeNudge snaps trueSnaps id name \n");
-	Q_strcat(status, sizeof(status), "----- -------- ------- ------ ---- ------- --------- ----- --------- -- ---------------\n");
+	Q_strcat(status, sizeof(status), "score gamePing netPing userRate   rate trueRate  fps packets timeNudge snaps trueSnaps id name \n");
+	Q_strcat(status, sizeof(status), "----- -------- ------- -------- ------ -------- ---- ------- --------- ----- --------- -- ---------------\n");
 
 	for (i = 0, cl = server.svs->clients; i < server.cvars.sv_maxclients->integer; i++, cl++)
 	{
@@ -76,8 +77,12 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 			Com_sprintf(timeNudge, sizeof(timeNudge), "%i", proxy.clientData[i].timenudge);
 		}
 
+		// The rate the client asked for, the one the server applies (sv_minRate, sv_maxRate), and "trueRate": the bytes
+		// sent in the last second. The rate is a limit, trueRate reaches it only when the client is short of rate
+		const int userRate = atoi(Info_ValueForKey(cl->userinfo, "rate"));
+
 		// No need for truncation "feature" if we move name to the end
-		Q_strcat(status, sizeof(status), va("%5i %s %7s %6i %4i %7i %9s %5i %9i %2i %s^7\n", ps->persistant[PERS_SCORE], state, netPing, cl->rate, rates.fps, rates.packets, timeNudge, snaps, rates.snaps, i, cl->name));
+		Q_strcat(status, sizeof(status), va("%5i %s %7s %8i %6i %8i %4i %7i %9s %5i %9i %2i %s^7\n", ps->persistant[PERS_SCORE], state, netPing, userRate, Proxy_Engine_Rate_Applied(cl), rates.rate, rates.fps, rates.packets, timeNudge, snaps, rates.snaps, i, cl->name));
 	}
 
 	currentClientData->lastTimeNetStatus = server.svs->time;

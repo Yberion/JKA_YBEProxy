@@ -405,6 +405,7 @@ void Proxy_Engine_NetStatus_GetRates(client_t* client, NetRates_t* rates)
 	// The snapshots of the last second. The ring keeps the last 32: when the client gets more than 32 per second the
 	// rate is the one of the span they cover
 	int count = 0;
+	int bytes = 0;
 	int oldest = now;
 	int newest = 0;
 
@@ -413,17 +414,17 @@ void Proxy_Engine_NetStatus_GetRates(client_t* client, NetRates_t* rates)
 		if (e.sentSequence[i] && now - e.sentTime[i] < 1000)
 		{
 			++count;
+			// The slot of the message, as SV_SendMessageToClient wrote it. 48 bytes of header, as SV_RateMsec counts, so
+			// a client that is short of rate shows about its rate
+			bytes += client->frames[i].messageSize + 48;
 			oldest = std::min(oldest, e.sentTime[i]);
 			newest = std::max(newest, e.sentTime[i]);
 		}
 	}
 
-	if (count >= 2 && newest > oldest)
-	{
-		rates->snaps = (int)std::lround((float)(count - 1) * 1000.0f / (float)(newest - oldest));
-	}
-	else
-	{
-		rates->snaps = count;
-	}
+	const float perSecond = (count >= 2 && newest > oldest) ? (float)(count - 1) * 1000.0f / (float)(newest - oldest) : (float)count;
+
+	rates->snaps = (int)std::lround(perSecond);
+	// The mean size of these messages times their rate
+	rates->rate = count ? (int)std::lround((float)bytes / (float)count * perSecond) : 0;
 }

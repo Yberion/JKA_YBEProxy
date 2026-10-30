@@ -3,6 +3,7 @@
 #include "JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Utils.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Rate.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.hpp"
 
@@ -499,6 +500,9 @@ void Proxy_SV_UserinfoChanged(client_t* cl) {
 	}
 
 	Original_SV_UserinfoChanged(cl);
+
+	// After the engine sets cl->rate from the userinfo
+	Proxy_Engine_Rate_ApplyMinRate(cl);
 }
 
 /*

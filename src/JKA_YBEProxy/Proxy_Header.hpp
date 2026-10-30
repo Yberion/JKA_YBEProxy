@@ -172,6 +172,8 @@ struct Proxy_OriginalEngine_CVars_t
 	// New cvars
 	vmCvar_t proxy_sv_pingFix;
 	vmCvar_t proxy_sv_enableNetStatus;
+	// Floor of the clients' rate, as in ioq3, Quake3e, OpenJK and JK2MV (see Proxy_Engine_Rate.cpp)
+	vmCvar_t sv_minRate;
 };
 
 struct Proxy_CVars_t

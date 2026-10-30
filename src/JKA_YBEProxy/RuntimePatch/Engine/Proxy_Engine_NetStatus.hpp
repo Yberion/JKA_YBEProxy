@@ -11,6 +11,7 @@ struct NetRates_t
 	int packets;		// packets received from the client
 	int fps;			// usercmds received from the client, one per client frame
 	int snaps;			// snapshots sent to the client
+	int rate;			// bytes sent to the client, counted as the engine's rate does
 };
 
 // Net ping and timenudge
