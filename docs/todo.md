@@ -73,6 +73,7 @@ None known.
 
 ### Bugs
 
+- NPC navigation data never freed: memory leaked at each map change and `map_restart`, and the nodes of the previous map stayed for the NPCs. The proxy frees it before the game loads, as OpenJK does in `CNavigator::Load`.
 - Original engine: the server stayed down when a counter was about to wrap. `SV_Frame` calls `SV_Shutdown` then `map_restart 0`, but `map_restart` refuses to run once the server is down ("Server is not running."), so every player was dropped and the server had no map until someone restarted it ([`server/sv_main.cpp:866-878`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_main.cpp#L866-L878), [`server/sv_ccmds.cpp:246`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_ccmds.cpp#L246)). Found by reading the code, not reproduced. The proxy now loads the map again a little before the limit:
   - `svs.nextSnapshotEntities` (it grows by the entities of every snapshot built, and only a map change resets it, so a server that stays on one map with many players reaches it in hours): `map <current map>`, a normal map change, the players stay connected;
   - `svs.time` (after about 21.7 days, only `SV_Shutdown` resets it): `killserver` then `map <current map>`, as ioq3 and OpenJK. The players are dropped.

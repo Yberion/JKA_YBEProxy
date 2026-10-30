@@ -105,6 +105,12 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 			// Before the game loads its ban list from g_banIPs
 			Proxy_Bans_BeforeGameInit();
 
+			// Before the game loads the navigation of the map (trap_Nav_Load, or a node per waypoint). The game never frees
+			// it (NAV_Shutdown is never called), and the retail CNavigator::Load adds to the nodes of the previous map: a
+			// leak at each map change and map_restart, and NPCs that can pick a node of the previous map. OpenJK frees in
+			// CNavigator::Load
+			proxy.trap->Nav_Free();
+
 			break;
 		}
 		//==================================================

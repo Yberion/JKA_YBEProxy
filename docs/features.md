@@ -307,6 +307,12 @@ Engine: Any.
 
 Engine: Any. When they enter the game after their first connection, human players receive a message with the proxy name and version. Turn it off with [`proxy_sv_disableWelcomeMessage`](#proxy_sv_disablewelcomemessage).
 
+### NPC navigation
+
+Engine: Any.
+
+The game never frees the navigation data of the NPCs (the nodes of the `.nav` file of the map, or one per `waypoint` entity), and the retail engine adds the nodes of the new map to those of the previous one: memory leaked at each map change and `map_restart`, and NPCs could pick a node of the previous map. The proxy frees it before the game loads, as OpenJK does. Bots use another system and are not affected.
+
 ### Engine fixes
 
 Engine: Original.
