@@ -11,7 +11,14 @@
 
 ### Bugs
 
-None known.
+Found by reading the code of the other engines (2026-10-31), not reproduced. Most severe first.
+
+- Original engine: memory leak of the sub-BSPs. For a sub-BSP (a `misc_bsp` entity, model `#name`), `CM_LoadMap_Actual` reads the whole file into a buffer that it never frees: only the main map goes through `gpvCachedMapDiskImage` ([`qcommon/cm_load.cpp:672-681`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/cm_load.cpp#L672-L681)). It leaks at each load of a map that has some. Which MP maps use `misc_bsp` was not checked. OpenJK [`e76263d8`](https://github.com/JACoders/OpenJK/commit/e76263d8). Possible fix: on a dedicated server the buffer of the main map is freed at the end of the load, so after `GAME_INIT` only the lost buffers are left in `TAG_BSP_DISKIMAGE`, and `Z_TagFree(TAG_BSP_DISKIMAGE)` would free them (needs the address of `Z_TagFree`).
+- Ghoul2 system calls with a null pointer crash the server: the engine uses the `ghoul2` argument without a test ([`server/sv_game.cpp:1380`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_game.cpp#L1380)). Seen with an NPC without its model or animations, and with FFA changed to Siege then `map_restart`. `npc spawn` needs cheats, so otherwise it takes broken content or an admin action. OpenJK [`b244d4e3`](https://github.com/JACoders/OpenJK/commit/b244d4e3), [`41bd4d8f`](https://github.com/JACoders/OpenJK/commit/41bd4d8f), [`083ae51e`](https://github.com/JACoders/OpenJK/commit/083ae51e). Possible fix: null tests in `Proxy_OriginalAPI_VM_DllSyscall`, which every system call of the game goes through. Any engine, no engine address.
+- Original engine: `sv_maxPing` can be bypassed. `SV_GetChallenge` reuses the existing challenge of an address instead of making a new one ([`server/sv_client.cpp:67-76`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L67-L76)). Only matters with `sv_maxPing` set (default `0`). ioq3, OpenJK [`5ee248fd`](https://github.com/JACoders/OpenJK/commit/5ee248fd).
+- Original engine: a `map_restart` while a client is still loading makes it active with the last usercmd of the previous map, and the client hangs. ioq3, OpenJK [`36bc2c55`](https://github.com/JACoders/OpenJK/commit/36bc2c55).
+- Original engine: a dropped bot goes to `CS_ZOMBIE` for a few seconds instead of `CS_FREE`, so its slot stays taken meanwhile. OpenJK [`93daa30d`](https://github.com/JACoders/OpenJK/commit/93daa30d).
+- Original engine: `SV_SendServerCommand` to one client does not check that it is at least `CS_PRIMED` (only the broadcast does), so commands can pile up before the gamestate is sent. No realistic path to a "Server command overflow" was found. OpenJK [`c0e9b765`](https://github.com/JACoders/OpenJK/commit/c0e9b765).
 
 ### Long term
 
