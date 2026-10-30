@@ -201,6 +201,32 @@ static void Proxy_ForceTeamEveryone(const char* team)
 	}
 }
 
+int Proxy_SharedAPI_ConsoleClientNum(const char* cmd)
+{
+	char arg[MAX_TOKEN_CHARS];
+
+	proxy.trap->Argv(1, arg, sizeof(arg));
+
+	// Digits only: atoi would read "1abc" as 1, and the empty argument as 0
+	bool isNumber = arg[0] != '\0';
+
+	for (const char* c = arg; *c; ++c)
+	{
+		isNumber = isNumber && *c >= '0' && *c <= '9';
+	}
+
+	const int clientNum = isNumber ? atoi(arg) : -1;
+
+	if (clientNum < 0 || clientNum >= MAX_CLIENTS || clientNum >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients") || !proxy.clientData[clientNum].isConnected)
+	{
+		proxy.trap->Print("Usage: %s <client number>, of a player in the game (see status)\n", cmd);
+
+		return -1;
+	}
+
+	return clientNum;
+}
+
 // "mute <client number>" and "unmute <client number>", from the server console or rcon
 // The game has no such command, so GAME_CONSOLE_COMMAND reaches the proxy for it
 qboolean Proxy_SharedAPI_ConsoleCommand(void)
@@ -239,24 +265,10 @@ qboolean Proxy_SharedAPI_ConsoleCommand(void)
 		return qfalse;
 	}
 
-	char arg[MAX_TOKEN_CHARS];
+	const int clientNum = Proxy_SharedAPI_ConsoleClientNum(cmd);
 
-	proxy.trap->Argv(1, arg, sizeof(arg));
-
-	// Digits only: atoi would read "1abc" as 1, and the empty argument as 0
-	bool isNumber = arg[0] != '\0';
-
-	for (const char* c = arg; *c; ++c)
+	if (clientNum < 0)
 	{
-		isNumber = isNumber && *c >= '0' && *c <= '9';
-	}
-
-	const int clientNum = isNumber ? atoi(arg) : -1;
-
-	if (clientNum < 0 || clientNum >= MAX_CLIENTS || clientNum >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients") || !proxy.clientData[clientNum].isConnected)
-	{
-		proxy.trap->Print("Usage: %s <client number>, of a player in the game (see status)\n", mute ? "mute" : "unmute");
-
 		return qtrue;
 	}
 

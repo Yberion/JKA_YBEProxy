@@ -168,7 +168,9 @@ IP bans, with the rules of OpenJK instead of the retail game's. In the retail ga
 
 - `removeip` takes the same spelling. The old spelling of a ban made before the proxy (`removeip 152.0.0.0` for `152.*.*.*`) still finds it.
 - `listip` prints the bans, with `*` for a wildcard.
-- The proxy keeps the list in `proxy_sv_banIPs` (archived, like `g_banIPs` was), and the game's own list stays empty. The bans of `g_banIPs` are imported when the game loads, with their old meaning (a `0` was a wildcard), then `g_banIPs` is emptied. The cvar holds `MAX_CVAR_VALUE_STRING` characters, about 20 bans, as `g_banIPs` did. The bans after that are kept until the map changes only.
+- `ban <client number>` and `unban <client number>` are `addip` and `removeip` of the address of a player in the game (the client number shown by `status`). `ban` prints the player name and the address. Like `addip`, it does not drop the player: they are refused at the next map change, or when they connect again. `unban` removes the ban of that exact address, not a wider ban that covers it (`152.0.*.*`): use `removeip` for that. Bots have no address.
+- The proxy keeps the list in the file `ybeproxy_bans.txt`, next to `jampserver.cfg` (`fs_homepath/<fs_game>/`, `base` without `fs_game`), and the game's own list stays empty. The file has one ban per line (`152.0.*.*`). It is read when the game loads (at every map change) and rewritten after every `addip` and `removeip`. It can be edited by hand while the server runs: the change applies at the next map change, and the next `addip` or `removeip` before it overwrites the file. Up to 1024 bans, as in the game.
+- The bans of `g_banIPs` are imported into the file when the game loads, with their old meaning (a `0` was a wildcard), then `g_banIPs` is emptied.
 - A banned address is refused on connect with `Banned.`, as before. Bots and `localhost` are never banned.
 - With `g_filterBan 0` (only the listed addresses may connect) the proxy does nothing: the game keeps its own list and rules, and a `0` stays a wildcard. The mode is read when the game loads: after a change of `g_filterBan`, restart the map.
 

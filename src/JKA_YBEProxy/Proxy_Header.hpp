@@ -183,8 +183,6 @@ struct Proxy_CVars_t
 	vmCvar_t proxy_sv_maxClientsPerIP;
 	vmCvar_t proxy_sv_disableWelcomeMessage;
 	vmCvar_t proxy_sv_disableServerInfoVersion;
-	// The IP bans, kept by the proxy (see Proxy_Bans.cpp)
-	vmCvar_t proxy_sv_banIPs;
 
 	// get cvars
 	vmCvar_t sv_fps;

@@ -1,5 +1,6 @@
 #include "JKA_YBEProxy/Proxy_Header.hpp"
 #include "JKA_YBEProxy/Proxy_Bans.hpp"
+#include "JKA_YBEProxy/Proxy_SharedAPI.hpp"
 
 /*
 IP bans, with the rules of OpenJK's StringToFilter instead of the retail game's
@@ -9,8 +10,11 @@ The retail game gives a mask of 255 to an octet only when it is not 0, so a 0 in
 octet that is written is compared, 0 included, and "*" is the wildcard. "152.0" then bans 152.0.*.* only.
 The proxy cannot change the game module, so it keeps the list itself and the game's list stays empty:
 - before the game loads, g_banIPs (the game's list, as retail wrote it) is imported and emptied;
-- the list is stored in proxy_sv_banIPs, which is archived, in the new format ("152.0.*.* ");
-- addip, removeip and listip are answered here, and the connection is refused in Proxy_SharedAPI_ClientConnect.
+- the list is stored in ybeproxy_bans.txt (fs_homepath/<fs_game>/), one ban per line in the new format ("152.0.*.*"),
+  read when the game loads and rewritten after every change. The module is reloaded at every map change, so the file
+  is read again each time;
+- addip, removeip, listip, ban and unban are answered here, and the connection is refused in
+  Proxy_SharedAPI_ClientConnect.
 Only with g_filterBan 1 (the default). With g_filterBan 0 (only the listed addresses may connect) the game's empty list
 would refuse everybody, so the game keeps its own list and its own rules
 */
@@ -19,6 +23,8 @@ namespace
 {
 	// MAX_IPFILTERS of the retail game
 	constexpr int MaxIpFilters = 1024;
+
+	constexpr const char* BansFile = "ybeproxy_bans.txt";
 
 	struct IpFilter
 	{
@@ -103,9 +109,19 @@ namespace
 		return a.used && b.used && !std::memcmp(a.compare, b.compare, 4) && !std::memcmp(a.mask, b.mask, 4);
 	}
 
+	// Rewrites the whole file, one ban per line
 	void UpdateIPBans(void)
 	{
-		char list[MAX_CVAR_VALUE_STRING] = { 0 };
+		fileHandle_t f = 0;
+
+		proxy.trap->FS_Open(BansFile, &f, FS_WRITE);
+
+		if (!f)
+		{
+			proxy.trap->Print("Could not write %s, the change will be lost at the next map change\n", BansFile);
+
+			return;
+		}
 
 		for (int i = 0; i < numIpFilters; ++i)
 		{
@@ -127,20 +143,13 @@ namespace
 					Q_strcat(ip, sizeof(ip), va("%i", ipFilters[i].compare[j]));
 				}
 
-				Q_strcat(ip, sizeof(ip), (j < 3) ? "." : " ");
+				Q_strcat(ip, sizeof(ip), (j < 3) ? "." : "\n");
 			}
 
-			if (std::strlen(list) + std::strlen(ip) >= sizeof(list))
-			{
-				proxy.trap->Print("proxy_sv_banIPs overflowed at MAX_CVAR_VALUE_STRING, the bans after this one will not be kept after a restart\n");
-
-				break;
-			}
-
-			Q_strcat(list, sizeof(list), ip);
+			proxy.trap->FS_Write(ip, (int)std::strlen(ip), f);
 		}
 
-		proxy.trap->Cvar_Set("proxy_sv_banIPs", list);
+		proxy.trap->FS_Close(f);
 	}
 
 	// Returns false when the address is not valid or the list is full. Does not save the list
@@ -185,7 +194,36 @@ namespace
 		return true;
 	}
 
-	// The list is words separated by spaces
+	// Saves the list and prints the result
+	void RemoveIP(const char* str)
+	{
+		IpFilter filter;
+
+		if (!StringToFilter(str, filter, false))
+		{
+			return;
+		}
+
+		// A ban made before the proxy, "152.0.0.0" for 152.*.*.*, is now "152.*.*.*": the old spelling still finds it
+		IpFilter legacyFilter;
+		const bool hasLegacy = StringToFilter(str, legacyFilter, true);
+
+		for (int i = 0; i < numIpFilters; ++i)
+		{
+			if (SameFilter(ipFilters[i], filter) || (hasLegacy && SameFilter(ipFilters[i], legacyFilter)))
+			{
+				ipFilters[i].used = false;
+				proxy.trap->Print("Removed.\n");
+				UpdateIPBans();
+
+				return;
+			}
+		}
+
+		proxy.trap->Print("Didn't find %s.\n", str);
+	}
+
+	// The list is words separated by spaces or line breaks
 	void AddIPList(const char* list, bool legacy)
 	{
 		char word[64];
@@ -193,7 +231,7 @@ namespace
 
 		for (const char* c = list;; ++c)
 		{
-			if (*c && *c != ' ')
+			if (*c && !std::strchr(" \t\r\n", *c))
 			{
 				if (length < sizeof(word) - 1)
 				{
@@ -236,10 +274,41 @@ void Proxy_Bans_BeforeGameInit(void)
 		return;
 	}
 
-	char list[MAX_CVAR_VALUE_STRING];
+	// A missing file is an empty list. The buffer holds MaxIpFilters bans as the proxy writes them, with room for "\r\n"
+	static char buffer[MaxIpFilters * 20];
+	fileHandle_t f = 0;
+	const int length = proxy.trap->FS_Open(BansFile, &f, FS_READ);
 
-	proxy.trap->Cvar_VariableStringBuffer("proxy_sv_banIPs", list, sizeof(list));
-	AddIPList(list, false);
+	if (f)
+	{
+		if (length > 0)
+		{
+			// shortcut: a file edited by hand past the buffer is cut at its last full word, read it in chunks if that ever matters
+			const int size = (length < (int)sizeof(buffer)) ? length : (int)sizeof(buffer) - 1;
+
+			proxy.trap->FS_Read(buffer, size, f);
+			buffer[size] = '\0';
+
+			// The end of the buffer can cut a word, and a cut "152.12" would become the wider ban "152.1": drop that word
+			if (size < length)
+			{
+				int end = size;
+
+				while (end > 0 && !std::strchr(" \t\r\n", buffer[end - 1]))
+				{
+					--end;
+				}
+
+				buffer[end] = '\0';
+			}
+
+			AddIPList(buffer, false);
+		}
+
+		proxy.trap->FS_Close(f);
+	}
+
+	char list[MAX_CVAR_VALUE_STRING];
 
 	// The bans of the game, written by the retail game before the proxy: a 0 was a wildcard
 	proxy.trap->Cvar_VariableStringBuffer("g_banIPs", list, sizeof(list));
@@ -256,6 +325,50 @@ void Proxy_Bans_BeforeGameInit(void)
 
 qboolean Proxy_Bans_ConsoleCommand(const char* cmd)
 {
+	// addip and removeip of the address of a player in the game. Like addip, the player is not dropped: the ban refuses
+	// their next connection, at the latest at the next map change
+	const bool ban = !Q_stricmp(cmd, "ban");
+
+	if (ban || !Q_stricmp(cmd, "unban"))
+	{
+		// The game does not know these commands: a dedicated server would print them to every player as a chat line
+		if (!active)
+		{
+			proxy.trap->Print("%s needs g_filterBan 1, use addip and removeip\n", cmd);
+
+			return qtrue;
+		}
+
+		const int clientNum = Proxy_SharedAPI_ConsoleClientNum(cmd);
+
+		if (clientNum < 0)
+		{
+			return qtrue;
+		}
+
+		const ClientData_t* clientData = &proxy.clientData[clientNum];
+
+		// Empty for bots
+		if (!clientData->address[0])
+		{
+			proxy.trap->Print("%s ^7has no IP address\n", clientData->cleanName);
+
+			return qtrue;
+		}
+
+		if (!ban)
+		{
+			RemoveIP(clientData->address);
+		}
+		else if (AddIP(clientData->address, false))
+		{
+			UpdateIPBans();
+			proxy.trap->Print("%s ^7is banned (%s), they will be refused at the next map change or reconnection\n", clientData->cleanName, clientData->address);
+		}
+
+		return qtrue;
+	}
+
 	if (!active)
 	{
 		return qfalse;
@@ -292,31 +405,7 @@ qboolean Proxy_Bans_ConsoleCommand(const char* cmd)
 		}
 
 		proxy.trap->Argv(1, arg, sizeof(arg));
-
-		IpFilter filter;
-
-		if (!StringToFilter(arg, filter, false))
-		{
-			return qtrue;
-		}
-
-		// A ban made before the proxy, "152.0.0.0" for 152.*.*.*, is now "152.*.*.*": the old spelling still finds it
-		IpFilter legacyFilter;
-		const bool hasLegacy = StringToFilter(arg, legacyFilter, true);
-
-		for (int i = 0; i < numIpFilters; ++i)
-		{
-			if (SameFilter(ipFilters[i], filter) || (hasLegacy && SameFilter(ipFilters[i], legacyFilter)))
-			{
-				ipFilters[i].used = false;
-				proxy.trap->Print("Removed.\n");
-				UpdateIPBans();
-
-				return qtrue;
-			}
-		}
-
-		proxy.trap->Print("Didn't find %s.\n", arg);
+		RemoveIP(arg);
 
 		return qtrue;
 	}

@@ -21,6 +21,9 @@ void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum);
 // Returns qtrue when the command is the proxy's ("mute", "unmute"), qfalse to let the game handle it
 qboolean Proxy_SharedAPI_ConsoleCommand(void);
+// The client number in argument 1 of the console command cmd, of a player in the game. Otherwise prints the usage and
+// returns -1
+int Proxy_SharedAPI_ConsoleClientNum(const char* cmd);
 qboolean Proxy_SharedAPI_ClientUserinfoChanged(int clientNum);
 
 // Checks the userinfo of a client (only if validate), then cleans it in place

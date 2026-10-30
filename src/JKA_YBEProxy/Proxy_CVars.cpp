@@ -17,7 +17,6 @@ static cvarTable_t proxyCVarTable[] =
 	{ &proxy.cvars.proxy_sv_maxClientsPerIP, "proxy_sv_maxClientsPerIP", "3", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.cvars.proxy_sv_disableWelcomeMessage, "proxy_sv_disableWelcomeMessage", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.cvars.proxy_sv_disableServerInfoVersion, "proxy_sv_disableServerInfoVersion", "0", CVAR_ARCHIVE, 0, qfalse },
-	{ &proxy.cvars.proxy_sv_banIPs, "proxy_sv_banIPs", "", CVAR_ARCHIVE, 0, qfalse },
 	// The proxy version in the serverinfo (getstatus), set by Proxy_UpdateServerInfoVersion
 	{ nullptr, "YbeProxy", "", CVAR_SERVERINFO | CVAR_ROM, 0, qfalse },
 
