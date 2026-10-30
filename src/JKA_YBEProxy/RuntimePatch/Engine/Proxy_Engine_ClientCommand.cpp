@@ -29,8 +29,8 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 
 	status[0] = 0;
 
-	Q_strcat(status, sizeof(status), "score gamePing netPing userRate   rate trueRate  fps packets timeNudge snaps trueSnaps id name \n");
-	Q_strcat(status, sizeof(status), "----- -------- ------- -------- ------ -------- ---- ------- --------- ----- --------- -- ---------------\n");
+	Q_strcat(status, sizeof(status), "score gamePing netPing userRate   rate trueRate  fps packets timeNudge userSnaps snaps trueSnaps id name \n");
+	Q_strcat(status, sizeof(status), "----- -------- ------- -------- ------ -------- ---- ------- --------- --------- ----- --------- -- ---------------\n");
 
 	for (i = 0, cl = server.svs->clients; i < server.cvars.sv_maxclients->integer; i++, cl++)
 	{
@@ -54,9 +54,9 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 		// Read-only: writing cl->snapshotMsec changed the real snapshot rate of a human with a ping of 0
 		const int snapshotMsec = cl->snapshotMsec > 0 ? cl->snapshotMsec : 1;
 
-		// The snaps the client asked for, limited by sv_fps. "trueSnaps" below is what the server sent in the last second:
-		// the server sends on its frames, so a request between two frame rates gets the lower one, and a client that
-		// is short of rate gets less
+		// The snaps the server applies (sv_minSnaps, sv_maxSnaps), limited by sv_fps. "trueSnaps" below is what the
+		// server sent in the last second: the server sends on its frames, so a value between two frame rates gets the
+		// lower one, and a client that is short of rate gets less
 		const int snaps = (1000 / snapshotMsec > server.cvars.sv_fps->integer) ? server.cvars.sv_fps->integer : 1000 / snapshotMsec;
 
 		// The numbers of a bot stay 0: it has no packets, and its snapshots go nowhere
@@ -80,9 +80,10 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 		// The rate the client asked for, the one the server applies (sv_minRate, sv_maxRate), and "trueRate": the bytes
 		// sent in the last second. The rate is a limit, trueRate reaches it only when the client is short of rate
 		const int userRate = atoi(Info_ValueForKey(cl->userinfo, "rate"));
+		const int userSnaps = atoi(Info_ValueForKey(cl->userinfo, "snaps"));
 
 		// No need for truncation "feature" if we move name to the end
-		Q_strcat(status, sizeof(status), va("%5i %s %7s %8i %6i %8i %4i %7i %9s %5i %9i %2i %s^7\n", ps->persistant[PERS_SCORE], state, netPing, userRate, Proxy_Engine_Rate_Applied(cl), rates.rate, rates.fps, rates.packets, timeNudge, snaps, rates.snaps, i, cl->name));
+		Q_strcat(status, sizeof(status), va("%5i %s %7s %8i %6i %8i %4i %7i %9s %9i %5i %9i %2i %s^7\n", ps->persistant[PERS_SCORE], state, netPing, userRate, Proxy_Engine_Rate_Applied(cl), rates.rate, rates.fps, rates.packets, timeNudge, userSnaps, snaps, rates.snaps, i, cl->name));
 	}
 
 	currentClientData->lastTimeNetStatus = server.svs->time;

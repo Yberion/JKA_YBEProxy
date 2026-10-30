@@ -59,6 +59,34 @@ Values:
 - `0` (default): no floor, the `rate` of the client (1000 to 90000).
 - A number: the lowest rate given to a client. Below 1000 it changes nothing.
 
+### `sv_minSnaps` `sv_maxSnaps`
+
+Engine: Original. Same names and meaning as in JK2MV.
+
+`snaps` is the number of snapshots per second a client wants. The client sees the other players about one snapshot interval in the past (50 ms at 20 snapshots per second, 25 ms at 40), on top of its ping: the base game has no lag compensation, so it adds to the lead a player needs to aim. The engine keeps `snaps` between 1 and 30 whatever `sv_fps` is, and the retail client sends `snaps 20` by default.
+
+The server sends snapshots on its frames only, so a client gets `sv_fps / n` snapshots per second: the highest one that is not above its `snaps`.
+
+| `sv_fps` | `snaps 20` | `snaps 30` | `snaps 40` |
+| --- | --- | --- | --- |
+| 20 | 20 | 20 | 20 |
+| 30 | 15 | 30 | 30 |
+| 40 | 20 | 20 | 40 (20 without the proxy) |
+
+`sv_maxSnaps` is a cap to the `snaps` of the clients, never above `sv_fps`. `sv_minSnaps` is a floor, and the cap wins over a higher floor: `sv_minSnaps` at `sv_fps` or above gives every client one snapshot per frame, like `sv_snapsPolicy 1` in OpenJK. Take the values from the table: a floor of 30 at `sv_fps 40` gives 20. A change of either, or of `sv_fps`, applies within a second to the clients already in. A LAN client gets a snapshot at every frame whatever its `snaps`, as before.
+
+More snapshots need more [`rate`](#sv_minrate): about `(snapshot size + 48) × snaps`. `/netStatus` shows the `snaps` each client asked for, the one it gets, and what the server really sent.
+
+Values of `sv_minSnaps`:
+
+- `0` (default): no floor.
+- A number: the lowest `snaps` given to a client.
+
+Values of `sv_maxSnaps`:
+
+- `0` (default): `sv_fps`.
+- A number: the highest `snaps` given to a client, at most `sv_fps`.
+
 ### `proxy_sv_maxCallVoteMapRestartValue`
 
 Engine: Any.
@@ -145,12 +173,13 @@ Prints the network settings of every client:
 | `fps` | User commands received during the last second (client FPS) |
 | `packets` | Packets received during the last second |
 | `timeNudge` | Estimate of the client's `cl_timenudge` (see below). `-` until it is measured, and for a client that gets fewer than about 10 snapshots per second |
-| `snaps` | Snapshots per second the client asked for (capped by `sv_fps`) |
+| `userSnaps` | `snaps` of the client's userinfo, as it sent it |
+| `snaps` | Snapshots per second the server applies: the `snaps` of the client between [`sv_minSnaps` and `sv_maxSnaps`](#sv_minsnaps-sv_maxsnaps), at most `sv_fps` |
 | `trueSnaps` | Snapshots per second the server sent in the last second |
 | `id` | Client number |
 | `name` | Name |
 
-A player can run the command at most once every 500 ms. Bots show `BOT` for `gamePing` and `netPing`, `0` for everything else but `userRate`, `rate` and `snaps`, and `-` for `timeNudge`. All the values of the last second are measured when the command runs, so a client that stopped sending shows `0`, not its last value.
+A player can run the command at most once every 500 ms. Bots show `BOT` for `gamePing` and `netPing`, `0` for everything else but `userRate`, `rate`, `userSnaps` and `snaps`, and `-` for `timeNudge`. All the values of the last second are measured when the command runs, so a client that stopped sending shows `0`, not its last value.
 
 - `packets` is what the server received. It is not `cl_maxpackets`: a client sends a packet at the first frame where `1000 / cl_maxpackets` milliseconds went by since the last one, so at 125 fps and `cl_maxpackets 30` it sends 25 per second, and a client in the same LAN sends one at every frame.
 - `trueSnaps` is lower than `snaps` when the server sends on its frames: a request between two frame rates gets the lower one (`sv_fps 40` and `snaps 30` give 20), and a client that is short of `rate` gets less.

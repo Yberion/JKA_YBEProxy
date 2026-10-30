@@ -501,8 +501,8 @@ void Proxy_SV_UserinfoChanged(client_t* cl) {
 
 	Original_SV_UserinfoChanged(cl);
 
-	// After the engine sets cl->rate from the userinfo
-	Proxy_Engine_Rate_ApplyMinRate(cl);
+	// After the engine sets cl->rate and cl->snapshotMsec from the userinfo
+	Proxy_Engine_Rate_Apply(cl);
 }
 
 /*

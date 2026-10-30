@@ -8,6 +8,9 @@ static cvarTable_t proxyOriginalEngineCVarTable[] =
 	{ &proxy.originalEngineCvars.proxy_sv_enableNetStatus, "proxy_sv_enableNetStatus", "0", CVAR_ARCHIVE, 0, qfalse },
 	// The flags of the engine's sv_maxRate
 	{ &proxy.originalEngineCvars.sv_minRate, "sv_minRate", "0", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
+	// 0: no floor, and a cap of sv_fps
+	{ &proxy.originalEngineCvars.sv_minSnaps, "sv_minSnaps", "0", CVAR_ARCHIVE, 0, qfalse },
+	{ &proxy.originalEngineCvars.sv_maxSnaps, "sv_maxSnaps", "0", CVAR_ARCHIVE, 0, qfalse },
 };
 static constexpr std::size_t proxyOriginalEngineCVarTableSize = ARRAY_LEN(proxyOriginalEngineCVarTable);
 
@@ -121,15 +124,23 @@ void Proxy_UpdateAllCvars(int levelTime)
 
 		if (proxy.isOriginalEngine)
 		{
-			// Reset with the module at each map change: a floor that is set is applied again, which changes nothing
-			static int minRate = 0;
+			// The settings the clients got. Reset with the module at each map change: they are applied again, which
+			// changes nothing
+			static int applied[4] = { 0, 0, 0, 0 };
 
 			Proxy_UpdateCvarTable(proxyOriginalEngineCVarTable, proxyOriginalEngineCVarTableSize);
 
-			if (proxy.originalEngineCvars.sv_minRate.integer != minRate)
+			const int current[4] = {
+				proxy.originalEngineCvars.sv_minRate.integer,
+				proxy.originalEngineCvars.sv_minSnaps.integer,
+				proxy.originalEngineCvars.sv_maxSnaps.integer,
+				proxy.cvars.sv_fps.integer
+			};
+
+			if (std::memcmp(applied, current, sizeof(current)))
 			{
-				minRate = proxy.originalEngineCvars.sv_minRate.integer;
-				Proxy_Engine_Rate_MinRateChanged();
+				std::memcpy(applied, current, sizeof(current));
+				Proxy_Engine_Rate_SettingsChanged();
 			}
 		}
 	}

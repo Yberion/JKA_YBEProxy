@@ -30,7 +30,7 @@ The time rules are read from the retail source (jediacademy `codemp`). They are 
 | On each frame, if `realtime + serverTimeDelta >= snap.serverTime - 5`, the next snapshot is flagged as extrapolated | `client/cl_cgame.cpp:2063` |
 | On each new snapshot, with `deltaDelta = abs(snap.serverTime - realtime - serverTimeDelta)`: above 500 the delta is reset, above 100 the difference is halved (fast adjust), otherwise the delta moves by -2 if flagged and +1 if not | `client/cl_cgame.cpp:1870` (`CL_AdjustTimeDelta`) |
 | The snapshot time is the server time `svs.time` | `server/sv_snapshot.cpp:144` |
-| The server limits `snaps` to 1..30 and sends snapshots on its own frames | `server/sv_client.cpp:1491`, `server/sv_snapshot.cpp:692` |
+| The server limits `snaps` to 1..30 (the proxy: `sv_minSnaps`..`sv_maxSnaps`, at most `sv_fps`) and sends snapshots on its own frames | `server/sv_client.cpp:1491`, `server/sv_snapshot.cpp:692` |
 
 Notation: `I` the snapshot interval, `F` the client frame, `k` the frames per packet, `d` and `u` the network delays from and to the server, `tn` the `cl_timenudge`.
 
@@ -100,7 +100,8 @@ The mean has the smallest largest error (2.6 ms) and keeps one sign. What is lef
 ### 3.4 Other columns
 
 - `fps` and `packets`: usercmds run and packets received during the last second, counted by walking the ring of packets back from the newest.
-- `snaps`: what the client asked for, limited by `sv_fps`. `trueSnaps`: snapshots sent during the last second; lower than `snaps` when the request falls between two server frame rates (`sv_fps 40` with `snaps 30` gives 20) or when the client is short of `rate`.
+- `userSnaps`: what the client asked for. `snaps`: what the server applies, between `sv_minSnaps` and `sv_maxSnaps`, limited by `sv_fps`. `trueSnaps`: snapshots sent during the last second; lower than `snaps` when the value falls between two server frame rates (`sv_fps 40` with `snaps 30` gives 20) or when the client is short of `rate`.
+- `userRate`, `rate` and `trueRate`: the same for the rate (`rate` after `sv_minRate` and `sv_maxRate`). `trueRate` is the mean size of the messages of the last second, plus 48 bytes of header as `SV_RateMsec` counts, times `trueSnaps`.
 
 ## 4. Simulation of the client
 
