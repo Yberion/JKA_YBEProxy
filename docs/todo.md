@@ -12,7 +12,9 @@
 
 ### Bugs
 
-None known.
+- Original engine: the server stays down when a counter is about to wrap. `SV_Frame` calls `SV_Shutdown` then `map_restart 0`, but `map_restart` refuses to run once the server is down ("Server is not running."), so every player is dropped and the server has no map until someone restarts it ([`server/sv_main.cpp:866-878`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_main.cpp#L866-L878), [`server/sv_ccmds.cpp:246`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_ccmds.cpp#L246)). Found by reading the code, not reproduced.
+  - `svs.nextSnapshotEntities` grows by the entities of every snapshot built, and only a map change resets it: a server that stays on one map with many players reaches it in hours (about 19 h with 32 players, 50 entities per snapshot and 20 snaps; half that at 40 snaps). Fix: run `map <current map>` a little before the limit. It is a normal map change, so the players stay connected.
+  - `svs.time` after about 21.7 days: a map change does not reset it, only `SV_Shutdown` does. Fix: keep the shutdown, then `map <current map>` instead of `map_restart 0`, as ioq3 and OpenJK. The players are dropped.
 
 ### Long term
 
