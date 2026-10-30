@@ -4,6 +4,7 @@
 #include "sdk/server/sv_client.hpp"
 #include "JKA_YBEProxy/Proxy_SharedAPI.hpp"
 #include "JKA_YBEProxy/Proxy_Bans.hpp"
+#include "JKA_YBEProxy/Proxy_CVars.hpp"
 #include "JKA_YBEProxy/Imports/game/g_cmds.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.hpp"
 
@@ -237,6 +238,13 @@ qboolean Proxy_SharedAPI_ConsoleCommand(void)
 
 	if (Proxy_Bans_ConsoleCommand(cmd))
 	{
+		return qtrue;
+	}
+
+	if (!Q_stricmp(cmd, "proxyconfig"))
+	{
+		Proxy_CVars_PrintConfig();
+
 		return qtrue;
 	}
 

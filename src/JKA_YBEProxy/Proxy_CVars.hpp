@@ -14,3 +14,5 @@ struct cvarTable_t {
 void Proxy_OriginalEngine_CVars_Registration(void);
 void Proxy_CVars_Registration(void);
 void Proxy_UpdateAllCvars(int levelTime);
+// "proxyconfig": the version, the engine, and every proxy cvar with its value
+void Proxy_CVars_PrintConfig(void);

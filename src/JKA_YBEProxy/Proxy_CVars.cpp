@@ -145,3 +145,47 @@ void Proxy_UpdateAllCvars(int levelTime)
 		}
 	}
 }
+
+// Leaves out the engine cvars the proxy only reads (flags 0) and the YbeProxy key (no vmCvar, it is the version)
+static void Proxy_PrintCvarTable(const cvarTable_t* table, std::size_t size)
+{
+	for (const cvarTable_t* item = table; item < table + size; ++item)
+	{
+		if (!item->vmCvar || !item->cvarFlags)
+		{
+			continue;
+		}
+
+		char value[MAX_CVAR_VALUE_STRING];
+
+		// Read now: the vmCvar is updated once per second only
+		proxy.trap->Cvar_VariableStringBuffer(item->cvarName, value, sizeof(value));
+		proxy.trap->Print("%-36s %-10s %s\n", item->cvarName, value, item->defaultString);
+	}
+}
+
+// ==================================================
+// Proxy_CVars_PrintConfig
+// --------------------------------------------------
+// The "proxyconfig" console command.
+// ==================================================
+
+void Proxy_CVars_PrintConfig(void)
+{
+	char version[MAX_STRING_CHARS];
+
+	proxy.trap->Cvar_VariableStringBuffer("version", version, sizeof(version));
+
+	proxy.trap->Print("%s %s\n", YBEPROXY_NAME, YBEPROXY_VERSION);
+	proxy.trap->Print("Engine: %s (%s)\n", version, proxy.isOriginalEngine ? "original engine, engine fixes on" : "not the original engine, no engine fixes");
+	proxy.trap->Print("%-36s %-10s %s\n", "cvar", "value", "default");
+	proxy.trap->Print("------------------------------------ ---------- -------\n");
+
+	// Registered on the original engine only
+	if (proxy.isOriginalEngine)
+	{
+		Proxy_PrintCvarTable(proxyOriginalEngineCVarTable, proxyOriginalEngineCVarTableSize);
+	}
+
+	Proxy_PrintCvarTable(proxyCVarTable, proxyCVarTableSize);
+}

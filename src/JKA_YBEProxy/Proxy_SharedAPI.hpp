@@ -19,7 +19,7 @@ void Proxy_SharedAPI_ClientConnected(int clientNum, qboolean isBot);
 void Proxy_SharedAPI_ClientDisconnect(int clientNum);
 void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum);
-// Returns qtrue when the command is the proxy's ("mute", "unmute"), qfalse to let the game handle it
+// Returns qtrue when the command is the proxy's ("mute", "unmute", "proxyconfig"...), qfalse to let the game handle it
 qboolean Proxy_SharedAPI_ConsoleCommand(void);
 // The client number in argument 1 of the console command cmd, of a player in the game. Otherwise prints the usage and
 // returns -1

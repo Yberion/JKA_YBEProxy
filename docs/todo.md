@@ -8,7 +8,6 @@
 ### Short term
 
 - **Create a plugin system.** See A6 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
-- A command that prints everything about the proxy (name to choose, for example `proxyconfig`): the version, the engine it runs on, and every proxy cvar with its value.
 
 ### Bugs
 
@@ -28,6 +27,7 @@
 
 ### Features and fixes
 
+- `proxyconfig` command: the version, the engine it runs on, and every proxy cvar with its value and its default, see [features.md](features.md#proxyconfig).
 - Snaps policy: `sv_minSnaps` and `sv_maxSnaps` (the engine kept `snaps` between 1 and 30 whatever `sv_fps` was), and a `userSnaps` column in `/netStatus`, see [features.md](features.md#sv_minsnaps-sv_maxsnaps).
 - Rate policy: `sv_minRate`, and the `userRate` and `trueRate` columns in `/netStatus`, see [features.md](features.md#sv_minrate).
 - Persist bans across server restarts: the IP bans are stored in `ybeproxy_bans.txt`, up to 1024, and `ban` and `unban` take a client number, see [features.md](features.md#addip-removeip-listip).

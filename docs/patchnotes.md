@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- Added the [`proxyconfig`](features.md#proxyconfig) command (server console and `rcon`): the proxy version, the engine, and every proxy cvar with its value and its default. Any engine.
 - Added [`sv_minSnaps` and `sv_maxSnaps`](features.md#sv_minsnaps-sv_maxsnaps) (original engine), as in JK2MV: a floor (default `0`, none) and a cap (default `0`, `sv_fps`) to the `snaps` of the clients. The engine kept `snaps` between 1 and 30 whatever `sv_fps` was, so at `sv_fps 40` nobody got more than 20 snapshots per second (30 rounds to every other frame): a client asking 40 now gets 40. `sv_minSnaps` at `sv_fps` gives every client one snapshot per frame (with `sv_fps 30`, the default `snaps 20` of the retail client gives 15). `/netStatus` has a new `userSnaps` column (the `snaps` the client sent), and `snaps` is the value the server applies.
 - Added [`sv_minRate`](features.md#sv_minrate) (original engine, default `0`, no floor), as in ioq3, Quake3e, OpenJK and JK2MV: a floor to the `rate` of the clients. The retail client sends `rate 4000` by default: it then gets fewer snapshots than its `snaps` as soon as they are bigger than about 150 bytes, and its game state and downloads come slower. With `sv_maxRate` at the same value, every client gets that rate.
 - `/netStatus` (original engine): the `rate` column is now the rate the server applies (after `sv_minRate` and `sv_maxRate`), next to two new columns: `userRate` (the `rate` the client sent) and `trueRate` (the bytes sent in the last second).
