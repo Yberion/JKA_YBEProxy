@@ -28,6 +28,11 @@
 
 ### Features and fixes
 
+- Rate policy: `sv_minRate`, and the `userRate` and `trueRate` columns in `/netStatus`, see [features.md](features.md#sv_minrate).
+- Persist bans across server restarts: the IP bans are stored in `ybeproxy_bans.txt`, up to 1024, and `ban` and `unban` take a client number, see [features.md](features.md#addip-removeip-listip).
+- `BOT` instead of a ping of `0` for bots in `rcon status` and `/netStatus`.
+- `YbeProxy` key with the proxy version in the serverinfo, and `proxy_sv_disableServerInfoVersion` to remove it.
+- `/netStatus`: `netPing`, `gamePing`, and a `timeNudge` from a simulation of the client, see [features.md](features.md#netstatus-shownet).
 - Ban system: a `0` in an IP ban is no longer a wildcard (`addip 152.0` bans `152.0.*.*` only), see `addip` in [features.md](features.md#addip-removeip-listip).
 - `/rcon forceteam -1 <team>` moves everyone, caught with `GAME_CONSOLE_COMMAND`.
 - `dumpuser` accepts a client number, as in ioq3, OpenJK and Quake3e.
