@@ -2,16 +2,8 @@
 
 #include "sdk/game/g_public.hpp"
 
-// ==================================================
-// IMPORT TABLE
-// ==================================================
-
-void Proxy_SharedAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient);
-void Proxy_SharedAPI_GetUsercmd(int clientNum, usercmd_t* ucmd);
-
-// ==================================================
-// EXPORT TABLE
-// ==================================================
+// The commands of the game module (gameExport_t) that the proxy handles before the original game, one per vmMain
+// command. They only call the features
 
 const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 // Called when the game accepted the client
@@ -21,20 +13,9 @@ void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum);
 // Called once the game has run the client command
 void Proxy_SharedAPI_ClientCommandDone(void);
-// The text of a G_SEND_SERVER_COMMAND of the game: text itself, another text, or nullptr to drop it (say_team of a
-// spectator below the team gametypes, see GameExports.cpp)
-const char* Proxy_SharedAPI_TeamChat(int clientNum, const char* text);
 // Returns qtrue when the command is the proxy's ("mute", "unmute", "proxyconfig"...), qfalse to let the game handle it
 qboolean Proxy_SharedAPI_ConsoleCommand(void);
-// The client number in argument 1 of the console command cmd, of a player in the game. Otherwise prints the usage and
-// returns -1
-int Proxy_SharedAPI_ConsoleClientNum(const char* cmd);
 qboolean Proxy_SharedAPI_ClientUserinfoChanged(int clientNum);
-
-// Checks the userinfo of a client (only if validate), then cleans it in place
-// Returns nullptr, or the reason to reject the client. Never drops the client itself
-// isAntiCheat, if not null, tells whether the reason is the anti-cheat's
-const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum, bool validate, bool* isAntiCheat);
 
 /*
 // If we want to do something with the usercmd then call manually GetUsercmd

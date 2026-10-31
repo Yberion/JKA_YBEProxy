@@ -1,6 +1,6 @@
 #include "JKA_YBEProxy/Proxy.hpp"
 #include "JKA_YBEProxy/Features/Bans.hpp"
-#include "JKA_YBEProxy/Module/GameExports.hpp"
+#include "JKA_YBEProxy/Features/ConsoleCommands.hpp"
 
 /*
 IP bans, with the rules of OpenJK's StringToFilter instead of the retail game's

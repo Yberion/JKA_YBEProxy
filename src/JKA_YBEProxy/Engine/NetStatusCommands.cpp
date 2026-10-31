@@ -159,3 +159,27 @@ void Proxy_Engine_ClientCommand_ExplainNetStatus(int clientNum)
 	proxy.trap->SendServerCommand(clientNum, va("print \"%s\"", explainNetStatusColumns));
 	proxy.trap->SendServerCommand(clientNum, va("print \"%s\"", explainNetStatusMore));
 }
+
+bool Proxy_Engine_NetStatusCommands_Run(int clientNum, const char* cmd)
+{
+	if (!proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer)
+	{
+		return false;
+	}
+
+	if (!Q_stricmp(cmd, "netStatus") || !Q_stricmp(cmd, "showNet"))
+	{
+		Proxy_Engine_ClientCommand_NetStatus(clientNum);
+
+		return true;
+	}
+
+	if (!Q_stricmp(cmd, "explainNetStatus"))
+	{
+		Proxy_Engine_ClientCommand_ExplainNetStatus(clientNum);
+
+		return true;
+	}
+
+	return false;
+}

@@ -1,10 +1,47 @@
 #include "JKA_YBEProxy/Proxy.hpp"
 #include "sdk/game/g_public.hpp"
 #include "JKA_YBEProxy/Module/GameImports.hpp"
-#include "JKA_YBEProxy/Module/GameExports.hpp"
 #include "JKA_YBEProxy/Module/Main.hpp"
+#include "JKA_YBEProxy/Features/Chat.hpp"
 
 #include <cstdarg>
+
+static void Proxy_SharedAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient)
+{
+	proxy.locatedGameData.g_entities = gEnts;
+	proxy.locatedGameData.num_entities = numGEntities;
+	proxy.locatedGameData.g_entitySize = sizeofGEntity_t;
+
+	proxy.locatedGameData.g_clients = clients;
+	proxy.locatedGameData.g_clientSize = sizeofGameClient;
+}
+
+static void Proxy_SharedAPI_GetUsercmd(int /*clientNum*/, usercmd_t* ucmd)
+{
+	if (ucmd->forcesel == FP_LEVITATION || ucmd->forcesel >= NUM_FORCE_POWERS)
+	{
+		ucmd->forcesel = 0xFFu;
+	}
+
+	ucmd->angles[ROLL] = 0;
+
+	// A signed char reaches -128 but only +127: a negative move would be one unit longer than the longest positive one
+	// (ioq3 bug 5273, OpenJK, Quake3e and TaystJK do it when they read the usercmd)
+	if (ucmd->forwardmove == -128)
+	{
+		ucmd->forwardmove = -127;
+	}
+
+	if (ucmd->rightmove == -128)
+	{
+		ucmd->rightmove = -127;
+	}
+
+	if (ucmd->upmove == -128)
+	{
+		ucmd->upmove = -127;
+	}
+}
 
 intptr_t QDECL Proxy_OriginalAPI_VM_DllSyscall(intptr_t command, ...)
 {
