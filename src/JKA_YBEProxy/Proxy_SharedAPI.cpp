@@ -691,6 +691,93 @@ static const char* Proxy_ValidateUserinfo(const char* userinfo)
 	return nullptr;
 }
 
+// What two names are compared on, as japro and TaystJK (ClientNameEquals): without colors, spaces and case
+static void Proxy_NameKey(const char* name, char* key, std::size_t keySize)
+{
+	Q_strncpyz(key, name, keySize);
+	Q_StripColor(key);
+
+	char* out = key;
+
+	for (const char* in = key; *in; ++in)
+	{
+		if (*in != ' ')
+		{
+			*out++ = *in;
+		}
+	}
+
+	*out = '\0';
+}
+
+// A name that another client already uses gets the lowest free number, "Bob" becomes "Bob^7[1]", as japro and TaystJK
+// do with g_allowSamePlayerNames 0. The names of the others are those of the game (CS_PLAYERS), bots included
+// name: MAX_NETNAME characters
+static void Proxy_UniqueName(int clientNum, char* name)
+{
+	char others[MAX_CLIENTS][MAX_NETNAME];
+	int otherCount = 0;
+
+	for (int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		char info[MAX_INFO_STRING];
+
+		proxy.trap->GetConfigstring(CS_PLAYERS + i, info, sizeof(info));
+
+		if (i != clientNum && info[0])
+		{
+			Proxy_NameKey(Info_ValueForKey(info, "n"), others[otherCount++], sizeof(others[0]));
+		}
+	}
+
+	const auto inUse = [&](const char* candidate) {
+		char key[MAX_NETNAME];
+
+		Proxy_NameKey(candidate, key, sizeof(key));
+
+		for (int i = 0; i < otherCount; ++i)
+		{
+			if (!Q_stricmp(key, others[i]))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	};
+
+	if (!inUse(name))
+	{
+		return;
+	}
+
+	// Room for "^7[32]", and no color escape left alone at the end
+	char base[MAX_NETNAME];
+
+	Q_strncpyz(base, name, MAX_NETNAME - 6);
+
+	const std::size_t baseLength = std::strlen(base);
+
+	if (baseLength && base[baseLength - 1] == Q_COLOR_ESCAPE)
+	{
+		base[baseLength - 1] = '\0';
+	}
+
+	for (int number = 1; number <= MAX_CLIENTS; ++number)
+	{
+		char candidate[MAX_NETNAME];
+
+		Com_sprintf(candidate, sizeof(candidate), "%s" S_COLOR_WHITE "[%i]", base, number);
+
+		if (!inUse(candidate))
+		{
+			Q_strncpyz(name, candidate, MAX_NETNAME);
+
+			return;
+		}
+	}
+}
+
 const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum, bool validate, bool* isAntiCheat)
 {
 	static char reason[96];
@@ -729,6 +816,11 @@ const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum, bool validate, bool*
 
 	// Fix bad names
 	Proxy_ClientCleanName(val, currentClientData->cleanName, sizeof(currentClientData->cleanName));
+
+	if (!proxy.cvars.proxy_sv_allowSamePlayerNames.integer)
+	{
+		Proxy_UniqueName(clientNum, currentClientData->cleanName);
+	}
 
 	// Info_SetValueForKey adds nothing when the userinfo has no room left: the old value would stay, and the game would read it
 	if (!Info_SetValueForKey(userinfo, "name", currentClientData->cleanName))

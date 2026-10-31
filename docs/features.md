@@ -18,6 +18,7 @@ All proxy cvars are archived (`CVAR_ARCHIVE`). The proxy reads them again about 
 | [`proxy_sv_disableKillCmd`](#proxy_sv_disablekillcmd) | `0` | Any | Disables `/kill` |
 | [`proxy_sv_disableWelcomeMessage`](#proxy_sv_disablewelcomemessage) | `0` | Any | Disables the welcome message |
 | [`proxy_sv_disableServerInfoVersion`](#proxy_sv_disableserverinfoversion) | `0` | Any | Removes the proxy version from the serverinfo |
+| [`proxy_sv_allowSamePlayerNames`](#proxy_sv_allowsameplayernames) | `0` | Any | Lets two players have the same name |
 | [`proxy_sv_modelPathLength`](#proxy_sv_modelpathlength) | `64` | Any (partial) | Maximum model name length |
 
 ### `proxy_sv_pingFix`
@@ -140,6 +141,15 @@ Values:
 
 - `0` (default): the `YbeProxy` key is in the serverinfo.
 - `1`: the key is removed from the serverinfo.
+
+### `proxy_sv_allowSamePlayerNames`
+
+Engine: Any. Same name and meaning as `g_allowSamePlayerNames` in japro and TaystJK.
+
+Values:
+
+- `0` (default): a name that another client already uses gets the lowest free number, see [Userinfo](#userinfo).
+- `1`: names are left as they are, as in the retail game.
 
 ### `proxy_sv_modelPathLength`
 
@@ -288,6 +298,7 @@ The proxy checks the userinfo on connect, on the reconnect after each map change
   - control characters are removed;
   - runs of more than 3 spaces or `@` are shortened;
   - an empty name becomes `Padawan`.
+- A name that another client already uses, bots included, gets the lowest free number: `Bob` becomes `Bob^7[1]`. Names are compared without colors, spaces and case, so `^1B o b` is the same as `bob`. Same rule as japro and TaystJK. [`proxy_sv_allowSamePlayerNames 1`](#proxy_sv_allowsameplayernames) turns it off.
 - The model is replaced with `kyle` when it is empty, when it starts with `rancor` or `wampa` (any skin), when it is `jedi_` without a species (`jedi_` alone or with any skin), when it contains a character outside printable ASCII, or when it is too long (see [`proxy_sv_modelPathLength`](#proxy_sv_modelpathlength)).
 - `forcepowers` must look like `rank-side-powers` (22 to 24 characters). Otherwise the proxy replaces it with `7-1-030000000000003332` (crash fix).
 - The `ip` key, which the game's ban check (`addip`) reads, is set again from the address of the connection at every userinfo change (original engine). The engine only sets it when the client connects, and the `userinfo` command replaces the whole userinfo with the client's string: a client already on the server could send a fake `ip`, or none, and stay after its address was banned with `addip`: the game checks the ban again at the next map change (the reconnect of every client), with the `ip` of the userinfo. A new connection was never affected, the engine sets `ip` itself. A client whose userinfo has no room for `ip` is dropped (`userinfo string length exceeded`). On connect (any engine), a userinfo that was too long to receive `ip` is refused with `Userinfo string length exceeded.  Try removing setu cvars from your config.`, as on ioq3, JK2MV and OpenJK.

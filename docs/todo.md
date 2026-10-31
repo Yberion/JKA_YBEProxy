@@ -12,7 +12,6 @@
 - Mute the general, team and private chat separately. Today `mute` blocks all three at once.
 - Geolocation of the IP addresses of the players.
 - `/whois <client number>`: every name that the client has used on the server since it first connected.
-- Refuse a name that another player already uses.
 
 ### Long term
 
@@ -28,6 +27,7 @@
 
 ### Features and fixes
 
+- Duplicate names: a name that another client already uses gets the lowest free number (`Bob^7[1]`), compared without colors, spaces and case, as japro and TaystJK (`g_allowSamePlayerNames 0`). OpenJK, CleanJK, jk2mv, ioq3 and Quake3e do nothing. The names of the others come from `CS_PLAYERS`, bots included. `proxy_sv_allowSamePlayerNames 1` turns it off, see [features.md](features.md#userinfo).
 - `/explainNetStatus`: the meaning of each column of `/netStatus`, for the players who run it, see [features.md](features.md#netstatus-shownet).
 - Chat between spectators in FFA and duel: below the team gametypes the game turns `say_team` into `say` ([`game/g_cmds.c:1628`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_cmds.c#L1628)). The proxy lets the game run the `say_team` of a spectator, then sends its `chat` only to the spectators (`t` key of `CS_PLAYERS`), rewritten as the game's `tchat`, see [features.md](features.md#spectator-chat-below-the-team-gametypes). The `say_team` of a player stays public.
 - `proxyconfig` command: the version, the engine it runs on, every proxy cvar with its value and its default, and the main server settings with their value, see [features.md](features.md#proxyconfig).

@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- Two players can no longer have the same name: a [name already in use](features.md#userinfo) gets the lowest free number (`Bob` becomes `Bob^7[1]`), compared without colors, spaces and case, as japro and TaystJK do. Added [`proxy_sv_allowSamePlayerNames`](features.md#proxy_sv_allowsameplayernames) (default `0`, `1` turns it off). Any engine.
 - Added [`/explainNetStatus`](features.md#netstatus-shownet) (original engine, with `proxy_sv_enableNetStatus 1`): the meaning of each column of `/netStatus`, for the players. `/netStatus` ends with a line that points to it.
 - [Spectator chat](features.md#spectator-chat-below-the-team-gametypes) in FFA, duel and the other gametypes without teams: the `say_team` of a spectator now only reaches the spectators, as a team chat. The game turned it into a public `say`. The `say_team` of a player stays public. Any engine.
 - Original engine: a player who is downloading a pk3, or who has not received the new map yet, during a `map_restart` (end of the warmup, vote) no longer stays stuck waiting for the map. The engine put every connected client in the game, and the proxy refuses a new gamestate to a client in the game (`donedl` exploit fix). As Quake3e, a `map_restart` now only puts back in the game the players that were in it. Found by reading the code, not reproduced.

@@ -190,6 +190,7 @@ struct Proxy_CVars_t
 	vmCvar_t proxy_sv_maxClientsPerIP;
 	vmCvar_t proxy_sv_disableWelcomeMessage;
 	vmCvar_t proxy_sv_disableServerInfoVersion;
+	vmCvar_t proxy_sv_allowSamePlayerNames;
 
 	// get cvars
 	vmCvar_t sv_fps;
