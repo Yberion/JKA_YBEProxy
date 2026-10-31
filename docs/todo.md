@@ -14,7 +14,6 @@
 
 Found by reading the code of the other engines (2026-10-31), not reproduced. Most severe first.
 
-- Original engine: a dropped bot goes to `CS_ZOMBIE` for a few seconds instead of `CS_FREE`, so its slot stays taken meanwhile. OpenJK [`93daa30d`](https://github.com/JACoders/OpenJK/commit/93daa30d).
 - Original engine: `SV_SendServerCommand` to one client does not check that it is at least `CS_PRIMED` (only the broadcast does), so commands can pile up before the gamestate is sent. No realistic path to a "Server command overflow" was found. OpenJK [`c0e9b765`](https://github.com/JACoders/OpenJK/commit/c0e9b765).
 
 ### Long term
@@ -89,6 +88,7 @@ Found by reading the code of the other engines (2026-10-31), not reproduced. Mos
 
 ## Won't do
 
+- Free a dropped bot at once instead of leaving it in `CS_ZOMBIE`, as OpenJK [`93daa30d`](https://github.com/JACoders/OpenJK/commit/93daa30d): not a bug in the retail engine. `SV_DropClient` sets `CS_ZOMBIE`, then for a bot (`NA_BOT`) calls `SV_BotFreeClient` ([`server/sv_client.cpp:646`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L646)), which sets `CS_FREE` ([`server/sv_bot.cpp:215`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_bot.cpp#L215)) before `SV_DropClient` returns. Same in both binaries. The slot is never kept: OpenJK only moved the state change after `GAME_CLIENT_DISCONNECT`.
 - Uptime in the new `rcon status`: it would need a hook on `SV_Init()`, which is not possible.
 - Extend the `jedi_/red` model check to every `jedi_*` model, as EternalJK does (`g_blockUnknownJediModelsInTeamGametypes`): only the six base Jedi models (`jedi_hf`, `jedi_hm`, `jedi_kdm`, `jedi_rm`, `jedi_tf`, `jedi_zf`) would be allowed in team gametypes, anything else becomes `kyle`. The proxy already replaces `jedi_` without a species. The rest is a server policy that would also block valid custom `jedi_*` models, and nobody asked for it.
 - Patch `NET_SendPacket` to log packets. Maybe only packets under about 300 bytes, because some packets, such as info responses, are large.
