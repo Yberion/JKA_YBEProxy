@@ -43,6 +43,102 @@ intptr_t QDECL Proxy_OriginalAPI_VM_DllSyscall(intptr_t command, ...)
 			
 			return response;
 		}
+		//==================================================
+		// Ghoul2 calls
+		//==================================================
+		// The engine uses the ghoul2 instance of the game without a test, so a null one crashes the server. The game passes
+		// one when a model failed to load. Return what the engine returns for an empty instance, as OpenJK does; the bolt
+		// matrix of G_G2_GETBOLT is left as it is
+		//==================================================
+		case G_G2_HAVEWEGHOULMODELS: // (void* ghoul2, ...) for all of these
+		case G_G2_SETMODELS:
+		case G_G2_GETBOLT:
+		case G_G2_GETBOLT_NOREC:
+		case G_G2_GETBOLT_NOREC_NOROT:
+		case G_G2_SETSKIN:
+		case G_G2_SIZE:
+		case G_G2_SETBOLTINFO:
+		case G_G2_ANGLEOVERRIDE:
+		case G_G2_PLAYANIM:
+		case G_G2_GETBONEANIM:
+		case G_G2_GETGLANAME:
+		case G_G2_SETROOTSURFACE:
+		case G_G2_SETSURFACEONOFF:
+		case G_G2_SETNEWORIGIN:
+		case G_G2_DOESBONEEXIST:
+		case G_G2_ABSURDSMOOTHING:
+		case G_G2_SETRAGDOLL:
+		case G_G2_ANIMATEG2MODELS:
+		case G_G2_RAGPCJCONSTRAINT:
+		case G_G2_RAGPCJGRADIENTSPEED:
+		case G_G2_RAGEFFECTORGOAL:
+		case G_G2_GETRAGBONEPOS:
+		case G_G2_RAGEFFECTORKICK:
+		case G_G2_RAGFORCESOLVE:
+		case G_G2_SETBONEIKSTATE:
+		case G_G2_IKMOVE:
+		case G_G2_REMOVEBONE:
+		case G_G2_ATTACHINSTANCETOENTNUM:
+		case G_G2_OVERRIDESERVER:
+		case G_G2_GETSURFACENAME:
+		{
+			if (!args[0])
+			{
+				return 0;
+			}
+
+			break;
+		}
+		case G_G2_ADDBOLT: // (void* ghoul2, ...) for both
+		case G_G2_GETSURFACERENDERSTATUS:
+		{
+			if (!args[0])
+			{
+				return -1;
+			}
+
+			break;
+		}
+		case G_G2_COPYGHOUL2INSTANCE: // (void* g2From, void* g2To, int modelIndex)
+		case G_G2_DUPLICATEGHOUL2INSTANCE: // (void* g2From, void** g2To)
+		{
+			if (!args[0] || !args[1])
+			{
+				return 0;
+			}
+
+			break;
+		}
+		case G_G2_COPYSPECIFICGHOUL2MODEL: // (void* g2From, int modelFrom, void* g2To, int modelTo)
+		{
+			if (!args[0] || !args[2])
+			{
+				return 0;
+			}
+
+			break;
+		}
+		case G_G2_COLLISIONDETECT: // (CollisionRecord_t* collRecMap, void* ghoul2, ...) for both
+		case G_G2_COLLISIONDETECTCACHE:
+		{
+			if (!args[1])
+			{
+				return 0;
+			}
+
+			break;
+		}
+		case G_G2_HASGHOUL2MODELONINDEX: // (void** ghoul2Ptr, ...) for all of these, the engine uses *ghoul2Ptr without a test
+		case G_G2_REMOVEGHOUL2MODEL:
+		case G_G2_REMOVEGHOUL2MODELS:
+		{
+			if (!args[0] || !*(void**)args[0])
+			{
+				return 0;
+			}
+
+			break;
+		}
 		default:
 			break;
 	}

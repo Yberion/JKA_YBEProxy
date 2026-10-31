@@ -315,6 +315,12 @@ Engine: Any.
 
 The game never frees the navigation data of the NPCs (the nodes of the `.nav` file of the map, or one per `waypoint` entity), and the retail engine adds the nodes of the new map to those of the previous one: memory leaked at each map change and `map_restart`, and NPCs could pick a node of the previous map. The proxy frees it before the game loads, as OpenJK does. Bots use another system and are not affected.
 
+### Ghoul2 calls
+
+Engine: Any.
+
+The engine uses the Ghoul2 model instance that the game passes without a test, so a null one crashed the server. The game passes one when a model failed to load: OpenJK saw it with an NPC without its model or animations, and with FFA changed to Siege then `map_restart`. The proxy answers these calls as the engine does for an empty instance, as OpenJK does.
+
 ### Engine fixes
 
 Engine: Original.
