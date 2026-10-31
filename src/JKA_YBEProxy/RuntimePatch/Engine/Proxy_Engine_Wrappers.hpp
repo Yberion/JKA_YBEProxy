@@ -127,6 +127,7 @@ constexpr intptr_t func_Cmd_ExecuteString_addr[] = 					{ 0x40fa10, 0x8124144 };
 constexpr intptr_t func_Huff_Decompress_addr[] = 					{ 0x417900, 0x807c224 };
 constexpr intptr_t func_Z_Free_addr[] = 							{ 0x426c40, 0x8080474 };
 constexpr intptr_t func_Z_Malloc_addr[] = 							{ 0x427000, 0x80800f4 };
+constexpr intptr_t func_Z_TagFree_addr[] = 							{ 0x426ca0, 0x80804e4 };
 
 // --------------------------------
 // Variable address
@@ -285,6 +286,7 @@ struct Functions_t
 	void			(*Huff_Decompress)								(msg_t*, int);
 	void			(*Z_Free)										(void*);
 	void*			(*Z_Malloc)										(int, memtag_t, qboolean, int);
+	void			(*Z_TagFree)									(memtag_t);
 };
 
 struct Common_t

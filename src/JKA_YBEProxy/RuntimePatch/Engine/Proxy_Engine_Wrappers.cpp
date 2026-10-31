@@ -127,6 +127,7 @@ void Proxy_Engine_Initialize_MemoryLayer(void)
 	server.common.functions.Huff_Decompress = (decltype(server.common.functions.Huff_Decompress))func_Huff_Decompress_addr[PROXY_PLATFORM];
 	server.common.functions.Z_Free = (decltype(server.common.functions.Z_Free))func_Z_Free_addr[PROXY_PLATFORM];
 	server.common.functions.Z_Malloc = (decltype(server.common.functions.Z_Malloc))func_Z_Malloc_addr[PROXY_PLATFORM];
+	server.common.functions.Z_TagFree = (decltype(server.common.functions.Z_TagFree))func_Z_TagFree_addr[PROXY_PLATFORM];
 
 	proxy.trap->Print("----- Proxy: Memory layer properly initialized\n");
 }

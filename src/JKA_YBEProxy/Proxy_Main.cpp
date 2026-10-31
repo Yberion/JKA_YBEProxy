@@ -111,7 +111,18 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 			// CNavigator::Load
 			proxy.trap->Nav_Free();
 
-			break;
+			const intptr_t response = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+
+			if (proxy.isOriginalEngine)
+			{
+				// The game loads the sub-BSPs of the map (misc_bsp, model "#name") during its init. CM_LoadMap_Actual reads each
+				// file into a TAG_BSP_DISKIMAGE buffer that it never frees: it only frees the buffer of the main map, at the end
+				// of its load on a dedicated server. So the buffers left with that tag are the lost ones, and none is in use
+				// outside CM_LoadMap_Actual. OpenJK frees the buffer of a sub-BSP at the end of its load
+				server.common.functions.Z_TagFree(TAG_BSP_DISKIMAGE);
+			}
+
+			return response;
 		}
 		//==================================================
 		case GAME_SHUTDOWN: // (int restart)

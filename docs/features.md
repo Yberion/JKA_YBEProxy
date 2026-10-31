@@ -333,6 +333,7 @@ Engine: Original.
 - Before a counter of the engine wraps, the original server stops (`SV_Shutdown`) and then fails to start again (`map_restart` refuses to run once the server is down), so it stays without a map until someone restarts it. The proxy loads the current map again a little before:
   - the snapshot entities counter grows with every snapshot sent, and only a map change resets it: a server that stays on one map with many players reaches it in hours. The proxy runs `map <current map>`, a normal map change: the players stay connected;
   - the server time, after about 21.7 days: only a shutdown resets it. The proxy runs `killserver` then `map <current map>`, as ioq3 and OpenJK do. The players are dropped.
+- Maps that contain other BSPs (`misc_bsp` entities) no longer leak memory. The engine read each of these BSP files into a buffer that it never freed, at each map load. The proxy frees these buffers once the game has loaded the map; OpenJK frees them at the end of their load. No map of the base game has a `misc_bsp`.
 - Downloads:
   - only `.pk3` files can be downloaded;
   - paths with directory traversal are refused (q3dirtrav fix);
