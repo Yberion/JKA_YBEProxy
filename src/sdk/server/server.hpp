@@ -24,6 +24,8 @@ along with this program; if not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "sdk/qcommon/qcommon.hpp"
+// sharedEntity_t, as in OpenJK's server.h
+#include "sdk/game/g_public.hpp"
 
 // WE ONLY WANT DATA STRUCT
 // /!\ IT HAVE TO MATCH ORIGINAL DATA STRUCT CODE FROM ORIGINAL CODE /!\ <=====================
