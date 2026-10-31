@@ -2,4 +2,9 @@
 
 #include "sdk/server/server.hpp"
 
-playerState_t* Proxy_GetPlayerStateByClientNum(int clientNum);
+namespace ybeproxy::ports
+{
+
+playerState_t* GetPlayerState(int clientNum);
+
+} // namespace ybeproxy::ports

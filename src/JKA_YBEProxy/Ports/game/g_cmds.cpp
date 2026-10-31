@@ -2,6 +2,9 @@
 #include "JKA_YBEProxy/Proxy.hpp"
 #include "JKA_YBEProxy/Ports/game/g_cmds.hpp"
 
+namespace ybeproxy::ports
+{
+
 char* ConcatArgs(int start) {
 	int		i;
 	int		c;
@@ -36,3 +39,5 @@ char* ConcatArgs(int start) {
 
 	return line;
 }
+
+} // namespace ybeproxy::ports

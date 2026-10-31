@@ -2,7 +2,10 @@
 #include "JKA_YBEProxy/Features/Cvars.hpp"
 #include "JKA_YBEProxy/Engine/Rate.hpp"
 
-static cvarTable_t proxyOriginalEngineCVarTable[] =
+namespace ybeproxy::features::cvars
+{
+
+static CvarTable proxyOriginalEngineCVarTable[] =
 {
 	{ &proxy.originalEngineCvars.proxy_sv_pingFix, "proxy_sv_pingFix", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.originalEngineCvars.proxy_sv_enableNetStatus, "proxy_sv_enableNetStatus", "0", CVAR_ARCHIVE, 0, qfalse },
@@ -16,7 +19,7 @@ static cvarTable_t proxyOriginalEngineCVarTable[] =
 };
 static constexpr std::size_t proxyOriginalEngineCVarTableSize = ARRAY_LEN(proxyOriginalEngineCVarTable);
 
-static cvarTable_t proxyCVarTable[] =
+static CvarTable proxyCVarTable[] =
 {
 	// New cvars
 	{ &proxy.cvars.proxy_sv_maxCallVoteMapRestartValue, "proxy_sv_maxCallVoteMapRestartValue", "60", CVAR_ARCHIVE, 0, qfalse },
@@ -26,7 +29,7 @@ static cvarTable_t proxyCVarTable[] =
 	{ &proxy.cvars.proxy_sv_disableWelcomeMessage, "proxy_sv_disableWelcomeMessage", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.cvars.proxy_sv_disableServerInfoVersion, "proxy_sv_disableServerInfoVersion", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.cvars.proxy_sv_allowSamePlayerNames, "proxy_sv_allowSamePlayerNames", "0", CVAR_ARCHIVE, 0, qfalse },
-	// The proxy version in the serverinfo (getstatus), set by Proxy_UpdateServerInfoVersion
+	// The proxy version in the serverinfo (getstatus), set by UpdateServerInfoVersion
 	{ nullptr, "YbeProxy", "", CVAR_SERVERINFO | CVAR_ROM, 0, qfalse },
 
 	// get cvars
@@ -37,9 +40,9 @@ static cvarTable_t proxyCVarTable[] =
 };
 static constexpr std::size_t proxyCVarTableSize = ARRAY_LEN(proxyCVarTable);
 
-static void Proxy_RegisterCvarTable(cvarTable_t* table, std::size_t size)
+static void RegisterTable(CvarTable* table, std::size_t size)
 {
-	for (cvarTable_t* item = table; item < table + size; ++item)
+	for (CvarTable* item = table; item < table + size; ++item)
 	{
 		proxy.trap->Cvar_Register(item->vmCvar, item->cvarName, item->defaultString, item->cvarFlags);
 
@@ -50,9 +53,9 @@ static void Proxy_RegisterCvarTable(cvarTable_t* table, std::size_t size)
 	}
 }
 
-static void Proxy_UpdateCvarTable(cvarTable_t* table, std::size_t size)
+static void UpdateTable(CvarTable* table, std::size_t size)
 {
-	for (cvarTable_t* item = table; item < table + size; ++item)
+	for (CvarTable* item = table; item < table + size; ++item)
 	{
 		if (item->vmCvar)
 		{
@@ -75,40 +78,40 @@ static void Proxy_UpdateCvarTable(cvarTable_t* table, std::size_t size)
 
 // A forced set: it also replaces the value kept from an older proxy (the cvar survives the reload on a map change) or set in a cfg
 // It does nothing when the value is the same, and the engine leaves a key with an empty value out of the serverinfo
-static void Proxy_UpdateServerInfoVersion(void)
+static void UpdateServerInfoVersion(void)
 {
 	proxy.trap->Cvar_Set("YbeProxy", proxy.cvars.proxy_sv_disableServerInfoVersion.integer ? "" : YBEPROXY_VERSION);
 }
 
 // ==================================================
-// Proxy_OriginalEngine_CVars_Registration
+// OriginalEngineRegistration
 // --------------------------------------------------
 // Those are the variables that will affect engine modifications.
 // ==================================================
 
-void Proxy_OriginalEngine_CVars_Registration(void)
+void OriginalEngineRegistration(void)
 {
 	proxy.trap->Print("----- Proxy: Initializing original engine Proxy CVars\n");
 
-	Proxy_RegisterCvarTable(proxyOriginalEngineCVarTable, proxyOriginalEngineCVarTableSize);
+	RegisterTable(proxyOriginalEngineCVarTable, proxyOriginalEngineCVarTableSize);
 
 	proxy.trap->Print("----- Proxy: Original engine Proxy CVars properly initialized\n");
 }
 
 // ==================================================
-// Proxy_CVars_Registration
+// Registration
 // --------------------------------------------------
 // Those are the variables that won't affect engine modifications.
 // ==================================================
 
-void Proxy_CVars_Registration(void)
+void Registration(void)
 {
-	Proxy_RegisterCvarTable(proxyCVarTable, proxyCVarTableSize);
-	Proxy_UpdateServerInfoVersion();
+	RegisterTable(proxyCVarTable, proxyCVarTableSize);
+	UpdateServerInfoVersion();
 }
 
 // ==================================================
-// Proxy_UpdateAllCvars
+// UpdateAll
 // --------------------------------------------------
 // Updates all the variables once per second of server time.
 // ==================================================
@@ -122,18 +125,18 @@ static struct
 	int appliedRates[4];
 } updateState;
 
-void Proxy_UpdateAllCvars(int levelTime)
+void UpdateAll(int levelTime)
 {
 	if (levelTime < updateState.lastUpdateTime || levelTime - updateState.lastUpdateTime >= 1000)
 	{
 		updateState.lastUpdateTime = levelTime;
 
-		Proxy_UpdateCvarTable(proxyCVarTable, proxyCVarTableSize);
-		Proxy_UpdateServerInfoVersion();
+		UpdateTable(proxyCVarTable, proxyCVarTableSize);
+		UpdateServerInfoVersion();
 
 		if (proxy.isOriginalEngine)
 		{
-			Proxy_UpdateCvarTable(proxyOriginalEngineCVarTable, proxyOriginalEngineCVarTableSize);
+			UpdateTable(proxyOriginalEngineCVarTable, proxyOriginalEngineCVarTableSize);
 
 			const int current[4] = {
 				proxy.originalEngineCvars.sv_minRate.integer,
@@ -145,16 +148,16 @@ void Proxy_UpdateAllCvars(int levelTime)
 			if (std::memcmp(updateState.appliedRates, current, sizeof(current)))
 			{
 				std::memcpy(updateState.appliedRates, current, sizeof(current));
-				Proxy_Engine_Rate_SettingsChanged();
+				engine::rate::SettingsChanged();
 			}
 		}
 	}
 }
 
 // Leaves out the engine cvars the proxy only reads (flags 0) and the YbeProxy key (no vmCvar, it is the version)
-static void Proxy_PrintCvarTable(const cvarTable_t* table, std::size_t size)
+static void PrintTable(const CvarTable* table, std::size_t size)
 {
-	for (const cvarTable_t* item = table; item < table + size; ++item)
+	for (const CvarTable* item = table; item < table + size; ++item)
 	{
 		if (!item->vmCvar || !item->cvarFlags)
 		{
@@ -170,12 +173,12 @@ static void Proxy_PrintCvarTable(const cvarTable_t* table, std::size_t size)
 }
 
 // ==================================================
-// Proxy_CVars_PrintConfig
+// PrintConfig
 // --------------------------------------------------
 // The "proxyconfig" console command.
 // ==================================================
 
-void Proxy_CVars_PrintConfig(void)
+void PrintConfig(void)
 {
 	char version[MAX_STRING_CHARS];
 
@@ -189,10 +192,10 @@ void Proxy_CVars_PrintConfig(void)
 	// Registered on the original engine only
 	if (proxy.isOriginalEngine)
 	{
-		Proxy_PrintCvarTable(proxyOriginalEngineCVarTable, proxyOriginalEngineCVarTableSize);
+		PrintTable(proxyOriginalEngineCVarTable, proxyOriginalEngineCVarTableSize);
 	}
 
-	Proxy_PrintCvarTable(proxyCVarTable, proxyCVarTableSize);
+	PrintTable(proxyCVarTable, proxyCVarTableSize);
 
 	// Engine and game cvars, value only: their default depends on the engine and the mod
 	static const char* const serverSettings[] = {
@@ -216,3 +219,5 @@ void Proxy_CVars_PrintConfig(void)
 		proxy.trap->Print("%-36s %s\n", name, value);
 	}
 }
+
+} // namespace ybeproxy::features::cvars

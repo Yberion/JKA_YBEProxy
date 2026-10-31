@@ -5,6 +5,9 @@
 #include <cstring>
 #include <map>
 
+namespace ybeproxy::engine::rate_limit
+{
+
 // ==================================================
 // Modified version of OpenJK codemp/server/sv_main.cpp
 // (SVC_RateLimit and SVC_BucketForAddress, which come
@@ -22,14 +25,14 @@
 //   netadr_t has no ipi.
 // ==================================================
 
-struct leakyBucket_t
+struct LeakyBucket
 {
 	unsigned int lastTime;
 	int burst;
 };
 
 // Returns true when the request must be dropped
-static bool Proxy_RateLimit(leakyBucket_t* bucket, int burst, unsigned int period, unsigned int now)
+static bool Limit(LeakyBucket* bucket, int burst, unsigned int period, unsigned int now)
 {
 	const unsigned int interval = now - bucket->lastTime;
 	const unsigned int expired = interval / period;
@@ -61,18 +64,18 @@ static constexpr std::size_t maxBuckets = 65536;
 
 static struct
 {
-	std::map<uint32_t, leakyBucket_t>	buckets;
+	std::map<uint32_t, LeakyBucket>	buckets;
 	unsigned int						lastGC;
 	// getstatus and getinfo, every address
-	leakyBucket_t						outbound;
+	LeakyBucket						outbound;
 	// rcon with a bad password, every address
-	leakyBucket_t						badPassword;
+	LeakyBucket						badPassword;
 } rateLimit;
 
 // Returns nullptr when the table is full: the caller drops the request
-static leakyBucket_t* Proxy_BucketForAddress(const netadr_t& address, unsigned int period, unsigned int now)
+static LeakyBucket* BucketForAddress(const netadr_t& address, unsigned int period, unsigned int now)
 {
-	std::map<uint32_t, leakyBucket_t>& bucketMap = rateLimit.buckets;
+	std::map<uint32_t, LeakyBucket>& bucketMap = rateLimit.buckets;
 
 	if (now - rateLimit.lastGC > 1000)
 	{
@@ -105,7 +108,7 @@ static leakyBucket_t* Proxy_BucketForAddress(const netadr_t& address, unsigned i
 			return nullptr;
 		}
 
-		it = bucketMap.emplace(key, leakyBucket_t{ now, 0 }).first;
+		it = bucketMap.emplace(key, LeakyBucket{ now, 0 }).first;
 	}
 
 	return &it->second;
@@ -113,7 +116,7 @@ static leakyBucket_t* Proxy_BucketForAddress(const netadr_t& address, unsigned i
 
 // Per address (10, 1000): one bucket per address, shared by every limited command, as in ioq3 and Quake3e
 // Protects the victim of a reflection attack. Only IPv4 addresses are limited (not loopback or bots)
-bool Proxy_Engine_RateLimit_AddressAllowed(const netadr_t& from, const char* command)
+bool AddressAllowed(const netadr_t& from, const char* command)
 {
 	if (from.type != NA_IP)
 	{
@@ -121,9 +124,9 @@ bool Proxy_Engine_RateLimit_AddressAllowed(const netadr_t& from, const char* com
 	}
 
 	const unsigned int now = (unsigned int)proxy.trap->Milliseconds();
-	leakyBucket_t* bucket = Proxy_BucketForAddress(from, 1000, now);
+	LeakyBucket* bucket = BucketForAddress(from, 1000, now);
 
-	if (bucket && !Proxy_RateLimit(bucket, 10, 1000, now))
+	if (bucket && !Limit(bucket, 10, 1000, now))
 	{
 		return true;
 	}
@@ -139,14 +142,14 @@ bool Proxy_Engine_RateLimit_AddressAllowed(const netadr_t& from, const char* com
 }
 
 // getstatus / getinfo: per address, then a global outbound bucket (10, 100) that caps the total. Same values as ioq3
-bool Proxy_Engine_RateLimit_StatusAllowed(const netadr_t& from, const char* command)
+bool StatusAllowed(const netadr_t& from, const char* command)
 {
-	if (!Proxy_Engine_RateLimit_AddressAllowed(from, command))
+	if (!AddressAllowed(from, command))
 	{
 		return false;
 	}
 
-	if (!Proxy_RateLimit(&rateLimit.outbound, 10, 100, (unsigned int)proxy.trap->Milliseconds()))
+	if (!Limit(&rateLimit.outbound, 10, 100, (unsigned int)proxy.trap->Milliseconds()))
 	{
 		return true;
 	}
@@ -161,7 +164,7 @@ bool Proxy_Engine_RateLimit_StatusAllowed(const netadr_t& from, const char* comm
 
 // Valid password: never limited, so admins keep rcon during a flood, even one that spoofs their address
 // Bad password: one global bucket (10, 1000), about one guess per second whatever the source addresses
-bool Proxy_Engine_RateLimit_RconAllowed(void)
+bool RconAllowed(void)
 {
 	const char* password = server.cvars.sv_rconPassword->string;
 
@@ -170,7 +173,7 @@ bool Proxy_Engine_RateLimit_RconAllowed(void)
 		return true;
 	}
 
-	if (!Proxy_RateLimit(&rateLimit.badPassword, 10, 1000, (unsigned int)proxy.trap->Milliseconds()))
+	if (!Limit(&rateLimit.badPassword, 10, 1000, (unsigned int)proxy.trap->Milliseconds()))
 	{
 		return true;
 	}
@@ -183,3 +186,5 @@ bool Proxy_Engine_RateLimit_RconAllowed(void)
 
 	return false;
 }
+
+} // namespace ybeproxy::engine::rate_limit

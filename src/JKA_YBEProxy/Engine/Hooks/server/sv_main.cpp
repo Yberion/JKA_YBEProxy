@@ -6,6 +6,9 @@
 #include "JKA_YBEProxy/Engine/RateLimit.hpp"
 #include "JKA_YBEProxy/Engine/Challenge.hpp"
 
+namespace ybeproxy::engine::hooks
+{
+
 /*
 ===================
 SV_CalcPings
@@ -84,7 +87,7 @@ void Proxy_SV_CalcPings(void)
 		// let the game dll know about the ping
 		// Proxy -------------->
 		// ps = SV_GameClientNum( i );
-		ps = Proxy_GetPlayerStateByClientNum(i);
+		ps = ports::GetPlayerState(i);
 		// Proxy <--------------
 		ps->ping = cl->ping;
 	}
@@ -112,7 +115,7 @@ qboolean QDECL Proxy_SV_PacketEvent_Filter(netadr_t from, msg_t* msg)
 	if (!Q_strncmp("connect", (const char*)&msg->data[4], 7))
 	{
 		// Per address only, as Quake3e: reads nothing but the address
-		return Proxy_Engine_RateLimit_AddressAllowed(from, "connect") ? qtrue : qfalse;
+		return engine::rate_limit::AddressAllowed(from, "connect") ? qtrue : qfalse;
 	}
 
 	// Same reading as the original SV_ConnectionlessPacket, which reads and tokenizes again afterwards
@@ -131,26 +134,26 @@ qboolean QDECL Proxy_SV_PacketEvent_Filter(netadr_t from, msg_t* msg)
 			return qfalse;
 		}
 
-		return Proxy_Engine_RateLimit_StatusAllowed(from, c) ? qtrue : qfalse;
+		return engine::rate_limit::StatusAllowed(from, c) ? qtrue : qfalse;
 	}
 
 	// Per address only, as Quake3e: a global bucket would let a getstatus flood block every connection
 	if (!Q_stricmp(c, "getchallenge"))
 	{
-		if (!Proxy_Engine_RateLimit_AddressAllowed(from, c))
+		if (!engine::rate_limit::AddressAllowed(from, c))
 		{
 			return qfalse;
 		}
 
 		// A new challenge at each request, so sv_maxPing cannot be bypassed
-		Proxy_Engine_Challenge_Renew(from);
+		engine::challenge::Renew(from);
 
 		return qtrue;
 	}
 
 	if (!Q_stricmp(c, "rcon"))
 	{
-		return Proxy_Engine_RateLimit_RconAllowed() ? qtrue : qfalse;
+		return engine::rate_limit::RconAllowed() ? qtrue : qfalse;
 	}
 
 	// The original only answers the old authorize server, but prints a line for every other sender
@@ -161,3 +164,5 @@ qboolean QDECL Proxy_SV_PacketEvent_Filter(netadr_t from, msg_t* msg)
 
 	return qtrue;
 }
+
+} // namespace ybeproxy::engine::hooks

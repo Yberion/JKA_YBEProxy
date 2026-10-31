@@ -2,8 +2,11 @@
 #include "JKA_YBEProxy/Proxy.hpp"
 #include "JKA_YBEProxy/Features/Bans.hpp"
 
+namespace ybeproxy::features::connection
+{
+
 // "1.2.3.4:29070" -> "1.2.3.4"
-static void Proxy_GetBaseAddress(const char* ip, char* out, std::size_t outSize)
+static void GetBaseAddress(const char* ip, char* out, std::size_t outSize)
 {
 	const char* port = std::strrchr(ip, ':');
 	const std::size_t len = port ? (std::size_t)(port - ip) : std::strlen(ip);
@@ -11,7 +14,7 @@ static void Proxy_GetBaseAddress(const char* ip, char* out, std::size_t outSize)
 	Q_strncpyz(out, ip, (outSize < len + 1) ? outSize : len + 1);
 }
 
-const char* Proxy_Connection_Check(int clientNum, qboolean firstTime)
+const char* Check(int clientNum, qboolean firstTime)
 {
 	// SV_DirectConnect adds the "ip" key that the game's ban check reads. When the userinfo was too long to receive it,
 	// the key is missing, and a banned address would pass
@@ -26,7 +29,7 @@ const char* Proxy_Connection_Check(int clientNum, qboolean firstTime)
 	}
 
 	// The ban list is the proxy's, the game's own is empty (see Bans.cpp). Same reason as the game's
-	if (Proxy_Bans_IsBanned(Info_ValueForKey(userinfo, "ip")))
+	if (features::bans::IsBanned(Info_ValueForKey(userinfo, "ip")))
 	{
 		return "Banned.";
 	}
@@ -40,7 +43,7 @@ const char* Proxy_Connection_Check(int clientNum, qboolean firstTime)
 		char address[sizeof(proxy.clientData[0].address)];
 		int count = 0;
 
-		Proxy_GetBaseAddress(Info_ValueForKey(userinfo, "ip"), address, sizeof(address));
+		GetBaseAddress(Info_ValueForKey(userinfo, "ip"), address, sizeof(address));
 
 		for (int i = 0; i < MAX_CLIENTS; ++i)
 		{
@@ -55,7 +58,7 @@ const char* Proxy_Connection_Check(int clientNum, qboolean firstTime)
 	return nullptr;
 }
 
-void Proxy_Connection_Connected(int clientNum, qboolean isBot)
+void Connected(int clientNum, qboolean isBot)
 {
 	if (isBot)
 	{
@@ -65,12 +68,12 @@ void Proxy_Connection_Connected(int clientNum, qboolean isBot)
 	char userinfo[MAX_INFO_STRING];
 
 	proxy.trap->GetUserinfo(clientNum, userinfo, sizeof(userinfo));
-	Proxy_GetBaseAddress(Info_ValueForKey(userinfo, "ip"), proxy.clientData[clientNum].address, sizeof(proxy.clientData[clientNum].address));
+	GetBaseAddress(Info_ValueForKey(userinfo, "ip"), proxy.clientData[clientNum].address, sizeof(proxy.clientData[clientNum].address));
 }
 
-void Proxy_Connection_Begin(int clientNum)
+void Begin(int clientNum)
 {
-	ClientData_t* currentClientData = &proxy.clientData[clientNum];
+	ClientData* currentClientData = &proxy.clientData[clientNum];
 
 	currentClientData->isConnected = true;
 
@@ -84,3 +87,5 @@ void Proxy_Connection_Begin(int clientNum)
 		}
 	}
 }
+
+} // namespace ybeproxy::features::connection

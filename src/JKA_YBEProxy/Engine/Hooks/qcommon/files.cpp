@@ -3,6 +3,9 @@
 #include "JKA_YBEProxy/Ports/qcommon/cvar.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/qcommon/files.hpp"
 
+namespace ybeproxy::engine::hooks
+{
+
 const char* Proxy_FS_GetCurrentGameDir(bool emptybase)
 {
 	if (server.common.cvars.fs_gamedirvar->string[0])
@@ -93,7 +96,7 @@ void QDECL Proxy_Com_Printf(const char* fmt, ...)
 			{
 				server.common.functions.Com_Printf("Opening qconsole.log failed!\n");
 				
-				Cvar_SetValue("logfile", 0);
+				ports::Cvar_SetValue("logfile", 0);
 			}
 		}
 		// Proxy <--------------
@@ -114,3 +117,5 @@ void QDECL Proxy_Com_Printf(const char* fmt, ...)
 	}
 #endif
 }
+
+} // namespace ybeproxy::engine::hooks

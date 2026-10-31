@@ -3,6 +3,9 @@
 #include "JKA_YBEProxy/Engine/Hooks/server/sv_snapshot.hpp"
 #include "JKA_YBEProxy/Engine/NetStatus.hpp"
 
+namespace ybeproxy::engine::hooks
+{
+
 /*
 ====================
 SV_RateMsec
@@ -67,7 +70,7 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 	// Proxy -------------->
 	if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer)
 	{
-		Proxy_Engine_NetStatus_SnapshotSent(client);
+		engine::netstatus::SnapshotSent(client);
 	}
 	// Proxy <--------------
 
@@ -111,3 +114,5 @@ void Proxy_SV_SendMessageToClient(msg_t* msg, client_t* client)
 		}
 	}
 }
+
+} // namespace ybeproxy::engine::hooks

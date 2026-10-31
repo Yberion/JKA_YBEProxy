@@ -4,9 +4,12 @@
 #include "JKA_YBEProxy/Ports/server/sv_game.hpp"
 #include "JKA_YBEProxy/Engine/EngineState.hpp"
 
+namespace ybeproxy::features::client_commands
+{
+
 /*
 ==================
-Proxy_ClientCommand_MyRatio
+MyRatio
 ==================
 */
 static void ratioString(int kill, int death, char* ratioString, int sizeRatioString)
@@ -41,9 +44,9 @@ static float calcRatio(int kill, int death)
 	}
 }
 
-void Proxy_ClientCommand_MyRatio(int clientNum)
+void MyRatio(int clientNum)
 {
-	ClientData_t *currentClientData = &proxy.clientData[clientNum];
+	ClientData *currentClientData = &proxy.clientData[clientNum];
 
 	if (currentClientData->lastTimeMyratioCheck + 1000 > proxy.levelTime)
 	{
@@ -55,7 +58,7 @@ void Proxy_ClientCommand_MyRatio(int clientNum)
 	char ratioStringBuffer[16];
 	playerState_t* ps;
 
-	ps = Proxy_GetPlayerStateByClientNum(clientNum);
+	ps = ports::GetPlayerState(clientNum);
 
 	float ratio = calcRatio(ps->persistant[PERS_SCORE], ps->persistant[PERS_KILLED]);
 
@@ -76,9 +79,9 @@ void Proxy_ClientCommand_MyRatio(int clientNum)
 		(double)ratio, ratioStringBuffer));
 }
 
-bool Proxy_ClientCommands_Allowed(int clientNum, const char* cmd)
+bool Allowed(int clientNum, const char* cmd)
 {
-	ClientData_t *currentClientData = &proxy.clientData[clientNum];
+	ClientData *currentClientData = &proxy.clientData[clientNum];
 	qboolean sayCmd = qfalse;
 
 	// The commands and arguments below are compared whole (Q_stricmp), as the game does: a prefix also matched
@@ -101,7 +104,7 @@ bool Proxy_ClientCommands_Allowed(int clientNum, const char* cmd)
 	}
 
 	// Todo (not sure): Check in the entier command + args?
-	const char* argsConcat = ConcatArgs(1);
+	const char* argsConcat = ports::ConcatArgs(1);
 
 	if (!Q_stricmp(cmd, "say") || !Q_stricmp(cmd, "say_team") || !Q_stricmp(cmd, "tell"))
 	{
@@ -224,14 +227,16 @@ bool Proxy_ClientCommands_Allowed(int clientNum, const char* cmd)
 	return true;
 }
 
-bool Proxy_ClientCommands_Run(int clientNum, const char* cmd)
+bool Run(int clientNum, const char* cmd)
 {
 	if (!Q_stricmp(cmd, "myratio"))
 	{
-		Proxy_ClientCommand_MyRatio(clientNum);
+		MyRatio(clientNum);
 
 		return true;
 	}
 
 	return false;
 }
+
+} // namespace ybeproxy::features::client_commands

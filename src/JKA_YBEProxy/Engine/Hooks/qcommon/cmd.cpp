@@ -1,6 +1,9 @@
 #include "JKA_YBEProxy/Engine/EngineState.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/qcommon/cmd.hpp"
 
+namespace ybeproxy::engine::hooks
+{
+
 static char cmd_cmd[BIG_INFO_STRING]; // the original command we received (no token processing)
 
 /*
@@ -192,3 +195,5 @@ void Cmd_Update_Argv(int argNumber, char* newArg)
 
 	(*server.common.vars.cmd_argv)[argNumber] = newArg;
 }
+
+} // namespace ybeproxy::engine::hooks

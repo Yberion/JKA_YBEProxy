@@ -9,11 +9,14 @@
 #include "sdk/server/server.hpp"
 #include "JKA_YBEProxy/Engine/Addresses.hpp"
 
+namespace ybeproxy::engine
+{
+
 // ==================================================
 // STRUCT
 // ==================================================
 
-struct serverFunctions_t
+struct ServerFunctions
 {
 	void		(*SV_ClientEnterWorld)							(client_t*, usercmd_t*);
 	void		(*SV_ClientThink)								(client_t*, usercmd_t*);
@@ -38,7 +41,7 @@ struct serverFunctions_t
 	void		(*SV_SendClientSnapshot)						(client_t*);
 };
 
-struct serverCvars_t
+struct ServerCvars
 {
 	cvar_t* sv_fps;
 	cvar_t* sv_gametype;
@@ -53,7 +56,7 @@ struct serverCvars_t
 	cvar_t* sv_allowDownload;
 };
 
-struct vars_t
+struct CommonVars
 {
 	char**			rd_buffer;
 	int*			rd_buffersize;
@@ -64,7 +67,7 @@ struct vars_t
 	char			(*cmd_tokenized)[BIG_INFO_STRING + MAX_STRING_TOKENS]; // char cmd_tokenized[BIG_INFO_STRING+MAX_STRING_TOKENS];
 };
 
-struct Cvars_t
+struct CommonCvars
 {
 	cvar_t* com_dedicated;
 	cvar_t* com_sv_running;
@@ -74,7 +77,7 @@ struct Cvars_t
 	cvar_t* fs_gamedirvar;
 };
 
-struct Functions_t
+struct CommonFunctions
 {
 	void			(QDECL* Com_DPrintf)							(const char*, ...);
 	int				(*Com_HashKey)									(char*, int);
@@ -125,37 +128,39 @@ struct Functions_t
 	void			(*Z_TagFree)									(memtag_t);
 };
 
-struct Common_t
+struct Common
 {
-	vars_t 		vars;
-	Cvars_t 	cvars;
-	Functions_t	functions;
+	CommonVars 		vars;
+	CommonCvars 	cvars;
+	CommonFunctions	functions;
 };
 
-struct ProxyServer_t
+struct Server
 {
 	serverStatic_t*		svs;
 	server_t*			sv;
-	serverFunctions_t	functions;
-	serverCvars_t		cvars;
-	Common_t			common;
+	ServerFunctions	functions;
+	ServerCvars		cvars;
+	Common			common;
 };
 
 // ==================================================
 // FUNCTION
 // ==================================================
 
-void Proxy_Engine_Initialize_MemoryLayer(void);
+void InitializeMemoryLayer(void);
 
 // ==================================================
 // EXTERN VARIABLE
 // ==================================================
 
 // /!\ Should only be used when original jampded is used
-extern ProxyServer_t server;
+extern Server server;
 
 // The client number of a client of svs.clients
-inline std::size_t getClientNumFromAddr(client_t* client)
+inline std::size_t ClientNumFromAddress(client_t* client)
 {
 	return client - (*(client_t**)var_svsClients_addr[PROXY_PLATFORM]);
 }
+
+} // namespace ybeproxy::engine

@@ -1,5 +1,10 @@
 #pragma once
 
-void Proxy_Engine_Attach_Patches(void);
-void Proxy_Engine_Detach_Patches(void);
-void Proxy_Engine_Inline_Patches(void);
+namespace ybeproxy::engine::patches
+{
+
+void Attach(void);
+void Detach(void);
+void InlinePatches(void);
+
+} // namespace ybeproxy::engine::patches

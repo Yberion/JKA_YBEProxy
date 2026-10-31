@@ -2,7 +2,12 @@
 
 #include "sdk/qcommon/q_platform.hpp"
 
+namespace ybeproxy::engine::hooks
+{
+
 const char* Proxy_FS_GetCurrentGameDir(bool emptybase = false);
 
 extern void (QDECL *Original_Com_Printf)(const char*, ...);
 void QDECL Proxy_Com_Printf(const char* fmt, ...);
+
+} // namespace ybeproxy::engine::hooks

@@ -6,6 +6,9 @@
 #include <cmath>
 #include <cstdlib>
 
+namespace ybeproxy::engine::netstatus
+{
+
 // ==================================================
 // Network estimates: net ping and timenudge
 // --------------------------------------------------
@@ -25,7 +28,7 @@
 // is measured from the real send, so late is added back: 26 bots raised the estimate by 2.7 ms without it). The client tests
 // the extrapolation once per frame, so where it settles depends on how the snapshot interval falls on its frames: a fixed
 // half frame instead of simulated was off by -1 ms with 50 ms snapshots at 125 fps, -3 ms with 33 ms ones, -6 ms with
-// 33 ms ones at 60 fps. Proxy_Engine_NetStatus_SimulateClient runs the client rules.
+// 33 ms ones at 60 fps. SimulateClient runs the client rules.
 // The round trip to subtract is the mean of the round trips, not the smallest: the client settles behind its late
 // packets, so a path with jitter, or a delay in both directions, made the smallest one too short (measured on a
 // localhost with clumsy and on a Linux VM with netem, the error was 10 to 26 ms; with the mean it is about 4 ms). The
@@ -45,7 +48,7 @@ static struct
 
 // Inside GAME_RUN_FRAME, SV_Frame has just moved one frame from sv.timeResidual to svs.time. The sum of the two does
 // not change, and is the server time as it was when SV_Frame started: svs.time rounded down to the frame is not
-void Proxy_Engine_NetStatus_FrameClock(void)
+void FrameClock(void)
 {
 	const float offset = (float)(server.svs->time + server.sv->timeResidual - proxy.trap->Milliseconds());
 
@@ -61,9 +64,9 @@ void Proxy_Engine_NetStatus_FrameClock(void)
 	continuousClock.offset += (offset - continuousClock.offset) / 8.0f;
 }
 
-void Proxy_Engine_NetStatus_SnapshotSent(client_t* client)
+void SnapshotSent(client_t* client)
 {
-	netEstimate_t& e = proxy.clientData[getClientNumFromAddr(client)].netStatus.estimate;
+	NetEstimate& e = proxy.clientData[ClientNumFromAddress(client)].netStatus.estimate;
 	const int slot = client->netchan.outgoingSequence & PACKET_MASK;
 	const int now = proxy.trap->Milliseconds();
 
@@ -91,15 +94,15 @@ void Proxy_Engine_NetStatus_SnapshotSent(client_t* client)
 	}
 }
 
-static int Proxy_Median3(int a, int b, int c)
+static int Median3(int a, int b, int c)
 {
 	return std::max(std::min(a, b), std::min(std::max(a, b), c));
 }
 
 // Runs the client rules (CL_SendCmd, CL_AdjustTimeDelta, CL_SetCGameTime) for a client with no network delay and no
 // timenudge, a snapshot every interval ms, a frame every frameMs ms and a packet every framesPerPacket frames. Returns
-// delay + roundTrip as Proxy_Engine_NetStatus_PacketReceived computes them for that client
-static float Proxy_Engine_NetStatus_SimulateClient(int interval, int frameMs, int framesPerPacket)
+// delay + roundTrip as PacketReceived computes them for that client
+static float SimulateClient(int interval, int frameMs, int framesPerPacket)
 {
 	// A few phases between the client frames and the snapshots. The client starts near its balance, and its packets are
 	// measured after WarmSnapshots, until Snapshots and at least 10 packets
@@ -201,14 +204,14 @@ static float Proxy_Engine_NetStatus_SimulateClient(int interval, int frameMs, in
 }
 
 // Packets and usercmds received in the last second. The ring is in time order: walk back from the newest
-static void Proxy_Engine_NetStatus_CountPackets(const netEstimate_t& e, int now, int* packets, int* cmds)
+static void CountPackets(const NetEstimate& e, int now, int* packets, int* cmds)
 {
 	*packets = 0;
 	*cmds = 0;
 
-	for (int n = 1; n <= netEstimate_t::PacketSamples; ++n)
+	for (int n = 1; n <= NetEstimate::PacketSamples; ++n)
 	{
-		const int i = (e.packetIndex - n + netEstimate_t::PacketSamples) % netEstimate_t::PacketSamples;
+		const int i = (e.packetIndex - n + NetEstimate::PacketSamples) % NetEstimate::PacketSamples;
 
 		if (!e.packetTime[i] || now - e.packetTime[i] >= 1000)
 		{
@@ -220,10 +223,10 @@ static void Proxy_Engine_NetStatus_CountPackets(const netEstimate_t& e, int now,
 	}
 }
 
-void Proxy_Engine_NetStatus_PacketReceived(client_t* client, const usercmd_t* cmds, int cmdCount)
+void PacketReceived(client_t* client, const usercmd_t* cmds, int cmdCount)
 {
-	ClientData_t* clientData = &proxy.clientData[getClientNumFromAddr(client)];
-	netEstimate_t& e = clientData->netStatus.estimate;
+	ClientData* clientData = &proxy.clientData[ClientNumFromAddress(client)];
+	NetEstimate& e = clientData->netStatus.estimate;
 	const int now = proxy.trap->Milliseconds();
 
 	// Round trip: the first packet that acknowledges a snapshot, minus the real time that snapshot was sent
@@ -241,7 +244,7 @@ void Proxy_Engine_NetStatus_PacketReceived(client_t* client, const usercmd_t* cm
 		{
 			e.rttTime[e.rttIndex] = now;
 			e.rttValue[e.rttIndex] = rtt;
-			e.rttIndex = (e.rttIndex + 1) % netEstimate_t::RttSamples;
+			e.rttIndex = (e.rttIndex + 1) % NetEstimate::RttSamples;
 		}
 	}
 
@@ -259,14 +262,14 @@ void Proxy_Engine_NetStatus_PacketReceived(client_t* client, const usercmd_t* cm
 
 	e.packetTime[e.packetIndex] = now;
 	e.packetCmds[e.packetIndex] = newCmds;
-	e.packetIndex = (e.packetIndex + 1) % netEstimate_t::PacketSamples;
+	e.packetIndex = (e.packetIndex + 1) % NetEstimate::PacketSamples;
 
 	// Delay and frame lag, from the newest usercmd only: the older ones of the packet were made earlier
 	if (continuousClock.valid && cmdCount > 0)
 	{
 		const usercmd_t& newest = cmds[cmdCount - 1];
 
-		if (newest.serverTime > client->lastUsercmd.serverTime && e.delayCount < netEstimate_t::WindowSamples)
+		if (newest.serverTime > client->lastUsercmd.serverTime && e.delayCount < NetEstimate::WindowSamples)
 		{
 			// The difference of the two integer clocks first: a float holds them to the millisecond for 4.6 hours only
 			e.delaySum += (float)(newest.serverTime - now) - continuousClock.offset;
@@ -300,7 +303,7 @@ void Proxy_Engine_NetStatus_PacketReceived(client_t* client, const usercmd_t* cm
 	int rttCount = 0;
 	int rttSum = 0;
 
-	for (int i = 0; i < netEstimate_t::RttSamples; ++i)
+	for (int i = 0; i < NetEstimate::RttSamples; ++i)
 	{
 		if (e.rttTime[i] && now - e.rttTime[i] <= 4000)
 		{
@@ -347,7 +350,7 @@ void Proxy_Engine_NetStatus_PacketReceived(client_t* client, const usercmd_t* cm
 	int packetsPerSecond;
 	int cmdsPerSecond;
 
-	Proxy_Engine_NetStatus_CountPackets(e, now, &packetsPerSecond, &cmdsPerSecond);
+	CountPackets(e, now, &packetsPerSecond, &cmdsPerSecond);
 
 	const float hold = packetsPerSecond > 0 ? 500.0f / (float)packetsPerSecond : 0.0f;
 	const float roundTrip = std::max((float)rttMin, (float)rttSum / (float)rttCount - hold);
@@ -373,7 +376,7 @@ void Proxy_Engine_NetStatus_PacketReceived(client_t* client, const usercmd_t* cm
 		e.simInterval = interval;
 		e.simFrameMs = frameMs;
 		e.simFramesPerPacket = framesPerPacket;
-		e.simulated = Proxy_Engine_NetStatus_SimulateClient(interval, frameMs, framesPerPacket);
+		e.simulated = SimulateClient(interval, frameMs, framesPerPacket);
 	}
 
 	// late: the simulation dates its round trips from the server time of the snapshots, the proxy from their real send
@@ -391,19 +394,19 @@ void Proxy_Engine_NetStatus_PacketReceived(client_t* client, const usercmd_t* cm
 		e.historyFilled = true;
 	}
 
-	clientData->netStatus.timenudge = e.historyFilled ? Proxy_Median3(e.history[0], e.history[1], e.history[2]) : nudge;
+	clientData->netStatus.timenudge = e.historyFilled ? Median3(e.history[0], e.history[1], e.history[2]) : nudge;
 	clientData->netStatus.timenudgeKnown = true;
 }
 
 
-void Proxy_Engine_NetStatus_GetRates(client_t* client, NetRates_t* rates)
+void GetRates(client_t* client, NetRates* rates)
 {
-	const netEstimate_t& e = proxy.clientData[getClientNumFromAddr(client)].netStatus.estimate;
+	const NetEstimate& e = proxy.clientData[ClientNumFromAddress(client)].netStatus.estimate;
 	const int now = proxy.trap->Milliseconds();
 
-	*rates = NetRates_t();
+	*rates = NetRates();
 
-	Proxy_Engine_NetStatus_CountPackets(e, now, &rates->packets, &rates->fps);
+	CountPackets(e, now, &rates->packets, &rates->fps);
 
 	// The snapshots of the last second. The ring keeps the last 32: when the client gets more than 32 per second the
 	// rate is the one of the span they cover
@@ -431,3 +434,5 @@ void Proxy_Engine_NetStatus_GetRates(client_t* client, NetRates_t* rates)
 	// The mean size of these messages times their rate
 	rates->rate = count ? (int)std::lround((float)bytes / (float)count * perSecond) : 0;
 }
+
+} // namespace ybeproxy::engine::netstatus

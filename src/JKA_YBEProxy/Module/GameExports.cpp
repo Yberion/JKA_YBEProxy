@@ -14,17 +14,20 @@
 #include "JKA_YBEProxy/Engine/Patches.hpp"
 #include "JKA_YBEProxy/Engine/Restart.hpp"
 
-void Proxy_SharedAPI_Init(void)
+namespace ybeproxy::module::game_exports
+{
+
+void Init(void)
 {
 	proxy.trap->Print("================================================================\n");
 	proxy.trap->Print("----- Proxy: %s %s %s\n", YBEPROXY_NAME, YBEPROXY_VERSION, YBEPROXY_BY_AUTHOR);
 	proxy.trap->Print("================================================================\n");
 
-	Proxy_GameLibrary_Load();
+	ybeproxy::module::game_library::Load();
 
 	proxy.trap->Print("----- Proxy: Initializing Proxy CVars\n");
 
-	Proxy_CVars_Registration();
+	features::cvars::Registration();
 
 	proxy.trap->Print("----- Proxy: Proxy CVars properly initialized\n");
 
@@ -41,19 +44,19 @@ void Proxy_SharedAPI_Init(void)
 	{
 		proxy.trap->Print("----- Proxy: Original engine detected\n");
 
-		Proxy_Engine_Initialize_MemoryLayer();
-		Proxy_OriginalEngine_CVars_Registration();
+		engine::InitializeMemoryLayer();
+		features::cvars::OriginalEngineRegistration();
 
 		proxy.trap->Print("----- Proxy: Patching engine\n");
 
-		Proxy_Engine_Inline_Patches();
-		Proxy_Engine_Attach_Patches();
+		engine::patches::InlinePatches();
+		engine::patches::Attach();
 
 		proxy.trap->Print("----- Proxy: Engine properly patched\n");
 	}
 
 	// Before the game loads its ban list from g_banIPs
-	Proxy_Bans_BeforeGameInit();
+	features::bans::BeforeGameInit();
 
 	// Before the game loads the navigation of the map (trap_Nav_Load, or a node per waypoint). The game never frees
 	// it (NAV_Shutdown is never called), and the retail CNavigator::Load adds to the nodes of the previous map: a
@@ -62,7 +65,7 @@ void Proxy_SharedAPI_Init(void)
 	proxy.trap->Nav_Free();
 }
 
-void Proxy_SharedAPI_InitDone(void)
+void InitDone(void)
 {
 	if (proxy.isOriginalEngine)
 	{
@@ -70,11 +73,11 @@ void Proxy_SharedAPI_InitDone(void)
 		// file into a TAG_BSP_DISKIMAGE buffer that it never frees: it only frees the buffer of the main map, at the end
 		// of its load on a dedicated server. So the buffers left with that tag are the lost ones, and none is in use
 		// outside CM_LoadMap_Actual. OpenJK frees the buffer of a sub-BSP at the end of its load
-		server.common.functions.Z_TagFree(TAG_BSP_DISKIMAGE);
+		engine::server.common.functions.Z_TagFree(TAG_BSP_DISKIMAGE);
 	}
 }
 
-void Proxy_SharedAPI_Shutdown(void)
+void Shutdown(void)
 {
 	if (proxy.isOriginalEngine)
 	{
@@ -82,11 +85,11 @@ void Proxy_SharedAPI_Shutdown(void)
 		// which only calls Com_EndRedirect() once Cmd_ExecuteString() returns, after the whole map load
 		// While the redirect is active, Com_Printf skips the console and the log file: end it here,
 		// so the rest of the map load is printed there. The later Com_EndRedirect() then does nothing
-		server.common.functions.Com_EndRedirect();
+		engine::server.common.functions.Com_EndRedirect();
 
 		proxy.trap->Print("----- Proxy: Unpatching engine\n");
 
-		Proxy_Engine_Detach_Patches();
+		engine::patches::Detach();
 
 		proxy.trap->Print("----- Proxy: Engine properly unpatched\n");
 	}
@@ -94,25 +97,25 @@ void Proxy_SharedAPI_Shutdown(void)
 
 // The server is going to active its new frame, which often is around 20 times per second. Active some of our own
 // active functions
-void Proxy_SharedAPI_RunFrame(int levelTime)
+void RunFrame(int levelTime)
 {
-	Proxy_UpdateAllCvars(levelTime);
+	features::cvars::UpdateAll(levelTime);
 
 	if (proxy.isOriginalEngine && proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer)
 	{
-		Proxy_Engine_NetStatus_FrameClock();
+		engine::netstatus::FrameClock();
 	}
 
 	if (proxy.isOriginalEngine)
 	{
-		Proxy_Engine_Restart_BeforeWrap();
+		engine::restart::BeforeWrap();
 	}
 
 	proxy.levelTime = levelTime;
 }
 
 // The userinfo of a bot comes from the bot files, and has no forcepowers key
-static bool Proxy_IsBot(int clientNum)
+static bool IsBot(int clientNum)
 {
 	if (!proxy.locatedGameData.g_entities)
 	{
@@ -124,17 +127,17 @@ static bool Proxy_IsBot(int clientNum)
 	return (ent->r.svFlags & SVF_BOT) != 0;
 }
 
-const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
+const char* ClientConnect(int clientNum, qboolean firstTime, qboolean isBot)
 {
 	// The game reads the userinfo here, before SV_UserinfoChanged and GAME_CLIENT_USERINFO_CHANGED
 	// Bots are skipped: their userinfo comes from the bot files
 	if (!isBot)
 	{
-		const char* reason = Proxy_Connection_Check(clientNum, firstTime);
+		const char* reason = features::connection::Check(clientNum, firstTime);
 
 		if (!reason)
 		{
-			reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum, true, nullptr);
+			reason = features::userinfo::Sanitize(clientNum, true, nullptr);
 		}
 
 		// Returning the reason refuses the client, never DropClient here (the slot is still CS_FREE)
@@ -150,12 +153,12 @@ const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qbo
 	return nullptr;
 }
 
-void Proxy_SharedAPI_ClientConnected(int clientNum, qboolean isBot)
+void ClientConnected(int clientNum, qboolean isBot)
 {
-	Proxy_Connection_Connected(clientNum, isBot);
+	features::connection::Connected(clientNum, isBot);
 }
 
-void Proxy_SharedAPI_ClientDisconnect(int clientNum)
+void ClientDisconnect(int clientNum)
 {
 	// No isConnected test: it is only set in ClientBegin, so a client that leaves before entering the game
 	// would leave its data (cleanName, sendWelcomeMessage) to the next client of the slot
@@ -165,20 +168,20 @@ void Proxy_SharedAPI_ClientDisconnect(int clientNum)
 	}
 }
 
-void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean /*allowTeamReset*/)
+void ClientBegin(int clientNum, qboolean /*allowTeamReset*/)
 {
 	if (clientNum >= 0 && clientNum < MAX_CLIENTS)
 	{
-		Proxy_Connection_Begin(clientNum);
+		features::connection::Begin(clientNum);
 	}
 }
 
-qboolean Proxy_SharedAPI_ConsoleCommand(void)
+qboolean ConsoleCommand(void)
 {
-	return Proxy_ConsoleCommands_Run();
+	return features::console_commands::Run();
 }
 
-qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
+qboolean ClientCommand(int clientNum)
 {
 	if (!proxy.clientData[clientNum].isConnected)
 	{
@@ -189,37 +192,37 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 
 	proxy.trap->Argv(0, cmd, sizeof(cmd));
 
-	if (!Proxy_ClientCommands_Allowed(clientNum, cmd) || Proxy_ClientCommands_Run(clientNum, cmd))
+	if (!features::client_commands::Allowed(clientNum, cmd) || features::client_commands::Run(clientNum, cmd))
 	{
 		return qfalse;
 	}
 
 	// Only work on default engine since it require memory hook
-	if (proxy.isOriginalEngine && Proxy_Engine_NetStatusCommands_Run(clientNum, cmd))
+	if (proxy.isOriginalEngine && engine::netstatus_commands::Run(clientNum, cmd))
 	{
 		return qfalse;
 	}
 
-	Proxy_Chat_ClientCommand(clientNum, cmd);
+	features::chat::ClientCommand(clientNum, cmd);
 
 	return qtrue;
 }
 
-void Proxy_SharedAPI_ClientCommandDone(void)
+void ClientCommandDone(void)
 {
-	Proxy_Chat_ClientCommandDone();
+	features::chat::ClientCommandDone();
 }
 
 /*
 // If we want to do something with the usercmd then call manually GetUsercmd
-void Proxy_SharedAPI_ClientThink(int clientNum, usercmd_t* ucmd)
+void ClientThink(int clientNum, usercmd_t* ucmd)
 {}
 */
 
-qboolean Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
+qboolean ClientUserinfoChanged(int clientNum)
 {
 	bool isAntiCheat = false;
-	const char* reason = Proxy_SharedAPI_SanitizeUserinfo(clientNum, !Proxy_IsBot(clientNum), &isAntiCheat);
+	const char* reason = features::userinfo::Sanitize(clientNum, !IsBot(clientNum), &isAntiCheat);
 
 	if (reason)
 	{
@@ -235,3 +238,5 @@ qboolean Proxy_SharedAPI_ClientUserinfoChanged(int clientNum)
 
 	return qtrue;
 }
+
+} // namespace ybeproxy::module::game_exports

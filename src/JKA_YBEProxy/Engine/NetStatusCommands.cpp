@@ -5,16 +5,19 @@
 #include "JKA_YBEProxy/Engine/NetStatus.hpp"
 #include "JKA_YBEProxy/Engine/Rate.hpp"
 
+namespace ybeproxy::engine::netstatus_commands
+{
+
 /*
 ==================
-Proxy_ClientCommand_NetStatus
+NetStatus
 
 Display net settings of all players
 ==================
 */
-void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
+void NetStatus(int clientNum)
 {
-	ClientData_t *currentClientData = &proxy.clientData[clientNum];
+	ClientData *currentClientData = &proxy.clientData[clientNum];
 
 	if (currentClientData->netStatus.lastCommandTime + 500 > server.svs->time)
 	{
@@ -34,7 +37,7 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 
 	for (i = 0, cl = server.svs->clients; i < server.cvars.sv_maxclients->integer; i++, cl++)
 	{
-		NetRates_t	rates = NetRates_t();
+		engine::netstatus::NetRates	rates = engine::netstatus::NetRates();
 
 		if (!cl->state)
 			continue;
@@ -48,7 +51,7 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 		else
 			Com_sprintf(state, sizeof(state), "%8i", cl->ping < 9999 ? cl->ping : 9999);
 
-		ps = Proxy_GetPlayerStateByClientNum(i);
+		ps = ports::GetPlayerState(i);
 
 		// A bot's snapshotMsec can be 0, which is bad for "1000 / snapshotMsec"
 		// Read-only: writing cl->snapshotMsec changed the real snapshot rate of a human with a ping of 0
@@ -65,7 +68,7 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 
 		if (cl->netchan.remoteAddress.type != NA_BOT)
 		{
-			Proxy_Engine_NetStatus_GetRates(cl, &rates);
+			engine::netstatus::GetRates(cl, &rates);
 			Com_sprintf(netPing, sizeof(netPing), "%i", proxy.clientData[i].netStatus.netPing);
 		}
 
@@ -83,7 +86,7 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 		const int userSnaps = atoi(Info_ValueForKey(cl->userinfo, "snaps"));
 
 		// No need for truncation "feature" if we move name to the end
-		Q_strcat(status, sizeof(status), va("%5i %s %7s %8i %6i %8i %4i %7i %9s %9i %5i %9i %2i %s^7\n", ps->persistant[PERS_SCORE], state, netPing, userRate, Proxy_Engine_Rate_Applied(cl), rates.rate, rates.fps, rates.packets, timeNudge, userSnaps, snaps, rates.snaps, i, cl->name));
+		Q_strcat(status, sizeof(status), va("%5i %s %7s %8i %6i %8i %4i %7i %9s %9i %5i %9i %2i %s^7\n", ps->persistant[PERS_SCORE], state, netPing, userRate, engine::rate::Applied(cl), rates.rate, rates.fps, rates.packets, timeNudge, userSnaps, snaps, rates.snaps, i, cl->name));
 	}
 
 	currentClientData->netStatus.lastCommandTime = server.svs->time;
@@ -110,7 +113,7 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 
 /*
 ==================
-Proxy_ClientCommand_ExplainNetStatus
+ExplainNetStatus
 
 Explains each column of /netStatus to the player
 ==================
@@ -144,9 +147,9 @@ static const char explainNetStatusMore[] =
 static_assert(sizeof(explainNetStatusColumns) + 8 < MAX_STRING_CHARS, "one print per server command");
 static_assert(sizeof(explainNetStatusMore) + 8 < MAX_STRING_CHARS, "one print per server command");
 
-void Proxy_Engine_ClientCommand_ExplainNetStatus(int clientNum)
+void ExplainNetStatus(int clientNum)
 {
-	ClientData_t *currentClientData = &proxy.clientData[clientNum];
+	ClientData *currentClientData = &proxy.clientData[clientNum];
 
 	// The same limit as /netStatus, shared with it
 	if (currentClientData->netStatus.lastCommandTime + 500 > server.svs->time)
@@ -160,7 +163,7 @@ void Proxy_Engine_ClientCommand_ExplainNetStatus(int clientNum)
 	proxy.trap->SendServerCommand(clientNum, va("print \"%s\"", explainNetStatusMore));
 }
 
-bool Proxy_Engine_NetStatusCommands_Run(int clientNum, const char* cmd)
+bool Run(int clientNum, const char* cmd)
 {
 	if (!proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer)
 	{
@@ -169,17 +172,19 @@ bool Proxy_Engine_NetStatusCommands_Run(int clientNum, const char* cmd)
 
 	if (!Q_stricmp(cmd, "netStatus") || !Q_stricmp(cmd, "showNet"))
 	{
-		Proxy_Engine_ClientCommand_NetStatus(clientNum);
+		NetStatus(clientNum);
 
 		return true;
 	}
 
 	if (!Q_stricmp(cmd, "explainNetStatus"))
 	{
-		Proxy_Engine_ClientCommand_ExplainNetStatus(clientNum);
+		ExplainNetStatus(clientNum);
 
 		return true;
 	}
 
 	return false;
 }
+
+} // namespace ybeproxy::engine::netstatus_commands

@@ -3,10 +3,13 @@
 #include "JKA_YBEProxy/Features/Bans.hpp"
 #include "JKA_YBEProxy/Features/Cvars.hpp"
 
+namespace ybeproxy::features::console_commands
+{
+
 // "forceteam -1 <team>": the game only takes a client number or a name, "-1" is looked up as a name and fails
 // Every client in the game gets the game's own "forceteam <number> <team>", so SetTeam runs with its usual checks
 // The commands are appended, not executed now: the game must not run console commands from inside one
-static void Proxy_ForceTeamEveryone(const char* team)
+static void ForceTeamEveryone(const char* team)
 {
 	// The team goes into command text: it must not be able to end the command and start another
 	if (!team[0] || std::strpbrk(team, ";\"\n\r"))
@@ -27,7 +30,7 @@ static void Proxy_ForceTeamEveryone(const char* team)
 	}
 }
 
-int Proxy_SharedAPI_ConsoleClientNum(const char* cmd)
+int ClientNumArgument(const char* cmd)
 {
 	char arg[MAX_TOKEN_CHARS];
 
@@ -55,20 +58,20 @@ int Proxy_SharedAPI_ConsoleClientNum(const char* cmd)
 
 // "mute <client number>" and "unmute <client number>", from the server console or rcon
 // The game has no such command, so GAME_CONSOLE_COMMAND reaches the proxy for it
-qboolean Proxy_ConsoleCommands_Run(void)
+qboolean Run(void)
 {
 	char cmd[MAX_TOKEN_CHARS];
 
 	proxy.trap->Argv(0, cmd, sizeof(cmd));
 
-	if (Proxy_Bans_ConsoleCommand(cmd))
+	if (features::bans::ConsoleCommand(cmd))
 	{
 		return qtrue;
 	}
 
 	if (!Q_stricmp(cmd, "proxyconfig"))
 	{
-		Proxy_CVars_PrintConfig();
+		features::cvars::PrintConfig();
 
 		return qtrue;
 	}
@@ -86,7 +89,7 @@ qboolean Proxy_ConsoleCommands_Run(void)
 			return qfalse;
 		}
 
-		Proxy_ForceTeamEveryone(arg2);
+		ForceTeamEveryone(arg2);
 
 		return qtrue;
 	}
@@ -98,14 +101,14 @@ qboolean Proxy_ConsoleCommands_Run(void)
 		return qfalse;
 	}
 
-	const int clientNum = Proxy_SharedAPI_ConsoleClientNum(cmd);
+	const int clientNum = ClientNumArgument(cmd);
 
 	if (clientNum < 0)
 	{
 		return qtrue;
 	}
 
-	ClientData_t* clientData = &proxy.clientData[clientNum];
+	ClientData* clientData = &proxy.clientData[clientNum];
 
 	clientData->muted = mute;
 
@@ -114,3 +117,5 @@ qboolean Proxy_ConsoleCommands_Run(void)
 
 	return qtrue;
 }
+
+} // namespace ybeproxy::features::console_commands

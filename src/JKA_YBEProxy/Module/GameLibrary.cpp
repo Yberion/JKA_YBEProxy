@@ -2,6 +2,9 @@
 #include "JKA_YBEProxy/Proxy.hpp"
 #include "JKA_YBEProxy/Module/GameImports.hpp"
 
+namespace ybeproxy::module::game_library
+{
+
 #define FS_GAME_CVAR "fs_game"
 
 #define DEFAULT_BASE_GAME_FOLDER_NAME "base"
@@ -12,7 +15,7 @@
 
 #define PROXY_LIBRARY PROXY_LIBRARY_SLASH PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT
 
-static void Proxy_LoadGameLibrary(void)
+static void OpenLibrary(void)
 {
 	char basePath[MAX_OSPATH] = { 0 };
 	char gameDir[MAX_OSPATH] = { 0 };
@@ -62,7 +65,7 @@ static void Proxy_LoadGameLibrary(void)
 	}
 }
 
-static void Proxy_GetOriginalGameAPI(void)
+static void GetOriginalGameApi(void)
 {
 	// 1) Original Engine -> Load the Proxy dllEntry (store the original server's systemCall function pointer in originalSystemCall)
 	// 2) The Proxy get the Original dllEntry
@@ -92,21 +95,21 @@ static void Proxy_GetOriginalGameAPI(void)
 	}
 
 	// "Send our own Proxy systemCall function pointer to the Original dllEntry"
-	proxy.originalGame.dllEntry(Proxy_OriginalAPI_VM_DllSyscall);
+	proxy.originalGame.dllEntry(ybeproxy::module::game_imports::Syscall);
 }
 
-void Proxy_GameLibrary_Load(void)
+void Load(void)
 {
 	proxy.trap->Print("----- Proxy: Loading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
 
-	Proxy_LoadGameLibrary();
+	OpenLibrary();
 
-	Proxy_GetOriginalGameAPI();
+	GetOriginalGameApi();
 
 	proxy.trap->Print("----- Proxy: %s properly loaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
 }
 
-void Proxy_GameLibrary_Unload(void)
+void Unload(void)
 {
 	proxy.trap->Print("----- Proxy: Unloading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
 
@@ -115,3 +118,5 @@ void Proxy_GameLibrary_Unload(void)
 
 	proxy.trap->Print("----- Proxy: %s properly unloaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
 }
+
+} // namespace ybeproxy::module::game_library

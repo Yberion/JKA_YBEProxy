@@ -1,9 +1,12 @@
 #include "JKA_YBEProxy/Engine/EngineState.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/qcommon/common.hpp"
 
-ProxyServer_t server = {};
+namespace ybeproxy::engine
+{
 
-void Proxy_Engine_Initialize_MemoryLayer(void)
+Server server = {};
+
+void InitializeMemoryLayer(void)
 {
 	proxy.trap->Print("----- Proxy: Initializing memory layer\n");
 
@@ -79,7 +82,7 @@ void Proxy_Engine_Initialize_MemoryLayer(void)
 	// Use the define on Windows as the function address won't be accessible at compile time
 	if (PROXY_PLATFORM == Proxy_Platform_e::PROXY_WINDOWS)
 	{
-		server.common.functions.Com_EndRedirect = (decltype(server.common.functions.Com_EndRedirect))&Proxy_Windows_Com_EndRedirect;
+		server.common.functions.Com_EndRedirect = (decltype(server.common.functions.Com_EndRedirect))&engine::hooks::Proxy_Windows_Com_EndRedirect;
 	}
 	else
 	{
@@ -130,3 +133,5 @@ void Proxy_Engine_Initialize_MemoryLayer(void)
 
 	proxy.trap->Print("----- Proxy: Memory layer properly initialized\n");
 }
+
+} // namespace ybeproxy::engine

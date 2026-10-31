@@ -4,6 +4,9 @@
 
 #include <random>
 
+namespace ybeproxy::engine::challenge
+{
+
 /*
 The ping that SV_DirectConnect compares with sv_minPing and sv_maxPing is the time between the last challengeResponse
 and the connect. SV_GetChallenge keeps the challenge of an address that asks again and only moves its pingTime, so a
@@ -12,7 +15,7 @@ then close to 0, whatever its real ping. ioq3 and OpenJK make a new challenge at
 to carry the last one, which the client only gets after a full round trip.
 */
 
-void Proxy_Engine_Challenge_Renew(const netadr_t& from)
+void Renew(const netadr_t& from)
 {
 	challenge_t* const challenges = server.svs->challenges;
 
@@ -33,3 +36,5 @@ void Proxy_Engine_Challenge_Renew(const netadr_t& from)
 		}
 	}
 }
+
+} // namespace ybeproxy::engine::challenge

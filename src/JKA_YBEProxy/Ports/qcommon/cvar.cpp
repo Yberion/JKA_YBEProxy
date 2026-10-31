@@ -1,6 +1,9 @@
 #include "JKA_YBEProxy/Proxy.hpp"
 #include "JKA_YBEProxy/Ports/qcommon/cvar.hpp"
 
+namespace ybeproxy::ports
+{
+
 /*
 ============
 Cvar_SetValue
@@ -19,3 +22,5 @@ cvar_t* Cvar_SetValue(const char* var_name, float value)
 
 	return nullptr;
 }
+
+} // namespace ybeproxy::ports

@@ -2,6 +2,9 @@
 #include "JKA_YBEProxy/Proxy.hpp"
 #include "JKA_YBEProxy/Engine/EngineState.hpp"
 
+namespace ybeproxy::engine::rate
+{
+
 /*
 The rate of a client is the most bytes per second it wants from the server. The engine waits
 (size + 48) * 1000 / rate milliseconds after each message, so a client short of rate gets fewer snapshots, and its game
@@ -19,7 +22,7 @@ sv_minSnaps and sv_maxSnaps, as in JK2MV, and never above sv_fps (one snapshot p
 and OpenJK. The server still sends on its frames only, so only sv_fps / n is reached.
 */
 
-void Proxy_Engine_Rate_Apply(client_t* cl)
+void Apply(client_t* cl)
 {
 	// A floor below 1000 changes nothing, cl->rate is at least 1000
 	if (cl->rate < proxy.originalEngineCvars.sv_minRate.integer)
@@ -46,7 +49,7 @@ void Proxy_Engine_Rate_Apply(client_t* cl)
 	cl->snapshotMsec = 1000 / snaps;
 }
 
-void Proxy_Engine_Rate_SettingsChanged(void)
+void SettingsChanged(void)
 {
 	client_t* cl = server.svs->clients;
 
@@ -61,7 +64,7 @@ void Proxy_Engine_Rate_SettingsChanged(void)
 	}
 }
 
-int Proxy_Engine_Rate_Applied(const client_t* cl)
+int Applied(const client_t* cl)
 {
 	const int maxRate = server.cvars.sv_maxRate->integer;
 
@@ -73,3 +76,5 @@ int Proxy_Engine_Rate_Applied(const client_t* cl)
 
 	return cl->rate;
 }
+
+} // namespace ybeproxy::engine::rate

@@ -1,6 +1,9 @@
 #include "JKA_YBEProxy/Engine/EngineState.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/qcommon/common.hpp"
 
+namespace ybeproxy::engine::hooks
+{
+
 void Proxy_Windows_Com_EndRedirect(void)
 {
 
@@ -120,3 +123,5 @@ void Proxy_Info_Print(const char* s)
 		server.common.functions.Com_Printf("%s\n", value);
 	}
 }
+
+} // namespace ybeproxy::engine::hooks

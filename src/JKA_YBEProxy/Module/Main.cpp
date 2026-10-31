@@ -9,6 +9,12 @@
 #include "JKA_YBEProxy/Module/GameExports.hpp"
 #include "JKA_YBEProxy/Module/GameLibrary.hpp"
 
+namespace engine_api = ybeproxy::module::engine_api;
+namespace game_exports = ybeproxy::module::game_exports;
+namespace game_library = ybeproxy::module::game_library;
+
+using ybeproxy::proxy;
+
 // The engine calls the game module here. The proxy runs its part of each command, then forwards the command to the
 // original game module, whose response goes back to the engine
 Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, intptr_t arg2, intptr_t arg3, intptr_t arg4,
@@ -20,11 +26,11 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_INIT: // (int levelTime, int randomSeed, int restart)
 		//==================================================
 		{
-			Proxy_SharedAPI_Init();
+			game_exports::Init();
 
 			const intptr_t response = proxy.originalGame.vmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
 
-			Proxy_SharedAPI_InitDone();
+			game_exports::InitDone();
 
 			return response;
 		}
@@ -32,14 +38,14 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_SHUTDOWN: // (int restart)
 		//==================================================
 		{
-			Proxy_SharedAPI_Shutdown();
+			game_exports::Shutdown();
 
 			if (proxy.originalGame.handle)
 			{
 				// Send the shutdown signal to the original game module and store the response
 				const intptr_t response = proxy.originalGame.vmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
 
-				Proxy_GameLibrary_Unload();
+				game_library::Unload();
 
 				// Return the response of the original game module after the shutdown
 				return response;
@@ -51,7 +57,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_RUN_FRAME: // (int levelTime)
 		//==================================================
 		{
-			Proxy_SharedAPI_RunFrame((int)arg0);
+			game_exports::RunFrame((int)arg0);
 
 			break;
 		}
@@ -59,7 +65,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CLIENT_CONNECT: // (int clientNum, qboolean firstTime, qboolean isBot)
 		//==================================================
 		{
-			const char* reason = Proxy_SharedAPI_ClientConnect((int)arg0, (qboolean)arg1, (qboolean)arg2);
+			const char* reason = game_exports::ClientConnect((int)arg0, (qboolean)arg1, (qboolean)arg2);
 
 			// The engine refuses the client with this reason, as with the game's "Banned."
 			if (reason)
@@ -72,7 +78,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 			// The game returns a reason when it refuses the client
 			if (!response)
 			{
-				Proxy_SharedAPI_ClientConnected((int)arg0, (qboolean)arg2);
+				game_exports::ClientConnected((int)arg0, (qboolean)arg2);
 			}
 
 			return response;
@@ -81,7 +87,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CLIENT_DISCONNECT: // (int clientNum, qboolean firstTime, qboolean isBot)
 		//==================================================
 		{
-			Proxy_SharedAPI_ClientDisconnect((int)arg0);
+			game_exports::ClientDisconnect((int)arg0);
 
 			break;
 		}
@@ -89,7 +95,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CLIENT_BEGIN: // (int clientNum, qboolean allowTeamReset)
 		//==================================================
 		{
-			Proxy_SharedAPI_ClientBegin((int)arg0, (qboolean)arg1);
+			game_exports::ClientBegin((int)arg0, (qboolean)arg1);
 
 			break;
 		}
@@ -97,14 +103,14 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CLIENT_COMMAND: // (int clientNum)
 		//==================================================
 		{
-			if (!Proxy_SharedAPI_ClientCommand((int)arg0))
+			if (!game_exports::ClientCommand((int)arg0))
 			{
 				return 0;
 			}
 
 			const intptr_t response = proxy.originalGame.vmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
 
-			Proxy_SharedAPI_ClientCommandDone();
+			game_exports::ClientCommandDone();
 
 			return response;
 		}
@@ -115,7 +121,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		{
 			int response = proxy.originalGame.vmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
 
-			//Proxy_SharedAPI_ClientThink((int)arg0, (usercmd_t*)arg1);
+			//game_exports::ClientThink((int)arg0, (usercmd_t*)arg1);
 
 			return response;
 		}
@@ -124,7 +130,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CONSOLE_COMMAND: // (void)
 		//==================================================
 		{
-			if (Proxy_SharedAPI_ConsoleCommand())
+			if (game_exports::ConsoleCommand())
 			{
 				return qtrue;
 			}
@@ -136,7 +142,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		//==================================================
 		{
 			// The client got dropped: don't forward, the game would set CS_PLAYERS again for a gone client (ghost player)
-			if (!Proxy_SharedAPI_ClientUserinfoChanged((int)arg0))
+			if (!game_exports::ClientUserinfoChanged((int)arg0))
 			{
 				return 0;
 			}
@@ -155,7 +161,7 @@ Q_CABI Q_EXPORT void dllEntry(systemCallFuncPtr_t systemCallFuncPtdr) {
 	proxy.originalSystemCall = systemCallFuncPtdr;
 
 	// Create trap calls available directly within the proxy (proxy.trap->*)
-	Proxy_Translate_SystemCalls();
+	engine_api::Init();
 }
 
 // No GetModuleAPI export: OpenJK then loads the proxy through dllEntry and vmMain (legacy API), as the original engine does

@@ -6,6 +6,9 @@
 #include "JKA_YBEProxy/Engine/Hooks/qcommon/files.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/server/sv_ccmds.hpp"
 
+namespace ybeproxy::engine::hooks
+{
+
 /*
 ================
 SV_Status_f
@@ -96,7 +99,7 @@ void Proxy_SV_Status_f(void)
 			Com_sprintf(state, sizeof(state), "%4i", ping);
 		}
 
-		ps = Proxy_GetPlayerStateByClientNum(i);
+		ps = ports::GetPlayerState(i);
 		s = server.common.functions.NET_AdrToString(cl->netchan.remoteAddress);
 
 		//No need for truncation "feature" if we move name to end
@@ -168,3 +171,5 @@ void Proxy_SV_DumpUser_f(void)
 
 	Original_SV_DumpUser_f();
 }
+
+} // namespace ybeproxy::engine::hooks

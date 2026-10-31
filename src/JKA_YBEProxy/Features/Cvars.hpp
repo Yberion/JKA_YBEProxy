@@ -2,7 +2,10 @@
 
 #include "sdk/qcommon/q_shared.hpp"
 
-struct cvarTable_t {
+namespace ybeproxy::features::cvars
+{
+
+struct CvarTable {
 	vmCvar_t*	vmCvar;
 	const char*	cvarName;
 	const char*	defaultString;
@@ -11,8 +14,10 @@ struct cvarTable_t {
 	qboolean	trackChange;	    // track this variable, and announce if changed
 };
 
-void Proxy_OriginalEngine_CVars_Registration(void);
-void Proxy_CVars_Registration(void);
-void Proxy_UpdateAllCvars(int levelTime);
+void OriginalEngineRegistration(void);
+void Registration(void);
+void UpdateAll(int levelTime);
 // "proxyconfig": the version, the engine, and every proxy cvar with its value
-void Proxy_CVars_PrintConfig(void);
+void PrintConfig(void);
+
+} // namespace ybeproxy::features::cvars

@@ -2,6 +2,9 @@
 #include "JKA_YBEProxy/Proxy.hpp"
 #include "JKA_YBEProxy/Engine/EngineState.hpp"
 
+namespace ybeproxy::engine::restart
+{
+
 /*
 SV_Frame stops the server before two counters wrap:
 - svs.time past 0x70000000, after about 21.7 days: it goes on across map changes, only SV_Shutdown resets it;
@@ -20,7 +23,7 @@ SV_Frame and its checks:
 // Once per load of the module, which the map change loads again
 static bool requested = false;
 
-void Proxy_Engine_Restart_BeforeWrap(void)
+void BeforeWrap(void)
 {
 	if (requested)
 	{
@@ -46,3 +49,5 @@ void Proxy_Engine_Restart_BeforeWrap(void)
 
 	requested = true;
 }
+
+} // namespace ybeproxy::engine::restart

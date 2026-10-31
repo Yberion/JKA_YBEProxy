@@ -28,6 +28,13 @@ along with this program; if not, see <http://www.gnu.org/licenses/>.
 NORETURN_PTR void (*Com_Error)(int level, const char* fmt, ...);
 void (*Com_Printf)(const char* fmt, ...);
 
+namespace ybeproxy::module::engine_api
+{
+
+// The functions of proxy.trap, on the engine's system call. Only reached through proxy.trap
+namespace
+{
+
 int PASSFLOAT(float x) {
 	byteAlias_t fi;
 	fi.f = x;
@@ -1055,7 +1062,9 @@ void QDECL G_Printf(const char* msg, ...) {
 		trap_Print(text);
 }
 
-void Proxy_Translate_SystemCalls(void) {
+} // namespace
+
+void Init(void) {
 	static gameImport_t import = {};
 
 	proxy.trap = &import;
@@ -1373,3 +1382,5 @@ void Proxy_Translate_SystemCalls(void) {
 	proxy.trap->G2API_OverrideServer = trap_G2API_OverrideServer;
 	proxy.trap->G2API_GetSurfaceName = trap_G2API_GetSurfaceName;
 }
+
+} // namespace ybeproxy::module::engine_api

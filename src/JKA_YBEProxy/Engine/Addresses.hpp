@@ -5,6 +5,9 @@
 #include <cstddef>
 #include <cstdint>
 
+namespace ybeproxy::engine
+{
+
 // ==================================================
 // DEFINE
 // ==================================================
@@ -93,7 +96,7 @@ constexpr intptr_t func_Com_BeginRedirect_addr[] = 					{ 0x40fb70, 0x8072c34 };
 constexpr intptr_t func_Com_WriteConfigToFile_addr[] = 				{ 0x410630, 0x8074cb4 };
 // There's no function on Windows version as it was optimized, so do a proxy function
 // Use the define on Windows as the function address won't be accessible at compile time
-#define Proxy_Windows_Com_EndRedirect_ptr &Proxy_Windows_Com_EndRedirect
+#define Proxy_Windows_Com_EndRedirect_ptr &engine::hooks::Proxy_Windows_Com_EndRedirect
 constexpr intptr_t func_Com_EndRedirect_addr[] = 					{ 0x000000, 0x8072c74};
 constexpr intptr_t func_Cvar_VariableString_addr[] = 				{ 0x411ef0, 0x80756f4 };
 constexpr intptr_t func_Cvar_VariableValue_addr[] = 				{ 0x411e70, 0x8075694 };
@@ -181,3 +184,5 @@ constexpr intptr_t cvar_common_com_cl_running_addr[] = 	{ 0x4e3778, 0x831f400 };
 constexpr intptr_t cvar_common_com_logfile_addr[] = 	{ 0x4dc5b8, 0x831f41c };
 constexpr intptr_t cvar_common_com_developer_addr[] = 	{ 0x4dc5a4, 0x831e204 };
 constexpr intptr_t cvar_common_fs_gamedirvar_addr[] = 	{ 0x4ff464, 0x838aaec };
+
+} // namespace ybeproxy::engine

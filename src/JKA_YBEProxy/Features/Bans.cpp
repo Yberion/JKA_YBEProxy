@@ -2,6 +2,9 @@
 #include "JKA_YBEProxy/Features/Bans.hpp"
 #include "JKA_YBEProxy/Features/ConsoleCommands.hpp"
 
+namespace ybeproxy::features::bans
+{
+
 /*
 IP bans, with the rules of OpenJK's StringToFilter instead of the retail game's
 
@@ -14,7 +17,7 @@ The proxy cannot change the game module, so it keeps the list itself and the gam
   read when the game loads and rewritten after every change. The module is reloaded at every map change, so the file
   is read again each time;
 - addip, removeip, listip, ban and unban are answered here, and the connection is refused in
-  Proxy_SharedAPI_ClientConnect.
+  ybeproxy::module::game_exports::ClientConnect.
 Only with g_filterBan 1 (the default). With g_filterBan 0 (only the listed addresses may connect) the game's empty list
 would refuse everybody, so the game keeps its own list and its own rules
 */
@@ -256,7 +259,7 @@ namespace
 	}
 }
 
-void Proxy_Bans_BeforeGameInit(void)
+void BeforeGameInit(void)
 {
 	active = false;
 	numIpFilters = 0;
@@ -323,7 +326,7 @@ void Proxy_Bans_BeforeGameInit(void)
 	active = true;
 }
 
-qboolean Proxy_Bans_ConsoleCommand(const char* cmd)
+qboolean ConsoleCommand(const char* cmd)
 {
 	// addip and removeip of the address of a player in the game. Like addip, the player is not dropped: the ban refuses
 	// their next connection, at the latest at the next map change
@@ -339,14 +342,14 @@ qboolean Proxy_Bans_ConsoleCommand(const char* cmd)
 			return qtrue;
 		}
 
-		const int clientNum = Proxy_SharedAPI_ConsoleClientNum(cmd);
+		const int clientNum = features::console_commands::ClientNumArgument(cmd);
 
 		if (clientNum < 0)
 		{
 			return qtrue;
 		}
 
-		const ClientData_t* clientData = &proxy.clientData[clientNum];
+		const ClientData* clientData = &proxy.clientData[clientNum];
 
 		// Empty for bots
 		if (!clientData->address[0])
@@ -441,7 +444,7 @@ qboolean Proxy_Bans_ConsoleCommand(const char* cmd)
 	return qfalse;
 }
 
-qboolean Proxy_Bans_IsBanned(const char* ip)
+qboolean IsBanned(const char* ip)
 {
 	// Not an address, for example "localhost"
 	if (!active || *ip < '0' || *ip > '9')
@@ -491,3 +494,5 @@ qboolean Proxy_Bans_IsBanned(const char* ip)
 
 	return qfalse;
 }
+
+} // namespace ybeproxy::features::bans

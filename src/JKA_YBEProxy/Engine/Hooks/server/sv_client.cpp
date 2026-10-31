@@ -7,6 +7,9 @@
 #include "JKA_YBEProxy/Engine/Hooks/server/sv_ccmds.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/server/sv_client.hpp"
 
+namespace ybeproxy::engine::hooks
+{
+
 /*
 ===============
 SV_ClientCommand
@@ -156,7 +159,7 @@ static void Proxy_SV_UserMove(client_t* client, msg_t* msg, qboolean delta)
 	// Before the loop below: it compares with client->lastUsercmd, which SV_ClientThink then updates
 	if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer)
 	{
-		Proxy_Engine_NetStatus_PacketReceived(client, cmds, cmdCount);
+		engine::netstatus::PacketReceived(client, cmds, cmdCount);
 	}
 	// Proxy <--------------
 
@@ -274,7 +277,7 @@ void Proxy_SV_ExecuteClientMessage(client_t* cl, msg_t* msg) {
 		Proxy_SV_UserMove(cl, msg, qfalse);
 	}
 	else if (c != clc_EOF) {
-		server.common.functions.Com_Printf("WARNING: bad command byte for client %i\n", getClientNumFromAddr(cl));
+		server.common.functions.Com_Printf("WARNING: bad command byte for client %i\n", ClientNumFromAddress(cl));
 	}
 	//	if ( msg->readcount != msg->cursize ) {
 	//		server.common.functions.Com_Printf( "WARNING: Junk at end of packet for client %i\n", cl - svs.clients );
@@ -469,7 +472,7 @@ void Proxy_SV_UserinfoChanged(client_t* cl) {
 		if (len >= MAX_INFO_STRING)
 		{
 			// Only reachable on a "userinfo" command: a client that has no room for "ip" on connect is already refused
-			// by Proxy_SharedAPI_ClientConnect
+			// by ybeproxy::module::game_exports::ClientConnect
 			server.functions.SV_DropClient(cl, "userinfo string length exceeded");
 
 			return;
@@ -482,7 +485,7 @@ void Proxy_SV_UserinfoChanged(client_t* cl) {
 
 	// Fix model length crash on some custom clients
 	// On a connection this runs after GAME_CLIENT_CONNECT, on a userinfo command before GAME_CLIENT_USERINFO_CHANGED
-	// There's also a check done in Proxy_SharedAPI_SanitizeUserinfo, which runs on both
+	// There's also a check done in features::userinfo::Sanitize, which runs on both
 	if (val)
 	{
 		const std::size_t modelLen = std::strlen(val);
@@ -502,7 +505,7 @@ void Proxy_SV_UserinfoChanged(client_t* cl) {
 	Original_SV_UserinfoChanged(cl);
 
 	// After the engine sets cl->rate and cl->snapshotMsec from the userinfo
-	Proxy_Engine_Rate_Apply(cl);
+	engine::rate::Apply(cl);
 }
 
 /*
@@ -680,7 +683,7 @@ static void Proxy_SV_UpdateUserinfo_f(client_t* cl) {
 	Q_strncpyz(cl->userinfo, arg, sizeof(cl->userinfo));
 	server.functions.SV_UserinfoChanged(cl);
 	// call prog code to allow overrides
-	Proxy_OriginalAPI_VM_Call(GAME_CLIENT_USERINFO_CHANGED, cl - server.svs->clients);
+	ybeproxy::module::game_imports::Call(GAME_CLIENT_USERINFO_CHANGED, cl - server.svs->clients);
 }
 
 /*
@@ -886,7 +889,7 @@ void Proxy_SV_ExecuteClientCommand(client_t* cl, const char* s, qboolean clientO
 	if (clientOK) {
 		// pass unknown strings to the game
 		if (!u->name && server.sv->state == SS_GAME) {
-			Proxy_OriginalAPI_VM_Call(GAME_CLIENT_COMMAND, cl - server.svs->clients);
+			ybeproxy::module::game_imports::Call(GAME_CLIENT_COMMAND, cl - server.svs->clients);
 		}
 	}
 }
@@ -966,3 +969,5 @@ void Proxy_SV_WriteDownloadToClient(client_t* cl, msg_t* msg)
 
 	Original_SV_WriteDownloadToClient(cl, msg);
 }
+
+} // namespace ybeproxy::engine::hooks

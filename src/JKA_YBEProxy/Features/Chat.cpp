@@ -1,6 +1,9 @@
 #include "JKA_YBEProxy/Features/Chat.hpp"
 #include "JKA_YBEProxy/Proxy.hpp"
 
+namespace ybeproxy::features::chat
+{
+
 // Below the team gametypes the game turns say_team into say, so a spectator could not talk to the other spectators
 // only. While the game runs the say_team of a spectator there, its chat only goes to the spectators, as a team chat.
 // The say_team of a player stays public
@@ -8,7 +11,7 @@ static bool spectatorChat = false;
 
 // The team of the client in its configstring (the game's sessionTeam). The playerState of a spectator who follows a
 // player is a copy of that player's, team included
-static int Proxy_ClientTeam(int clientNum)
+static int ClientTeam(int clientNum)
 {
 	char info[MAX_INFO_STRING];
 
@@ -17,20 +20,20 @@ static int Proxy_ClientTeam(int clientNum)
 	return atoi(Info_ValueForKey(info, "t"));
 }
 
-void Proxy_Chat_ClientCommand(int clientNum, const char* cmd)
+void ClientCommand(int clientNum, const char* cmd)
 {
-	if (!Q_stricmp(cmd, "say_team") && proxy.cvars.sv_gametype.integer < GT_TEAM && Proxy_ClientTeam(clientNum) == TEAM_SPECTATOR)
+	if (!Q_stricmp(cmd, "say_team") && proxy.cvars.sv_gametype.integer < GT_TEAM && ClientTeam(clientNum) == TEAM_SPECTATOR)
 	{
 		spectatorChat = true;
 	}
 }
 
-void Proxy_Chat_ClientCommandDone(void)
+void ClientCommandDone(void)
 {
 	spectatorChat = false;
 }
 
-const char* Proxy_SharedAPI_TeamChat(int clientNum, const char* text)
+const char* TeamChat(int clientNum, const char* text)
 {
 	// A broadcast cannot be split by team
 	if (!spectatorChat || clientNum < 0 || std::strncmp(text, "chat \"", 6))
@@ -38,7 +41,7 @@ const char* Proxy_SharedAPI_TeamChat(int clientNum, const char* text)
 		return text;
 	}
 
-	if (Proxy_ClientTeam(clientNum) != TEAM_SPECTATOR)
+	if (ClientTeam(clientNum) != TEAM_SPECTATOR)
 	{
 		return nullptr;
 	}
@@ -61,3 +64,5 @@ const char* Proxy_SharedAPI_TeamChat(int clientNum, const char* text)
 
 	return teamText;
 }
+
+} // namespace ybeproxy::features::chat

@@ -6,7 +6,10 @@
 
 #include <cstdarg>
 
-static void Proxy_SharedAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient)
+namespace ybeproxy::module::game_imports
+{
+
+static void LocateGameData(sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient)
 {
 	proxy.locatedGameData.g_entities = gEnts;
 	proxy.locatedGameData.num_entities = numGEntities;
@@ -16,7 +19,7 @@ static void Proxy_SharedAPI_LocateGameData(sharedEntity_t* gEnts, int numGEntiti
 	proxy.locatedGameData.g_clientSize = sizeofGameClient;
 }
 
-static void Proxy_SharedAPI_GetUsercmd(int /*clientNum*/, usercmd_t* ucmd)
+static void GetUsercmd(int /*clientNum*/, usercmd_t* ucmd)
 {
 	if (ucmd->forcesel == FP_LEVITATION || ucmd->forcesel >= NUM_FORCE_POWERS)
 	{
@@ -43,7 +46,7 @@ static void Proxy_SharedAPI_GetUsercmd(int /*clientNum*/, usercmd_t* ucmd)
 	}
 }
 
-intptr_t QDECL Proxy_OriginalAPI_VM_DllSyscall(intptr_t command, ...)
+intptr_t QDECL Syscall(intptr_t command, ...)
 {
 	intptr_t args[16];
 	
@@ -64,7 +67,7 @@ intptr_t QDECL Proxy_OriginalAPI_VM_DllSyscall(intptr_t command, ...)
 		case G_LOCATE_GAME_DATA: // (sharedEntity_t* gEnts, int numGEntities, int sizeofGEntity_t, playerState_t* clients, int sizeofGameClient)
 		//==================================================
 		{
-			Proxy_SharedAPI_LocateGameData((sharedEntity_t*)args[0], (int)args[1], (int)args[2], (playerState_t*)args[3], (int)args[4]);
+			LocateGameData((sharedEntity_t*)args[0], (int)args[1], (int)args[2], (playerState_t*)args[3], (int)args[4]);
 
 			break;
 		}
@@ -76,7 +79,7 @@ intptr_t QDECL Proxy_OriginalAPI_VM_DllSyscall(intptr_t command, ...)
 			int response = proxy.originalSystemCall(command, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14], args[15]);
 			
 			// We then alter the usercmd if needed before "sending" it back to the original game module
-			Proxy_SharedAPI_GetUsercmd((int)args[0], (usercmd_t*)args[1]);
+			GetUsercmd((int)args[0], (usercmd_t*)args[1]);
 			
 			return response;
 		}
@@ -84,7 +87,7 @@ intptr_t QDECL Proxy_OriginalAPI_VM_DllSyscall(intptr_t command, ...)
 		case G_SEND_SERVER_COMMAND: // (int clientNum, const char* text)
 		//==================================================
 		{
-			const char* text = Proxy_SharedAPI_TeamChat((int)args[0], (const char*)args[1]);
+			const char* text = features::chat::TeamChat((int)args[0], (const char*)args[1]);
 
 			if (!text)
 			{
@@ -198,7 +201,7 @@ intptr_t QDECL Proxy_OriginalAPI_VM_DllSyscall(intptr_t command, ...)
 	return proxy.originalSystemCall(command, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14], args[15]);
 }
 
-intptr_t QDECL Proxy_OriginalAPI_VM_Call(intptr_t command, ...)
+intptr_t QDECL Call(intptr_t command, ...)
 {
 	intptr_t args[11];
 
@@ -215,3 +218,5 @@ intptr_t QDECL Proxy_OriginalAPI_VM_Call(intptr_t command, ...)
 
 	return vmMain(command, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10]);
 }
+
+} // namespace ybeproxy::module::game_imports

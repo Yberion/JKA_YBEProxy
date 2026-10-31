@@ -29,4 +29,10 @@ along with this program; if not, see <http://www.gnu.org/licenses/>.
 extern NORETURN_PTR void (*Com_Error)(int level, const char* fmt, ...);
 extern void (*Com_Printf)(const char* fmt, ...);
 
-void Proxy_Translate_SystemCalls(void);
+namespace ybeproxy::module::engine_api
+{
+
+// Builds proxy.trap, the functions of the engine for the proxy, and points Com_Error and Com_Printf to them
+void Init(void);
+
+} // namespace ybeproxy::module::engine_api

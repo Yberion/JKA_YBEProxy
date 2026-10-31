@@ -2,6 +2,9 @@
 #include "JKA_YBEProxy/Proxy.hpp"
 #include "sdk/server/sv_client.hpp"
 
+namespace ybeproxy::features::userinfo
+{
+
 // ==================================================
 // Userinfo validation
 // --------------------------------------------------
@@ -12,14 +15,14 @@
 // The retail client sends every key that is required here, with its default settings
 // ==================================================
 
-struct UserinfoField_t
+struct UserinfoField
 {
 	const char*		name;
 	unsigned int	minCount;
 	unsigned int	maxCount;
 };
 
-static const UserinfoField_t userinfoFields[] =
+static const UserinfoField userinfoFields[] =
 {
 	{ "cl_guid",		0, 0 }, // not allowed, q3fill protection
 	{ "cl_punkbuster",	0, 0 }, // not allowed, q3fill protection
@@ -45,7 +48,7 @@ static const UserinfoField_t userinfoFields[] =
 };
 
 // Returns nullptr, or why the userinfo is not valid. The text of the reason is only valid until the next call
-static const char* Proxy_ValidateUserinfo(const char* userinfo)
+static const char* Validate(const char* userinfo)
 {
 	static char reason[64];
 	const std::size_t length = std::strlen(userinfo);
@@ -138,7 +141,7 @@ static const char* Proxy_ValidateUserinfo(const char* userinfo)
 }
 
 // What two names are compared on, as japro and TaystJK (ClientNameEquals): without colors, spaces and case
-static void Proxy_NameKey(const char* name, char* key, std::size_t keySize)
+static void NameKey(const char* name, char* key, std::size_t keySize)
 {
 	Q_strncpyz(key, name, keySize);
 	Q_StripColor(key);
@@ -159,7 +162,7 @@ static void Proxy_NameKey(const char* name, char* key, std::size_t keySize)
 // A name that another client already uses gets the lowest free number, "Bob" becomes "Bob^7[1]", as japro and TaystJK
 // do with g_allowSamePlayerNames 0. The names of the others are those of the game (CS_PLAYERS), bots included
 // name: MAX_NETNAME characters
-static void Proxy_UniqueName(int clientNum, char* name)
+static void UniqueName(int clientNum, char* name)
 {
 	char others[MAX_CLIENTS][MAX_NETNAME];
 	int otherCount = 0;
@@ -172,14 +175,14 @@ static void Proxy_UniqueName(int clientNum, char* name)
 
 		if (i != clientNum && info[0])
 		{
-			Proxy_NameKey(Info_ValueForKey(info, "n"), others[otherCount++], sizeof(others[0]));
+			NameKey(Info_ValueForKey(info, "n"), others[otherCount++], sizeof(others[0]));
 		}
 	}
 
 	const auto inUse = [&](const char* candidate) {
 		char key[MAX_NETNAME];
 
-		Proxy_NameKey(candidate, key, sizeof(key));
+		NameKey(candidate, key, sizeof(key));
 
 		for (int i = 0; i < otherCount; ++i)
 		{
@@ -224,7 +227,7 @@ static void Proxy_UniqueName(int clientNum, char* name)
 	}
 }
 
-const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum, bool validate, bool* isAntiCheat)
+const char* Sanitize(int clientNum, bool validate, bool* isAntiCheat)
 {
 	static char reason[96];
 	char userinfo[MAX_INFO_STRING];
@@ -238,7 +241,7 @@ const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum, bool validate, bool*
 
 	if (validate)
 	{
-		const char* invalid = Proxy_ValidateUserinfo(userinfo);
+		const char* invalid = Validate(userinfo);
 
 		if (invalid)
 		{
@@ -258,14 +261,14 @@ const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum, bool validate, bool*
 
 	val = Info_ValueForKey(userinfo, "name");
 
-	ClientData_t *currentClientData = &proxy.clientData[clientNum];
+	ClientData *currentClientData = &proxy.clientData[clientNum];
 
 	// Fix bad names
 	Proxy_ClientCleanName(val, currentClientData->cleanName, sizeof(currentClientData->cleanName));
 
 	if (!proxy.cvars.proxy_sv_allowSamePlayerNames.integer)
 	{
-		Proxy_UniqueName(clientNum, currentClientData->cleanName);
+		UniqueName(clientNum, currentClientData->cleanName);
 	}
 
 	// Info_SetValueForKey adds nothing when the userinfo has no room left: the old value would stay, and the game would read it
@@ -370,3 +373,5 @@ const char* Proxy_SharedAPI_SanitizeUserinfo(int clientNum, bool validate, bool*
 
 	return nullptr;
 }
+
+} // namespace ybeproxy::features::userinfo

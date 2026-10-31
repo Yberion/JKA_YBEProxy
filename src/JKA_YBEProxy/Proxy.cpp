@@ -1,3 +1,8 @@
 #include "JKA_YBEProxy/Proxy.hpp"
 
-Proxy_t proxy = {};
+namespace ybeproxy
+{
+
+Proxy proxy = {};
+
+} // namespace ybeproxy

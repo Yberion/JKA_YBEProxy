@@ -4,6 +4,9 @@
 #include "sdk/qcommon/qcommon.hpp"
 #include "sdk/qcommon/q_shared.hpp"
 
+namespace ybeproxy::engine::hooks
+{
+
 extern void (*Original_SV_ExecuteClientMessage)(client_t*, msg_t*);
 void Proxy_SV_ExecuteClientMessage(client_t* cl, msg_t* msg);
 
@@ -24,3 +27,5 @@ void Proxy_SV_ExecuteClientCommand(client_t* cl, const char* s, qboolean clientO
 
 extern void (*Original_SV_WriteDownloadToClient)(client_t*, msg_t*);
 void Proxy_SV_WriteDownloadToClient(client_t* cl, msg_t* msg);
+
+} // namespace ybeproxy::engine::hooks

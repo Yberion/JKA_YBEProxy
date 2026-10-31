@@ -34,12 +34,15 @@ using systemCallFuncPtr_t =	intptr_t (QDECL *)(intptr_t command, ...);
 using vmMainFuncPtr_t = 	intptr_t (*)(intptr_t command, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t);
 using dllEntryFuncPtr_t = 	void (*)(systemCallFuncPtr_t);
 
+namespace ybeproxy
+{
+
 // ==================================================
 // STRUCTS
 // ==================================================
 
 // Net ping and timenudge, see Engine/NetStatus.cpp
-struct netEstimate_t
+struct NetEstimate
 {
 	static constexpr int RttSamples = 64;
 	static constexpr int WindowSamples = 128;
@@ -84,7 +87,7 @@ struct netEstimate_t
 	bool	historyFilled;
 };
 
-struct LocatedGameData_t
+struct LocatedGameData
 {
 	sharedEntity_t*		g_entities;
 	int					g_entitySize;
@@ -95,9 +98,9 @@ struct LocatedGameData_t
 };
 
 // /netStatus of a client, original engine only (see Engine/NetStatus.cpp)
-struct ClientNetStatus_t
+struct ClientNetStatus
 {
-	netEstimate_t		estimate;
+	NetEstimate		estimate;
 	int					netPing;
 	int					timenudge;
 	// False until measured, and when the client gets too few snapshots to tell
@@ -106,7 +109,7 @@ struct ClientNetStatus_t
 	int					lastCommandTime;
 };
 
-struct ClientData_t
+struct ClientData
 {
 	bool				isConnected;
 	bool				sendWelcomeMessage;
@@ -116,12 +119,12 @@ struct ClientData_t
 	// IP address of the connection, without the port. Empty until the game accepted the client, and for bots
 	char				address[32];
 
-	ClientNetStatus_t	netStatus;
+	ClientNetStatus	netStatus;
 	// levelTime of the last /myratio of the client
 	int					lastTimeMyratioCheck;
 };
 
-struct Proxy_OriginalEngine_CVars_t
+struct OriginalEngineCvars
 {
 	// New cvars
 	vmCvar_t proxy_sv_pingFix;
@@ -135,7 +138,7 @@ struct Proxy_OriginalEngine_CVars_t
 	vmCvar_t sv_maxSnaps;
 };
 
-struct Proxy_CVars_t
+struct ProxyCvars
 {
 	// New cvars
 	vmCvar_t proxy_sv_maxCallVoteMapRestartValue;
@@ -152,16 +155,16 @@ struct Proxy_CVars_t
 };
 
 // The original game module (see Module/GameLibrary.cpp)
-struct OriginalGame_t
+struct OriginalGame
 {
 	void*					handle;
 	vmMainFuncPtr_t			vmMain;
 	dllEntryFuncPtr_t		dllEntry;
 };
 
-struct Proxy_t
+struct Proxy
 {
-	OriginalGame_t			originalGame;
+	OriginalGame			originalGame;
 
 	// The system call of the engine, and the functions of the proxy built on it (see Module/EngineApi.cpp)
 	systemCallFuncPtr_t		originalSystemCall;
@@ -171,15 +174,17 @@ struct Proxy_t
 
 	// levelTime of the last GAME_RUN_FRAME
 	int						levelTime;
-	LocatedGameData_t		locatedGameData;
-	ClientData_t			clientData[MAX_CLIENTS];
+	LocatedGameData		locatedGameData;
+	ClientData			clientData[MAX_CLIENTS];
 	
-	Proxy_OriginalEngine_CVars_t originalEngineCvars;
-	Proxy_CVars_t			 cvars;
+	OriginalEngineCvars originalEngineCvars;
+	ProxyCvars			 cvars;
 };
 
 // ==================================================
 // EXTERN VARIABLE
 // ==================================================
 
-extern Proxy_t proxy;
+extern Proxy proxy;
+
+} // namespace ybeproxy

@@ -1,6 +1,9 @@
 #include "JKA_YBEProxy/Engine/EngineState.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/qcommon/msg.hpp"
 
+namespace ybeproxy::engine::hooks
+{
+
 /*
 ===============
 MSG_ReadBits
@@ -45,3 +48,5 @@ int Proxy_MSG_ReadBits(msg_t* msg, int bits)
 
 	return value;
 }
+
+} // namespace ybeproxy::engine::hooks

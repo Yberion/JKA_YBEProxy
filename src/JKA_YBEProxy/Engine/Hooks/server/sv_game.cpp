@@ -1,6 +1,9 @@
 #include "JKA_YBEProxy/Engine/EngineState.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/server/sv_game.hpp"
 
+namespace ybeproxy::engine::hooks
+{
+
 // these functions must be used instead of pointer arithmetic, because
 // the game allocates gentities with private information after the server shared part
 // Modified version of JK2MV src/server/sv_game.cpp, GPL: returns -1 when ent is not an element of gentities
@@ -45,3 +48,5 @@ svEntity_t* Proxy_SV_SvEntityForGentity(sharedEntity_t* gEnt)
 	return &server.sv->svEntities[num];
 	// Proxy <--------------
 }
+
+} // namespace ybeproxy::engine::hooks
