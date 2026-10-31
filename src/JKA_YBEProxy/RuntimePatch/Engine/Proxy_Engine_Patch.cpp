@@ -235,4 +235,16 @@ void Proxy_Engine_Inline_Patches(void)
 	{
 		Proxy_FatalHookError("Info_SetValueForKey_Big length", HookUtils::Status::ProtectionFailed);
 	}
+	// map_restart only puts the clients that were active back in the world, as Quake3e. The original also did it for a
+	// client without the gamestate of the map (one that downloads a pk3, or that has not sent a packet since the map
+	// changed), then sent it that gamestate on "donedl" or on a packet with an older serverId. The proxy refuses both to
+	// an active client (the donedl exploit fix, and ioq3's test before it resends the gamestate), so that client would
+	// wait forever. The others go on with their connection
+	for (std::size_t i = 0; i < func_SV_MapRestart_f_set_active_length[PROXY_PLATFORM]; ++i)
+	{
+		if (!HookUtils::Patch((unsigned char*)func_SV_MapRestart_f_set_active_addr[PROXY_PLATFORM] + i, func_SV_MapRestart_f_set_active_bytes[PROXY_PLATFORM][i]))
+		{
+			Proxy_FatalHookError("SV_MapRestart_f client state", HookUtils::Status::ProtectionFailed);
+		}
+	}
 }

@@ -37,6 +37,18 @@ constexpr intptr_t func_Info_SetValueForKey_length_jbe_addr[] =		{ 0x41beb2, 0x8
 constexpr intptr_t func_Info_SetValueForKey_Big_length_jbe_addr[] =	{ 0x41c091, 0x8080024 };
 
 // --------------------------------
+// Address to patch several bytes
+// --------------------------------
+
+// SV_MapRestart_f sets "client->state = CS_ACTIVE" then calls SV_ClientEnterWorld for every client from CS_CONNECTED
+// up. The mov becomes "cmp client->state, CS_ACTIVE", a jne past the call and a nop to fill:
+// - Windows: mov dword ptr [esi], 4 (6 bytes), the jne goes to the "add esp, 8" that follows the call
+// - Linux: mov dword ptr [esi + ecx], 4 (7 bytes), the jne goes to the instruction after the call
+constexpr intptr_t func_SV_MapRestart_f_set_active_addr[] =				{ 0x439f1f, 0x804f23f };
+constexpr unsigned char func_SV_MapRestart_f_set_active_bytes[][7] =	{ { 0x83, 0x3E, 0x04, 0x75, 0x06, 0x90 }, { 0x83, 0x3C, 0x0E, 0x04, 0x75, 0x13, 0x90 } };
+constexpr std::size_t func_SV_MapRestart_f_set_active_length[] =		{ 6, 7 };
+
+// --------------------------------
 // Function address to hook
 // --------------------------------
 

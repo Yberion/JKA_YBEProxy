@@ -336,6 +336,7 @@ Engine: Original.
   - a client that floods text commands has those commands ignored, but its movement is still processed;
   - a `nextdl` bug is fixed.
 - The server never sends a new gamestate to a client that is already active (`donedl` exploit fix).
+- A `map_restart` only puts back in the game the clients that were in it, as Quake3e does. The original put every connected client in the game, even one that did not have the map yet (one that downloads a pk3, for example): with the fix above, that client never got the map and stayed stuck. The others now finish their connection.
 - Before a counter of the engine wraps, the original server stops (`SV_Shutdown`) and then fails to start again (`map_restart` refuses to run once the server is down), so it stays without a map until someone restarts it. The proxy loads the current map again a little before:
   - the snapshot entities counter grows with every snapshot sent, and only a map change resets it: a server that stays on one map with many players reaches it in hours. The proxy runs `map <current map>`, a normal map change: the players stay connected;
   - the server time, after about 21.7 days: only a shutdown resets it. The proxy runs `killserver` then `map <current map>`, as ioq3 and OpenJK do. The players are dropped.
