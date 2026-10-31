@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- [Spectator chat](features.md#spectator-chat-below-the-team-gametypes) in FFA, duel and the other gametypes without teams: the `say_team` of a spectator now only reaches the spectators, as a team chat. The game turned it into a public `say`. The `say_team` of a player stays public. Any engine.
 - Original engine: a player who is downloading a pk3, or who has not received the new map yet, during a `map_restart` (end of the warmup, vote) no longer stays stuck waiting for the map. The engine put every connected client in the game, and the proxy refuses a new gamestate to a client in the game (`donedl` exploit fix). As Quake3e, a `map_restart` now only puts back in the game the players that were in it. Found by reading the code, not reproduced.
 - Original engine: [`sv_maxPing`](features.md#engine-fixes) can no longer be bypassed. The server kept the same challenge for an address, so a client could ask for a challenge again right before it connected with the one it already had, and get in with a ping close to 0. Each request now gets a new challenge, as in ioq3 and OpenJK. Only matters with `sv_maxPing` set (default `0`).
 - Fixed a server crash when the game passes a missing [Ghoul2 model](features.md#ghoul2-calls) to the engine, for example for an NPC whose model or animations failed to load. The engine used it without a test; the proxy now answers as for an empty model, as OpenJK does. Any engine.

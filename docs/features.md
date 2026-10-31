@@ -305,6 +305,12 @@ Engine: Any.
 - A client that sends a command starting with `jkaDST_` is kicked, with a public message.
 - A client using a model that starts with `darksidetools` is kicked, with a public message. On connect, it is refused with the same reason, without the public message.
 
+### Spectator chat below the team gametypes
+
+Engine: Any.
+
+In FFA, duel and the other gametypes without teams, the game turns `say_team` into a public `say`, so the spectators could not talk among themselves without the players seeing it. The `say_team` of a spectator now only reaches the spectators, shown as a team chat. The `say_team` of a player stays public, as before. The game still logs it as `say:`.
+
 ### Welcome message
 
 Engine: Any. When they enter the game after their first connection, human players receive a message with the proxy name and version. Turn it off with [`proxy_sv_disableWelcomeMessage`](#proxy_sv_disablewelcomemessage).

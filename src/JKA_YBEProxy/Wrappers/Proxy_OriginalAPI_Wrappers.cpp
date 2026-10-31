@@ -44,6 +44,21 @@ intptr_t QDECL Proxy_OriginalAPI_VM_DllSyscall(intptr_t command, ...)
 			return response;
 		}
 		//==================================================
+		case G_SEND_SERVER_COMMAND: // (int clientNum, const char* text)
+		//==================================================
+		{
+			const char* text = Proxy_SharedAPI_TeamChat((int)args[0], (const char*)args[1]);
+
+			if (!text)
+			{
+				return 0;
+			}
+
+			args[1] = (intptr_t)text;
+
+			break;
+		}
+		//==================================================
 		// Ghoul2 calls
 		//==================================================
 		// The engine uses the ghoul2 instance of the game without a test, so a null one crashes the server. The game passes

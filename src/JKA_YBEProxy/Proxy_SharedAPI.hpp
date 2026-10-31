@@ -19,6 +19,11 @@ void Proxy_SharedAPI_ClientConnected(int clientNum, qboolean isBot);
 void Proxy_SharedAPI_ClientDisconnect(int clientNum);
 void Proxy_SharedAPI_ClientBegin(int clientNum, qboolean allowTeamReset);
 qboolean Proxy_SharedAPI_ClientCommand(int clientNum);
+// Called once the game has run the client command
+void Proxy_SharedAPI_ClientCommandDone(void);
+// The text of a G_SEND_SERVER_COMMAND of the game: text itself, another text, or nullptr to drop it (say_team of a
+// spectator below the team gametypes, see Proxy_SharedAPI.cpp)
+const char* Proxy_SharedAPI_TeamChat(int clientNum, const char* text);
 // Returns qtrue when the command is the proxy's ("mute", "unmute", "proxyconfig"...), qfalse to let the game handle it
 qboolean Proxy_SharedAPI_ConsoleCommand(void);
 // The client number in argument 1 of the console command cmd, of a player in the game. Otherwise prints the usage and
