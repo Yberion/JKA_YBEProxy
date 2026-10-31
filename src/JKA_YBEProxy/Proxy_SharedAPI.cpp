@@ -476,6 +476,13 @@ qboolean Proxy_SharedAPI_ClientCommand(int clientNum)
 
 			return qfalse;
 		}
+
+		if (proxy.originalEngineCvars.proxy_sv_enableNetStatus.integer && !Q_stricmp(cmd, "explainNetStatus"))
+		{
+			Proxy_Engine_ClientCommand_ExplainNetStatus(clientNum);
+
+			return qfalse;
+		}
 	}
 
 	if (!Q_stricmp(cmd, "say_team") && proxy.cvars.sv_gametype.integer < GT_TEAM && Proxy_ClientTeam(clientNum) == TEAM_SPECTATOR)

@@ -104,4 +104,58 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 		proxy.trap->SendServerCommand(clientNum, va("print \"%s", buffer));
 		currentProgress += std::strlen(buffer);
 	}
+
+	proxy.trap->SendServerCommand(clientNum, "print \"Run /explainNetStatus for the meaning of each column.\n\"");
+}
+
+/*
+==================
+Proxy_ClientCommand_ExplainNetStatus
+
+Explains each column of /netStatus to the player
+==================
+*/
+
+// Two prints: a server command holds at most MAX_STRING_CHARS characters, "print" and the quotes included
+static const char explainNetStatusColumns[] =
+	"Columns of /netStatus:\n"
+	"score      Score\n"
+	"gamePing   Ping of the scoreboard and status. It includes the wait before the client sends its next\n"
+	"           packet, and the jitter. CON: connecting, ZMB: leaving, BOT: bot\n"
+	"netPing    Ping of the network: the smallest round trip of the last 4 seconds, close to the ping of the OS\n"
+	"userRate   The rate the client asked for (/rate)\n"
+	"rate       The rate the server applies: userRate, raised to sv_minRate and capped by sv_maxRate\n"
+	"trueRate   Bytes per second the server sent to the client in the last second\n"
+	"fps        Commands received in the last second: the FPS of the client\n"
+	"packets    Packets received in the last second\n";
+
+static const char explainNetStatusMore[] =
+	"timeNudge  Estimate of the cl_timenudge of the client. -: not measured yet, or fewer than about 10\n"
+	"           snapshots per second\n"
+	"userSnaps  The snaps the client asked for (/snaps)\n"
+	"snaps      The snapshots per second the server applies: userSnaps between sv_minSnaps and sv_maxSnaps,\n"
+	"           at most sv_fps\n"
+	"trueSnaps  Snapshots per second the server sent to the client in the last second\n"
+	"id         Client number\n"
+	"name       Name\n"
+	"packets is not cl_maxpackets: at 125 fps, cl_maxpackets 100 gives about 62 packets per second.\n"
+	"trueSnaps below snaps with trueRate close to rate: the rate of the client is too low, raise /rate.\n";
+
+static_assert(sizeof(explainNetStatusColumns) + 8 < MAX_STRING_CHARS, "one print per server command");
+static_assert(sizeof(explainNetStatusMore) + 8 < MAX_STRING_CHARS, "one print per server command");
+
+void Proxy_Engine_ClientCommand_ExplainNetStatus(int clientNum)
+{
+	ClientData_t *currentClientData = &proxy.clientData[clientNum];
+
+	// The same limit as /netStatus, shared with it
+	if (currentClientData->lastTimeNetStatus + 500 > server.svs->time)
+	{
+		return;
+	}
+
+	currentClientData->lastTimeNetStatus = server.svs->time;
+
+	proxy.trap->SendServerCommand(clientNum, va("print \"%s\"", explainNetStatusColumns));
+	proxy.trap->SendServerCommand(clientNum, va("print \"%s\"", explainNetStatusMore));
 }

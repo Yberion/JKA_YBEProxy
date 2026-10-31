@@ -8,7 +8,6 @@
 ### Short term
 
 - **Create a plugin system.** See A6 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
-- A command that explains each column of [`/netStatus`](features.md#netstatus-shownet), for the players who run it (name to choose, for example `/explainNetStatus`).
 - A protection against spectators who tell the health of a player ("HP teller").
 - Mute the general, team and private chat separately. Today `mute` blocks all three at once.
 - Geolocation of the IP addresses of the players.
@@ -29,6 +28,7 @@
 
 ### Features and fixes
 
+- `/explainNetStatus`: the meaning of each column of `/netStatus`, for the players who run it, see [features.md](features.md#netstatus-shownet).
 - Chat between spectators in FFA and duel: below the team gametypes the game turns `say_team` into `say` ([`game/g_cmds.c:1628`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_cmds.c#L1628)). The proxy lets the game run the `say_team` of a spectator, then sends its `chat` only to the spectators (`t` key of `CS_PLAYERS`), rewritten as the game's `tchat`, see [features.md](features.md#spectator-chat-below-the-team-gametypes). The `say_team` of a player stays public.
 - `proxyconfig` command: the version, the engine it runs on, every proxy cvar with its value and its default, and the main server settings with their value, see [features.md](features.md#proxyconfig).
 - Snaps policy: `sv_minSnaps` and `sv_maxSnaps` (the engine kept `snaps` between 1 and 30 whatever `sv_fps` was), and a `userSnaps` column in `/netStatus`, see [features.md](features.md#sv_minsnaps-sv_maxsnaps).
