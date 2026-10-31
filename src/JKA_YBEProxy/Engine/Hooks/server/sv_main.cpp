@@ -140,15 +140,13 @@ qboolean QDECL Proxy_SV_PacketEvent_Filter(netadr_t from, msg_t* msg)
 	// Per address only, as Quake3e: a global bucket would let a getstatus flood block every connection
 	if (!Q_stricmp(c, "getchallenge"))
 	{
-		if (!engine::rate_limit::AddressAllowed(from, c))
+		// Answered here with a stateless challenge: the original would store the address (see Engine/Challenge.cpp)
+		if (engine::rate_limit::AddressAllowed(from, c))
 		{
-			return qfalse;
+			engine::challenge::Answer(from);
 		}
 
-		// A new challenge at each request, so sv_maxPing cannot be bypassed
-		engine::challenge::Renew(from);
-
-		return qtrue;
+		return qfalse;
 	}
 
 	if (!Q_stricmp(c, "rcon"))

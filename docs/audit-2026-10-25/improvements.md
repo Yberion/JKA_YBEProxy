@@ -236,3 +236,15 @@ Sketch for the proxy, in the F1 filter, without rewriting `SV_DirectConnect`:
 5. LAN addresses: the retail `SV_GetChallenge` answers them at once, keep that.
 
 Cost: no new hook, but a non-trivial change on the connection path, to test with the retail client on both platforms.
+
+#### Applied
+
+Status: **applied**, with these changes to the sketch:
+
+- `connect`: a hook on `SV_DirectConnect` instead of a decompressed copy in the filter. There, `Cmd_Argv(1)` is already the decompressed userinfo.
+- The ping (point 3): not kept, as in OpenJK, TaystJK and Quake3e. The entry gets `pingTime = svs.time - sv_minPing`, a ping that passes both tests of the original, without patching its code. The console line `Client %i connecting with %i challenge ping` then shows `sv_minPing`.
+- MAC (point 4): SipHash-2-4, about 40 lines, with a `static_assert` on a test vector of the reference implementation, instead of OpenJK's HMAC-MD5. 31 bits of the hash and the parity of the timestamp, as OpenJK.
+- The key is kept in a hidden cvar (`CVAR_INTERNAL | CVAR_ROM`): the engine unloads the proxy on every map change, and a challenge sent just before must stay valid.
+- A `connect` sent again finds its entry in the table, even once its challenge has expired: a player who waits on a full server keeps their place, as with the original.
+- LAN addresses (point 5): without the CD key code, which the retail binaries do not have, the original answers every address at once. The filter does the same.
+- Limit: the F6 per-address table refuses every new address once it holds 65536 of them, so a spoofed flood of about 33,000 new addresses per second still blocks the connections. Before, about 1024 addresses during the round trip of a player were enough.

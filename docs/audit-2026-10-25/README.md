@@ -127,7 +127,7 @@ The risk sits in two places:
 - ⏳ A6: pinned loader and reloadable plugin (a larger redesign)
 - ✅ A7: minor observations
 - ✅ A8: cvar to disable the welcome message
-- ⏳ A9: stateless challenges (optional)
+- ✅ A9: stateless challenges (`sv_minPing` and `sv_maxPing` no longer checked on connect, as OpenJK)
 
 ## Suggested order
 

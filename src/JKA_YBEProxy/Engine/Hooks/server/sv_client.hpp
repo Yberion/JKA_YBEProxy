@@ -7,6 +7,9 @@
 namespace ybeproxy::engine::hooks
 {
 
+extern void (*Original_SV_DirectConnect)(netadr_t);
+void Proxy_SV_DirectConnect(netadr_t from);
+
 extern void (*Original_SV_ExecuteClientMessage)(client_t*, msg_t*);
 void Proxy_SV_ExecuteClientMessage(client_t* cl, msg_t* msg);
 

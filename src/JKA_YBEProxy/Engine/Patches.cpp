@@ -35,7 +35,8 @@ static std::variant<
 	HookUtils::HookEntry<decltype(engine::hooks::Proxy_SV_SvEntityForGentity)>,
 	HookUtils::HookEntry<decltype(engine::hooks::Proxy_SV_SendClientGameState)>, // HookEntry<decltype(&engine::hooks::Proxy_SV_UserinfoChanged)>, HookEntry<decltype(&engine::hooks::Proxy_SV_BeginDownload_f)>, HookEntry<decltype(&engine::hooks::Proxy_SV_DoneDownload_f)>,
 	HookUtils::HookEntry<decltype(engine::hooks::Proxy_SV_ExecuteClientMessage)>, // HookEntry<decltype(&engine::hooks::Proxy_SV_WriteDownloadToClient)>,
-	HookUtils::HookEntry<decltype(engine::hooks::Proxy_SV_ExecuteClientCommand)>
+	HookUtils::HookEntry<decltype(engine::hooks::Proxy_SV_ExecuteClientCommand)>,
+	HookUtils::HookEntry<decltype(engine::hooks::Proxy_SV_DirectConnect)>
 > hookEntries[] = {
 	HookUtils::HookEntry("Com_Printf", (unsigned char*)func_Com_Printf_addr[PROXY_PLATFORM], &engine::hooks::Original_Com_Printf, &engine::hooks::Proxy_Com_Printf),
 	HookUtils::HookEntry("MSG_ReadBits", (unsigned char*)func_MSG_ReadBits_addr[PROXY_PLATFORM], &engine::hooks::Original_MSG_ReadBits, &engine::hooks::Proxy_MSG_ReadBits),
@@ -45,6 +46,7 @@ static std::variant<
 	HookUtils::HookEntry("SV_SendMessageToClient", (unsigned char*)func_SV_SendMessageToClient_addr[PROXY_PLATFORM], &engine::hooks::Original_SV_SendMessageToClient, &engine::hooks::Proxy_SV_SendMessageToClient),
 	HookUtils::HookEntry("SV_CalcPings", (unsigned char*)func_SV_CalcPings_addr[PROXY_PLATFORM], &engine::hooks::Original_SV_CalcPings, &engine::hooks::Proxy_SV_CalcPings),
 	HookUtils::HookEntry("SV_SvEntityForGentity", (unsigned char*)func_SV_SvEntityForGentity_addr[PROXY_PLATFORM], &engine::hooks::Original_SV_SvEntityForGentity, &engine::hooks::Proxy_SV_SvEntityForGentity),
+	HookUtils::HookEntry("SV_DirectConnect", (unsigned char*)func_SV_DirectConnect_addr[PROXY_PLATFORM], &engine::hooks::Original_SV_DirectConnect, &engine::hooks::Proxy_SV_DirectConnect),
 	HookUtils::HookEntry("SV_SendClientGameState", (unsigned char*)func_SV_SendClientGameState_addr[PROXY_PLATFORM], &engine::hooks::Original_SV_SendClientGameState, &engine::hooks::Proxy_SV_SendClientGameState),
 	HookUtils::HookEntry("SV_ExecuteClientMessage", (unsigned char*)func_SV_ExecuteClientMessage_addr[PROXY_PLATFORM], &engine::hooks::Original_SV_ExecuteClientMessage, &engine::hooks::Proxy_SV_ExecuteClientMessage),
 	HookUtils::HookEntry("SV_UserinfoChanged", (unsigned char*)func_SV_UserinfoChanged_addr[PROXY_PLATFORM], &engine::hooks::Original_SV_UserinfoChanged, &engine::hooks::Proxy_SV_UserinfoChanged),

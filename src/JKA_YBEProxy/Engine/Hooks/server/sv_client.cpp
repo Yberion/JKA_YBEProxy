@@ -6,9 +6,26 @@
 #include "JKA_YBEProxy/Engine/Rate.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/server/sv_ccmds.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/server/sv_client.hpp"
+#include "JKA_YBEProxy/Engine/Challenge.hpp"
 
 namespace ybeproxy::engine::hooks
 {
+
+/*
+==================
+SV_DirectConnect
+
+A "connect" OOB command has been received
+==================
+*/
+void (*Original_SV_DirectConnect)(netadr_t);
+void Proxy_SV_DirectConnect(netadr_t from)
+{
+	// A valid stateless challenge gets its entry in svs.challenges, where the original looks it up
+	engine::challenge::Admit(from);
+
+	Original_SV_DirectConnect(from);
+}
 
 /*
 ===============
