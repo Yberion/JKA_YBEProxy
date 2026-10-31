@@ -27,8 +27,8 @@ namespace ybeproxy::engine::rate_limit
 
 struct LeakyBucket
 {
-	unsigned int lastTime;
-	int burst;
+	unsigned int	lastTime;
+	int				burst;
 };
 
 // Returns true when the request must be dropped
@@ -65,7 +65,7 @@ static constexpr std::size_t maxBuckets = 65536;
 static struct
 {
 	std::map<uint32_t, LeakyBucket>	buckets;
-	unsigned int						lastGC;
+	unsigned int					lastGC;
 	// getstatus and getinfo, every address
 	LeakyBucket						outbound;
 	// rcon with a bad password, every address

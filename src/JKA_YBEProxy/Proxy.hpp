@@ -100,28 +100,28 @@ struct LocatedGameData
 // /netStatus of a client, original engine only (see Engine/NetStatus.cpp)
 struct ClientNetStatus
 {
-	NetEstimate		estimate;
-	int					netPing;
-	int					timenudge;
+	NetEstimate	estimate;
+	int			netPing;
+	int			timenudge;
 	// False until measured, and when the client gets too few snapshots to tell
-	bool				timenudgeKnown;
+	bool		timenudgeKnown;
 	// Server time of the last /netStatus or /explainNetStatus of the client
-	int					lastCommandTime;
+	int			lastCommandTime;
 };
 
 struct ClientData
 {
-	bool				isConnected;
-	bool				sendWelcomeMessage;
+	bool			isConnected;
+	bool			sendWelcomeMessage;
 	// Set by the "mute" console command, cleared when the client leaves
-	bool				muted;
-	char				cleanName[MAX_NETNAME];
+	bool			muted;
+	char			cleanName[MAX_NETNAME];
 	// IP address of the connection, without the port. Empty until the game accepted the client, and for bots
-	char				address[32];
+	char			address[32];
 
 	ClientNetStatus	netStatus;
 	// levelTime of the last /myratio of the client
-	int					lastTimeMyratioCheck;
+	int				lastTimeMyratioCheck;
 };
 
 struct OriginalEngineCvars
@@ -164,21 +164,21 @@ struct OriginalGame
 
 struct Proxy
 {
-	OriginalGame			originalGame;
+	OriginalGame		originalGame;
 
 	// The system call of the engine, and the functions of the proxy built on it (see Module/EngineApi.cpp)
-	systemCallFuncPtr_t		originalSystemCall;
-	gameImport_t*			trap;
+	systemCallFuncPtr_t	originalSystemCall;
+	gameImport_t*		trap;
 
-	bool					isOriginalEngine;
+	bool				isOriginalEngine;
 
 	// levelTime of the last GAME_RUN_FRAME
-	int						levelTime;
+	int					levelTime;
 	LocatedGameData		locatedGameData;
 	ClientData			clientData[MAX_CLIENTS];
 	
-	OriginalEngineCvars originalEngineCvars;
-	ProxyCvars			 cvars;
+	OriginalEngineCvars	originalEngineCvars;
+	ProxyCvars			cvars;
 };
 
 // ==================================================

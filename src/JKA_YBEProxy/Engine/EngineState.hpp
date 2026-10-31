@@ -137,8 +137,8 @@ struct Common
 
 struct Server
 {
-	serverStatic_t*		svs;
-	server_t*			sv;
+	serverStatic_t*	svs;
+	server_t*		sv;
 	ServerFunctions	functions;
 	ServerCvars		cvars;
 	Common			common;
