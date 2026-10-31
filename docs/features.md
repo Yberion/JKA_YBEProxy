@@ -134,7 +134,7 @@ Values:
 
 Engine: Any.
 
-The proxy adds a `YbeProxy` key with its version (for example `0.19.0 Beta`) to the serverinfo. Clients see it in the server info window of the server browser (`getstatus`) and with `rcon serverinfo`. The key is read-only.
+The proxy adds a `YbeProxy` key with its version (for example `1.0.0 Beta`) to the serverinfo. Clients see it in the server info window of the server browser (`getstatus`) and with `rcon serverinfo`. The key is read-only.
 
 Values:
 
