@@ -10,12 +10,6 @@
 - **Create a plugin system.** See A6 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
 - A command that explains each column of [`/netStatus`](features.md#netstatus-shownet), for the players who run it (name to choose, for example `/explainNetStatus`).
 
-### Bugs
-
-Found by reading the code of the other engines (2026-10-31), not reproduced. Most severe first.
-
-- Original engine: `SV_SendServerCommand` to one client does not check that it is at least `CS_PRIMED` (only the broadcast does), so commands can pile up before the gamestate is sent. No realistic path to a "Server command overflow" was found. OpenJK [`c0e9b765`](https://github.com/JACoders/OpenJK/commit/c0e9b765).
-
 ### Long term
 
 - Features from JKA_Anti-cheat: https://hackmd.io/CtIPZON0QHKuqjdxXRw8uw
@@ -88,6 +82,7 @@ Found by reading the code of the other engines (2026-10-31), not reproduced. Mos
 
 ## Won't do
 
+- Skip the server commands sent to one client that is not `CS_PRIMED` yet, as OpenJK [`c0e9b765`](https://github.com/JACoders/OpenJK/commit/c0e9b765) does in `SV_AddServerCommand`: nothing to fix in the retail engine, and the port would break the kick message. The commands queued before the gamestate are sent with it (`SV_SendClientGameState` sends the pending commands first). No path to a "Server command overflow" was found: a client that is not primed gets a message at least once per second and acknowledges them, and the game sends its chat only to clients in the game (`G_SayTo`). ioq3 and OpenJK set `CS_ZOMBIE` after the `disconnect` command of `SV_DropClient`, the retail engine sets it before ([`server/sv_client.cpp:629`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L629), [`643`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L643), same order in `linuxjampded`): the same test would drop that command, and a kicked player would never get the reason.
 - Free a dropped bot at once instead of leaving it in `CS_ZOMBIE`, as OpenJK [`93daa30d`](https://github.com/JACoders/OpenJK/commit/93daa30d): not a bug in the retail engine. `SV_DropClient` sets `CS_ZOMBIE`, then for a bot (`NA_BOT`) calls `SV_BotFreeClient` ([`server/sv_client.cpp:646`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L646)), which sets `CS_FREE` ([`server/sv_bot.cpp:215`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_bot.cpp#L215)) before `SV_DropClient` returns. Same in both binaries. The slot is never kept: OpenJK only moved the state change after `GAME_CLIENT_DISCONNECT`.
 - Uptime in the new `rcon status`: it would need a hook on `SV_Init()`, which is not possible.
 - Extend the `jedi_/red` model check to every `jedi_*` model, as EternalJK does (`g_blockUnknownJediModelsInTeamGametypes`): only the six base Jedi models (`jedi_hf`, `jedi_hm`, `jedi_kdm`, `jedi_rm`, `jedi_tf`, `jedi_zf`) would be allowed in team gametypes, anything else becomes `kyle`. The proxy already replaces `jedi_` without a species. The rest is a server policy that would also block valid custom `jedi_*` models, and nobody asked for it.
