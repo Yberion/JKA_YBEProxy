@@ -45,6 +45,9 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE -mstackrealign -mfpmath=sse)
     # The server may not have the C++ runtime (linuxjampded does not use it)
     target_link_options(${PROJECT_NAME} PRIVATE -static-libgcc -static-libstdc++)
+    # The engine unloads the module at each map change, which resets the state of the proxy. A STB_GNU_UNIQUE symbol
+    # (an inline or template static) would keep dlclose from unloading it, and the state would outlive the map
+    target_compile_options(${PROJECT_NAME} PRIVATE -fno-gnu-unique)
   endif()
 
   # Removes -rdynamic at link, which caused crashes

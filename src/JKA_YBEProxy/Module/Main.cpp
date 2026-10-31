@@ -22,7 +22,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		{
 			Proxy_SharedAPI_Init();
 
-			const intptr_t response = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+			const intptr_t response = proxy.originalGame.vmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
 
 			Proxy_SharedAPI_InitDone();
 
@@ -34,10 +34,10 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		{
 			Proxy_SharedAPI_Shutdown();
 
-			if (proxy.jampgameHandle)
+			if (proxy.originalGame.handle)
 			{
 				// Send the shutdown signal to the original game module and store the response
-				const intptr_t response = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+				const intptr_t response = proxy.originalGame.vmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
 
 				Proxy_GameLibrary_Unload();
 
@@ -67,7 +67,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 				return (intptr_t)reason;
 			}
 
-			const intptr_t response = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+			const intptr_t response = proxy.originalGame.vmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
 
 			// The game returns a reason when it refuses the client
 			if (!response)
@@ -102,7 +102,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 				return 0;
 			}
 
-			const intptr_t response = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+			const intptr_t response = proxy.originalGame.vmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
 
 			Proxy_SharedAPI_ClientCommandDone();
 
@@ -113,7 +113,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 		case GAME_CLIENT_THINK: // (int clientNum)
 		//==================================================
 		{
-			int response = proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
+			int response = proxy.originalGame.vmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
 
 			//Proxy_SharedAPI_ClientThink((int)arg0, (usercmd_t*)arg1);
 
@@ -147,7 +147,7 @@ Q_CABI Q_EXPORT intptr_t vmMain(intptr_t command, intptr_t arg0, intptr_t arg1, 
 			break;
 	}
 
-	return proxy.originalVmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+	return proxy.originalGame.vmMain(command, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
 }
 
 // The engine sends the system call function pointer to the game module through dllEntry

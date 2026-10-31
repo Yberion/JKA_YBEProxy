@@ -55,18 +55,28 @@ static bool Proxy_RateLimit(leakyBucket_t* bucket, int burst, unsigned int perio
 	return true;
 }
 
+// An entry lives until its bucket is empty, burst * period: 1 to 2 s for a spoofed address that sends one packet
+// (the garbage collector runs once per second), so a spoofed flood of N new addresses per second keeps up to 2 * N entries
+static constexpr std::size_t maxBuckets = 65536;
+
+static struct
+{
+	std::map<uint32_t, leakyBucket_t>	buckets;
+	unsigned int						lastGC;
+	// getstatus and getinfo, every address
+	leakyBucket_t						outbound;
+	// rcon with a bad password, every address
+	leakyBucket_t						badPassword;
+} rateLimit;
+
 // Returns nullptr when the table is full: the caller drops the request
 static leakyBucket_t* Proxy_BucketForAddress(const netadr_t& address, unsigned int period, unsigned int now)
 {
-	// An entry lives until its bucket is empty, burst * period: 1 to 2 s for a spoofed address that sends one packet
-	// (the garbage collector runs once per second), so a spoofed flood of N new addresses per second keeps up to 2 * N entries
-	static constexpr std::size_t maxBuckets = 65536;
-	static std::map<uint32_t, leakyBucket_t> bucketMap;
-	static unsigned int lastGC = 0;
+	std::map<uint32_t, leakyBucket_t>& bucketMap = rateLimit.buckets;
 
-	if (now - lastGC > 1000)
+	if (now - rateLimit.lastGC > 1000)
 	{
-		lastGC = now;
+		rateLimit.lastGC = now;
 
 		for (auto it = bucketMap.begin(); it != bucketMap.end();)
 		{
@@ -136,9 +146,7 @@ bool Proxy_Engine_RateLimit_StatusAllowed(const netadr_t& from, const char* comm
 		return false;
 	}
 
-	static leakyBucket_t outboundBucket;
-
-	if (!Proxy_RateLimit(&outboundBucket, 10, 100, (unsigned int)proxy.trap->Milliseconds()))
+	if (!Proxy_RateLimit(&rateLimit.outbound, 10, 100, (unsigned int)proxy.trap->Milliseconds()))
 	{
 		return true;
 	}
@@ -162,9 +170,7 @@ bool Proxy_Engine_RateLimit_RconAllowed(void)
 		return true;
 	}
 
-	static leakyBucket_t badPasswordBucket;
-
-	if (!Proxy_RateLimit(&badPasswordBucket, 10, 1000, (unsigned int)proxy.trap->Milliseconds()))
+	if (!Proxy_RateLimit(&rateLimit.badPassword, 10, 1000, (unsigned int)proxy.trap->Milliseconds()))
 	{
 		return true;
 	}

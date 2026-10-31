@@ -24,7 +24,7 @@ void Proxy_Engine_Challenge_Renew(const netadr_t& from)
 			&& server.common.functions.NET_CompareBaseAdr(from, challenge->adr))
 		{
 			// Not rand(): on Windows the proxy has its own C runtime, which the engine's srand() does not seed, so its
-			// values could be guessed
+			// values could be guessed. Built at the first getchallenge, not when the module loads
 			static std::random_device random;
 
 			challenge->challenge = (int)random();

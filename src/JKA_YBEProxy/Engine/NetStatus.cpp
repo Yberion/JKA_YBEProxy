@@ -37,8 +37,11 @@
 // ==================================================
 
 // Server time, continuous (not rounded to the server frame), minus the real clock. Updated at each game frame
-static float continuousClockOffset = 0.0f;
-static bool continuousClockOffsetValid = false;
+static struct
+{
+	float	offset;
+	bool	valid;
+} continuousClock;
 
 // Inside GAME_RUN_FRAME, SV_Frame has just moved one frame from sv.timeResidual to svs.time. The sum of the two does
 // not change, and is the server time as it was when SV_Frame started: svs.time rounded down to the frame is not
@@ -47,20 +50,20 @@ void Proxy_Engine_NetStatus_FrameClock(void)
 	const float offset = (float)(server.svs->time + server.sv->timeResidual - proxy.trap->Milliseconds());
 
 	// First call, or the server time jumped (map change)
-	if (!continuousClockOffsetValid || std::fabs(offset - continuousClockOffset) > 50.0f)
+	if (!continuousClock.valid || std::fabs(offset - continuousClock.offset) > 50.0f)
 	{
-		continuousClockOffset = offset;
-		continuousClockOffsetValid = true;
+		continuousClock.offset = offset;
+		continuousClock.valid = true;
 
 		return;
 	}
 
-	continuousClockOffset += (offset - continuousClockOffset) / 8.0f;
+	continuousClock.offset += (offset - continuousClock.offset) / 8.0f;
 }
 
 void Proxy_Engine_NetStatus_SnapshotSent(client_t* client)
 {
-	netEstimate_t& e = proxy.clientData[getClientNumFromAddr(client)].netEstimate;
+	netEstimate_t& e = proxy.clientData[getClientNumFromAddr(client)].netStatus.estimate;
 	const int slot = client->netchan.outgoingSequence & PACKET_MASK;
 	const int now = proxy.trap->Milliseconds();
 
@@ -80,9 +83,9 @@ void Proxy_Engine_NetStatus_SnapshotSent(client_t* client)
 		e.lastSnapshotTime = now;
 
 		// Real send time minus the real time of svs.time. The difference of the two integer clocks first, as for the delay
-		if (continuousClockOffsetValid)
+		if (continuousClock.valid)
 		{
-			e.lateSum += (float)(now - server.svs->time) + continuousClockOffset;
+			e.lateSum += (float)(now - server.svs->time) + continuousClock.offset;
 			e.lateCount++;
 		}
 	}
@@ -220,7 +223,7 @@ static void Proxy_Engine_NetStatus_CountPackets(const netEstimate_t& e, int now,
 void Proxy_Engine_NetStatus_PacketReceived(client_t* client, const usercmd_t* cmds, int cmdCount)
 {
 	ClientData_t* clientData = &proxy.clientData[getClientNumFromAddr(client)];
-	netEstimate_t& e = clientData->netEstimate;
+	netEstimate_t& e = clientData->netStatus.estimate;
 	const int now = proxy.trap->Milliseconds();
 
 	// Round trip: the first packet that acknowledges a snapshot, minus the real time that snapshot was sent
@@ -259,14 +262,14 @@ void Proxy_Engine_NetStatus_PacketReceived(client_t* client, const usercmd_t* cm
 	e.packetIndex = (e.packetIndex + 1) % netEstimate_t::PacketSamples;
 
 	// Delay and frame lag, from the newest usercmd only: the older ones of the packet were made earlier
-	if (continuousClockOffsetValid && cmdCount > 0)
+	if (continuousClock.valid && cmdCount > 0)
 	{
 		const usercmd_t& newest = cmds[cmdCount - 1];
 
 		if (newest.serverTime > client->lastUsercmd.serverTime && e.delayCount < netEstimate_t::WindowSamples)
 		{
 			// The difference of the two integer clocks first: a float holds them to the millisecond for 4.6 hours only
-			e.delaySum += (float)(newest.serverTime - now) - continuousClockOffset;
+			e.delaySum += (float)(newest.serverTime - now) - continuousClock.offset;
 			e.delayCount++;
 
 			// The usercmd before the newest: two usercmds in a row are one client frame apart
@@ -313,7 +316,7 @@ void Proxy_Engine_NetStatus_PacketReceived(client_t* client, const usercmd_t* cm
 
 	if (rttMin >= 0)
 	{
-		clientData->netPing = rttMin;
+		clientData->netStatus.netPing = rttMin;
 	}
 
 	// The samples of the window, which starts again
@@ -355,7 +358,7 @@ void Proxy_Engine_NetStatus_PacketReceived(client_t* client, const usercmd_t* cm
 	// simulation, the shown value swung by ±8 ms at 100 ms, by -58 to +20 at 1000 ms, and stayed within 1 ms up to 90 ms)
 	if (interval + 5 >= 100)
 	{
-		clientData->timenudgeKnown = false;
+		clientData->netStatus.timenudgeKnown = false;
 		e.historyIndex = 0;
 		e.historyFilled = false;
 
@@ -388,14 +391,14 @@ void Proxy_Engine_NetStatus_PacketReceived(client_t* client, const usercmd_t* cm
 		e.historyFilled = true;
 	}
 
-	clientData->timenudge = e.historyFilled ? Proxy_Median3(e.history[0], e.history[1], e.history[2]) : nudge;
-	clientData->timenudgeKnown = true;
+	clientData->netStatus.timenudge = e.historyFilled ? Proxy_Median3(e.history[0], e.history[1], e.history[2]) : nudge;
+	clientData->netStatus.timenudgeKnown = true;
 }
 
 
 void Proxy_Engine_NetStatus_GetRates(client_t* client, NetRates_t* rates)
 {
-	const netEstimate_t& e = proxy.clientData[getClientNumFromAddr(client)].netEstimate;
+	const netEstimate_t& e = proxy.clientData[getClientNumFromAddr(client)].netStatus.estimate;
 	const int now = proxy.trap->Milliseconds();
 
 	*rates = NetRates_t();

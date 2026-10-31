@@ -45,12 +45,12 @@ void Proxy_ClientCommand_MyRatio(int clientNum)
 {
 	ClientData_t *currentClientData = &proxy.clientData[clientNum];
 
-	if (currentClientData->lastTimeMyratioCheck + 1000 > proxy.proxyData.svsTime)
+	if (currentClientData->lastTimeMyratioCheck + 1000 > proxy.levelTime)
 	{
 		return;
 	}
 
-	currentClientData->lastTimeMyratioCheck = proxy.proxyData.svsTime;
+	currentClientData->lastTimeMyratioCheck = proxy.levelTime;
 
 	char ratioStringBuffer[16];
 	playerState_t* ps;

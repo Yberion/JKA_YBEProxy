@@ -108,7 +108,7 @@ void Proxy_SharedAPI_RunFrame(int levelTime)
 		Proxy_Engine_Restart_BeforeWrap();
 	}
 
-	proxy.proxyData.svsTime = levelTime;
+	proxy.levelTime = levelTime;
 }
 
 // The userinfo of a bot comes from the bot files, and has no forcepowers key

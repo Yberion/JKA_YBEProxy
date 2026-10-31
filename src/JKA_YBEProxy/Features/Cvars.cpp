@@ -113,24 +113,26 @@ void Proxy_CVars_Registration(void)
 // Updates all the variables once per second of server time.
 // ==================================================
 
-void Proxy_UpdateAllCvars(int levelTime)
+static struct
 {
 	// The server time restarts at 0 on a map change, so a time before the last update means a new map
-	static int lastUpdateTime = 0;
+	int lastUpdateTime;
+	// The rate settings the clients got (sv_minRate, sv_minSnaps, sv_maxSnaps, sv_fps). Reset with the module at each
+	// map change: they are applied again, which changes nothing
+	int appliedRates[4];
+} updateState;
 
-	if (levelTime < lastUpdateTime || levelTime - lastUpdateTime >= 1000)
+void Proxy_UpdateAllCvars(int levelTime)
+{
+	if (levelTime < updateState.lastUpdateTime || levelTime - updateState.lastUpdateTime >= 1000)
 	{
-		lastUpdateTime = levelTime;
+		updateState.lastUpdateTime = levelTime;
 
 		Proxy_UpdateCvarTable(proxyCVarTable, proxyCVarTableSize);
 		Proxy_UpdateServerInfoVersion();
 
 		if (proxy.isOriginalEngine)
 		{
-			// The settings the clients got. Reset with the module at each map change: they are applied again, which
-			// changes nothing
-			static int applied[4] = { 0, 0, 0, 0 };
-
 			Proxy_UpdateCvarTable(proxyOriginalEngineCVarTable, proxyOriginalEngineCVarTableSize);
 
 			const int current[4] = {
@@ -140,9 +142,9 @@ void Proxy_UpdateAllCvars(int levelTime)
 				proxy.cvars.sv_fps.integer
 			};
 
-			if (std::memcmp(applied, current, sizeof(current)))
+			if (std::memcmp(updateState.appliedRates, current, sizeof(current)))
 			{
-				std::memcpy(applied, current, sizeof(current));
+				std::memcpy(updateState.appliedRates, current, sizeof(current));
 				Proxy_Engine_Rate_SettingsChanged();
 			}
 		}

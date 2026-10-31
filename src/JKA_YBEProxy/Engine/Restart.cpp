@@ -17,11 +17,11 @@ SV_Frame and its checks:
   dropped.
 */
 
+// Once per load of the module, which the map change loads again
+static bool requested = false;
+
 void Proxy_Engine_Restart_BeforeWrap(void)
 {
-	// Once per load of the module, which the map change loads again
-	static bool requested = false;
-
 	if (requested)
 	{
 		return;

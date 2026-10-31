@@ -16,7 +16,7 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 {
 	ClientData_t *currentClientData = &proxy.clientData[clientNum];
 
-	if (currentClientData->lastTimeNetStatus + 500 > server.svs->time)
+	if (currentClientData->netStatus.lastCommandTime + 500 > server.svs->time)
 	{
 		return;
 	}
@@ -66,15 +66,15 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 		if (cl->netchan.remoteAddress.type != NA_BOT)
 		{
 			Proxy_Engine_NetStatus_GetRates(cl, &rates);
-			Com_sprintf(netPing, sizeof(netPing), "%i", proxy.clientData[i].netPing);
+			Com_sprintf(netPing, sizeof(netPing), "%i", proxy.clientData[i].netStatus.netPing);
 		}
 
 		// "-" until measured, and for a client with too few snapshots to tell
 		char timeNudge[16] = "-";
 
-		if (proxy.clientData[i].timenudgeKnown)
+		if (proxy.clientData[i].netStatus.timenudgeKnown)
 		{
-			Com_sprintf(timeNudge, sizeof(timeNudge), "%i", proxy.clientData[i].timenudge);
+			Com_sprintf(timeNudge, sizeof(timeNudge), "%i", proxy.clientData[i].netStatus.timenudge);
 		}
 
 		// The rate the client asked for, the one the server applies (sv_minRate, sv_maxRate), and "trueRate": the bytes
@@ -86,7 +86,7 @@ void Proxy_Engine_ClientCommand_NetStatus(int clientNum)
 		Q_strcat(status, sizeof(status), va("%5i %s %7s %8i %6i %8i %4i %7i %9s %9i %5i %9i %2i %s^7\n", ps->persistant[PERS_SCORE], state, netPing, userRate, Proxy_Engine_Rate_Applied(cl), rates.rate, rates.fps, rates.packets, timeNudge, userSnaps, snaps, rates.snaps, i, cl->name));
 	}
 
-	currentClientData->lastTimeNetStatus = server.svs->time;
+	currentClientData->netStatus.lastCommandTime = server.svs->time;
 
 	char buffer[1012] = { 0 };
 	std::size_t statusLength = std::strlen(status);
@@ -149,12 +149,12 @@ void Proxy_Engine_ClientCommand_ExplainNetStatus(int clientNum)
 	ClientData_t *currentClientData = &proxy.clientData[clientNum];
 
 	// The same limit as /netStatus, shared with it
-	if (currentClientData->lastTimeNetStatus + 500 > server.svs->time)
+	if (currentClientData->netStatus.lastCommandTime + 500 > server.svs->time)
 	{
 		return;
 	}
 
-	currentClientData->lastTimeNetStatus = server.svs->time;
+	currentClientData->netStatus.lastCommandTime = server.svs->time;
 
 	proxy.trap->SendServerCommand(clientNum, va("print \"%s\"", explainNetStatusColumns));
 	proxy.trap->SendServerCommand(clientNum, va("print \"%s\"", explainNetStatusMore));

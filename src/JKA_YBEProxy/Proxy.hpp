@@ -84,11 +84,6 @@ struct netEstimate_t
 	bool	historyFilled;
 };
 
-struct ProxyData_t
-{
-	int					svsTime;
-};
-
 struct LocatedGameData_t
 {
 	sharedEntity_t*		g_entities;
@@ -97,6 +92,18 @@ struct LocatedGameData_t
 
 	playerState_t*		g_clients;
 	int					g_clientSize;
+};
+
+// /netStatus of a client, original engine only (see Engine/NetStatus.cpp)
+struct ClientNetStatus_t
+{
+	netEstimate_t		estimate;
+	int					netPing;
+	int					timenudge;
+	// False until measured, and when the client gets too few snapshots to tell
+	bool				timenudgeKnown;
+	// Server time of the last /netStatus or /explainNetStatus of the client
+	int					lastCommandTime;
 };
 
 struct ClientData_t
@@ -109,13 +116,8 @@ struct ClientData_t
 	// IP address of the connection, without the port. Empty until the game accepted the client, and for bots
 	char				address[32];
 
-	netEstimate_t		netEstimate;
-	int					netPing;
-	int					timenudge;
-	// False until measured, and when the client gets too few snapshots to tell
-	bool				timenudgeKnown;
-
-	int					lastTimeNetStatus;
+	ClientNetStatus_t	netStatus;
+	// levelTime of the last /myratio of the client
 	int					lastTimeMyratioCheck;
 };
 
@@ -149,21 +151,26 @@ struct Proxy_CVars_t
 	vmCvar_t sv_gametype;
 };
 
+// The original game module (see Module/GameLibrary.cpp)
+struct OriginalGame_t
+{
+	void*					handle;
+	vmMainFuncPtr_t			vmMain;
+	dllEntryFuncPtr_t		dllEntry;
+};
+
 struct Proxy_t
 {
-	void					*jampgameHandle;
+	OriginalGame_t			originalGame;
 
-	vmMainFuncPtr_t			originalVmMain;
-	dllEntryFuncPtr_t		originalDllEntry;
+	// The system call of the engine, and the functions of the proxy built on it (see Module/EngineApi.cpp)
 	systemCallFuncPtr_t		originalSystemCall;
-
-	intptr_t				originalVmMainResponse;
-
 	gameImport_t*			trap;
 
 	bool					isOriginalEngine;
 
-	ProxyData_t				proxyData;
+	// levelTime of the last GAME_RUN_FRAME
+	int						levelTime;
 	LocatedGameData_t		locatedGameData;
 	ClientData_t			clientData[MAX_CLIENTS];
 	
