@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- Original engine: [`sv_maxPing`](features.md#engine-fixes) can no longer be bypassed. The server kept the same challenge for an address, so a client could ask for a challenge again right before it connected with the one it already had, and get in with a ping close to 0. Each request now gets a new challenge, as in ioq3 and OpenJK. Only matters with `sv_maxPing` set (default `0`).
 - Fixed a server crash when the game passes a missing [Ghoul2 model](features.md#ghoul2-calls) to the engine, for example for an NPC whose model or animations failed to load. The engine used it without a test; the proxy now answers as for an empty model, as OpenJK does. Any engine.
 - Original engine: maps that contain other BSPs (`misc_bsp` entities) no longer leak memory. The engine read each of these BSP files into a buffer that it never freed, so the server lost their size at each map load (`map_restart` excepted). No map of the base game has a `misc_bsp`, only custom maps are affected. Found by reading the code, as OpenJK did, not reproduced.
 - The [navigation data of the NPCs](features.md#npc-navigation) is freed before each map load, as OpenJK does. The game never freed it, and the retail engine added the nodes of the new map to those of the previous one: memory leaked at each map change and `map_restart`, and NPCs could pick a node of the previous map. Any engine.

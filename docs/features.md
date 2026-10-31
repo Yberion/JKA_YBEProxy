@@ -349,6 +349,7 @@ Engine: Original.
   - requests with an argument longer than 128 characters are ignored (q3infoboom fix);
   - rate limiting, so the server cannot be used to amplify a DDoS: each address gets a burst of 10, then 1 per second, and the server answers a burst of 10, then 10 per second in total. Requests beyond that are ignored. During a flood the server may briefly disappear from server browsers.
 - `getchallenge` and `connect`: the same per-address limit, shared with `getstatus` and `getinfo` (a burst of 10, then 1 per second), as Quake3e. Requests beyond that are ignored. Players behind one public address (LAN party, carrier NAT) who connect at the same time may wait a few seconds: their client retries every 3 seconds.
+- `sv_maxPing` can no longer be bypassed. The ping checked on connect is the time between the last challenge answer and the `connect`, and the original kept the same challenge for an address: a client could ask for a challenge again right before it connected with the one it already had, and get in with a ping close to 0. Each `getchallenge` now gets a new challenge, as in ioq3 and OpenJK.
 - With `developer 1`, every request dropped by these limits, rcon included, is printed in the server console, as in ioq3 and Quake3e.
 - rcon:
   - the engine's 500 ms timer is removed. It was global and checked before the password, so anyone could lock the admins out (rcon disabler fix);

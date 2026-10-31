@@ -4,6 +4,7 @@
 #include "sdk/game/g_public.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.hpp"
 #include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_RateLimit.hpp"
+#include "JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Challenge.hpp"
 
 /*
 ===================
@@ -136,7 +137,15 @@ qboolean QDECL Proxy_SV_PacketEvent_Filter(netadr_t from, msg_t* msg)
 	// Per address only, as Quake3e: a global bucket would let a getstatus flood block every connection
 	if (!Q_stricmp(c, "getchallenge"))
 	{
-		return Proxy_Engine_RateLimit_AddressAllowed(from, c) ? qtrue : qfalse;
+		if (!Proxy_Engine_RateLimit_AddressAllowed(from, c))
+		{
+			return qfalse;
+		}
+
+		// A new challenge at each request, so sv_maxPing cannot be bypassed
+		Proxy_Engine_Challenge_Renew(from);
+
+		return qtrue;
 	}
 
 	if (!Q_stricmp(c, "rcon"))
