@@ -243,7 +243,7 @@ The game's `forceteam <player> <team>` takes a client number or a name. `-1` now
 
 ### `proxyconfig`
 
-Engine: Any. Server console or `rcon` only.
+Engine: Any. Server console and `rcon`, and `/proxyconfig` for every player in the game (at most once per second, in their console).
 
 Prints the proxy version, the engine (its `version` string, and whether it is the original engine, the only one the engine fixes apply to), then every proxy cvar with its value and its default. The cvars of the original engine (`proxy_sv_pingFix`, `proxy_sv_enableNetStatus`, `sv_minRate`, `sv_minSnaps`, `sv_maxSnaps`) are listed on the original engine only, with the engine's `sv_maxRate` next to `sv_minRate`.
 

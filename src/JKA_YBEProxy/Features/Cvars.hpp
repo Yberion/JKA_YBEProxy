@@ -18,6 +18,7 @@ void OriginalEngineRegistration(void);
 void Registration(void);
 void UpdateAll(int levelTime);
 // "proxyconfig": the version, the engine, and every proxy cvar with its value
-void PrintConfig(void);
+// proxyconfig: to the server console when clientNum is -1, to the console of the client otherwise
+void PrintConfig(int clientNum);
 
 } // namespace ybeproxy::features::cvars

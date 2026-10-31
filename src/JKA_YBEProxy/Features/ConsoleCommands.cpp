@@ -71,7 +71,7 @@ qboolean Run(void)
 
 	if (!Q_stricmp(cmd, "proxyconfig"))
 	{
-		features::cvars::PrintConfig();
+		features::cvars::PrintConfig(-1);
 
 		return qtrue;
 	}

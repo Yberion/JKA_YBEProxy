@@ -1,5 +1,6 @@
 #include "JKA_YBEProxy/Proxy.hpp"
 #include "JKA_YBEProxy/Features/ClientCommands.hpp"
+#include "JKA_YBEProxy/Features/Cvars.hpp"
 #include "JKA_YBEProxy/Ports/game/g_cmds.hpp"
 #include "JKA_YBEProxy/Ports/server/sv_game.hpp"
 
@@ -231,6 +232,20 @@ bool Run(int clientNum, const char* cmd)
 	if (!Q_stricmp(cmd, "myratio"))
 	{
 		MyRatio(clientNum);
+
+		return true;
+	}
+
+	if (!Q_stricmp(cmd, "proxyconfig"))
+	{
+		ClientData* currentClientData = &proxy.clientData[clientNum];
+
+		// Several prints: once per second at most, so a client cannot fill its reliable commands
+		if (currentClientData->lastTimeProxyConfig + 1000 <= proxy.levelTime)
+		{
+			currentClientData->lastTimeProxyConfig = proxy.levelTime;
+			features::cvars::PrintConfig(clientNum);
+		}
 
 		return true;
 	}

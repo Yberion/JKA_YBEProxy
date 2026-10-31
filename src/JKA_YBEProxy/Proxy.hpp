@@ -122,6 +122,8 @@ struct ClientData
 	ClientNetStatus	netStatus;
 	// levelTime of the last /myratio of the client
 	int				lastTimeMyratioCheck;
+	// levelTime of the last /proxyconfig of the client
+	int				lastTimeProxyConfig;
 };
 
 struct OriginalEngineCvars

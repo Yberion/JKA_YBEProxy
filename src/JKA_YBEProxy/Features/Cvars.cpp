@@ -155,7 +155,7 @@ void UpdateAll(int levelTime)
 }
 
 // Leaves out the engine cvars the proxy only reads (flags 0) and the YbeProxy key (no vmCvar, it is the version)
-static void PrintTable(const CvarTable* table, std::size_t size)
+static void PrintTable(char* text, std::size_t textSize, const CvarTable* table, std::size_t size)
 {
 	for (const CvarTable* item = table; item < table + size; ++item)
 	{
@@ -168,42 +168,92 @@ static void PrintTable(const CvarTable* table, std::size_t size)
 
 		// Read now: the vmCvar is updated once per second only
 		proxy.trap->Cvar_VariableStringBuffer(item->cvarName, value, sizeof(value));
-		proxy.trap->Print("%-36s %-10s %s\n", item->cvarName, value, item->defaultString);
+		Q_strcat(text, textSize, va("%-36s %-10s %s\n", item->cvarName, value, item->defaultString));
+	}
+}
+
+// A server command holds at most MAX_STRING_CHARS characters: whole lines, a few per print
+static void PrintToClient(int clientNum, const char* text)
+{
+	while (*text)
+	{
+		char chunk[1000];
+		std::size_t length = 0;
+		const char* line = text;
+
+		while (*line)
+		{
+			const char* end = std::strchr(line, '\n');
+			const std::size_t lineLength = end ? (std::size_t)(end - line) + 1 : std::strlen(line);
+
+			if (length + lineLength >= sizeof(chunk))
+			{
+				break;
+			}
+
+			std::memcpy(chunk + length, line, lineLength);
+			length += lineLength;
+			line += lineLength;
+		}
+
+		// A line longer than a chunk is cut
+		if (!length)
+		{
+			length = sizeof(chunk) - 1;
+			std::memcpy(chunk, text, length);
+			line = text + length;
+		}
+
+		chunk[length] = '\0';
+
+		// A double quote, from a value such as sv_hostname, would end the print command
+		for (char* c = chunk; *c; ++c)
+		{
+			if (*c == '"')
+			{
+				*c = '\'';
+			}
+		}
+
+		proxy.trap->SendServerCommand(clientNum, va("print \"%s\"", chunk));
+		text = line;
 	}
 }
 
 // ==================================================
 // PrintConfig
 // --------------------------------------------------
-// The "proxyconfig" console command.
+// The "proxyconfig" console command (clientNum -1), and the
+// "/proxyconfig" client command.
 // ==================================================
 
-void PrintConfig(void)
+void PrintConfig(int clientNum)
 {
+	char text[4096] = "";
 	char version[MAX_STRING_CHARS];
 
 	proxy.trap->Cvar_VariableStringBuffer("version", version, sizeof(version));
 
-	proxy.trap->Print("%s %s\n", YBEPROXY_NAME, YBEPROXY_VERSION);
-	proxy.trap->Print("Engine: %s (%s)\n", version, proxy.isOriginalEngine ? "original engine, engine fixes on" : "not the original engine, no engine fixes");
-	proxy.trap->Print("%-36s %-10s %s\n", "cvar", "value", "default");
-	proxy.trap->Print("------------------------------------ ---------- -------\n");
+	Q_strcat(text, sizeof(text), va("%s %s\n", YBEPROXY_NAME, YBEPROXY_VERSION));
+	Q_strcat(text, sizeof(text), va("Engine: %s (%s)\n", version, proxy.isOriginalEngine ? "original engine, engine fixes on" : "not the original engine, no engine fixes"));
+	Q_strcat(text, sizeof(text), va("%-36s %-10s %s\n", "cvar", "value", "default"));
+	Q_strcat(text, sizeof(text), "------------------------------------ ---------- -------\n");
 
 	// Registered on the original engine only
 	if (proxy.isOriginalEngine)
 	{
-		PrintTable(proxyOriginalEngineCVarTable, proxyOriginalEngineCVarTableSize);
+		PrintTable(text, sizeof(text), proxyOriginalEngineCVarTable, proxyOriginalEngineCVarTableSize);
 	}
 
-	PrintTable(proxyCVarTable, proxyCVarTableSize);
+	PrintTable(text, sizeof(text), proxyCVarTable, proxyCVarTableSize);
 
 	// Engine and game cvars, value only: their default depends on the engine and the mod
 	static const char* const serverSettings[] = {
 		"sv_hostname", "sv_maxclients", "sv_privateClients", "sv_fps", "sv_maxRate", "sv_pure", "fraglimit", "timelimit"
 	};
 
-	proxy.trap->Print("\n%-36s %s\n", "server setting", "value");
-	proxy.trap->Print("------------------------------------ ----------\n");
+	Q_strcat(text, sizeof(text), va("\n%-36s %s\n", "server setting", "value"));
+	Q_strcat(text, sizeof(text), "------------------------------------ ----------\n");
 
 	for (const char* name : serverSettings)
 	{
@@ -216,8 +266,17 @@ void PrintConfig(void)
 		char value[MAX_CVAR_VALUE_STRING];
 
 		proxy.trap->Cvar_VariableStringBuffer(name, value, sizeof(value));
-		proxy.trap->Print("%-36s %s\n", name, value);
+		Q_strcat(text, sizeof(text), va("%-36s %s\n", name, value));
 	}
+
+	if (clientNum < 0)
+	{
+		proxy.trap->Print("%s", text);
+
+		return;
+	}
+
+	PrintToClient(clientNum, text);
 }
 
 } // namespace ybeproxy::features::cvars
