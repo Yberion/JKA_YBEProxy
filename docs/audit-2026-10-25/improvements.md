@@ -6,11 +6,11 @@ Not bugs as such: robustness, simplification, missing features and build hygiene
 
 ### Signature check
 
-Status: confirmed, **not done**: the author considers that the `version` check is enough (a signature check, a generated table of the first bytes of every address from the retail binaries, and a stop on a difference were written, then removed). The only check before patching is the `version` cvar string ([Proxy_Main.cpp:83](../../src/JKA_YBEProxy/Proxy_Main.cpp#L83)).
+Status: confirmed, **not done**: the author considers that the `version` check is enough (a signature check, a generated table of the first bytes of every address from the retail binaries, and a stop on a difference were written, then removed). The only check before patching is the `version` cvar string ([Proxy_Main.cpp:83](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_Main.cpp#L83)).
 
 Fix:
 
-1. Next to each address in [Proxy_Engine_Wrappers.hpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp), store the first bytes expected at that address, per platform. Read them from the binaries once.
+1. Next to each address in [Proxy_Engine_Wrappers.hpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp), store the first bytes expected at that address, per platform. Read them from the binaries once.
 2. Before `Proxy_Engine_Inline_Patches` and `Proxy_Engine_Attach_Patches`, compare every hook and every inline patch address with `memcmp`.
 3. On any mismatch, patch nothing, print which address failed, and run like on an unknown engine (`isOriginalEngine = false`).
 
@@ -20,7 +20,7 @@ Status: **applied** with the move from HDE to Zydis (git submodule `external/zyd
 
 The problem: `GetTramp` copied the first bytes of the target as they were, so a `call`, `jmp` or `jcc` with a relative operand jumped to the wrong place from the trampoline, and `GetLen` ignored the HDE errors. Checked with capstone on the retail binaries: none of the 18 hooks at the time had a relative instruction in its copied bytes, but the hook of F7 on Windows does (`Com_WriteConfig_f` starts with `sub esp, 0x40; call Cmd_Argc`). F7 itself rewrites the whole function and never runs the trampoline.
 
-Applied, in [HookUtils.cpp](../../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.cpp):
+Applied, in [HookUtils.cpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.cpp):
 
 - `Analyze` decodes the instructions with Zydis until they cover 5 bytes (x86 or x64 mode, from the size of a pointer). A decoding error, or a `ret` before 5 bytes (function too short), fails the hook.
 - A relative instruction (`ZYDIS_ATTRIB_IS_RELATIVE`) other than `call`/`jmp rel32` without prefix (`e8`, `e9`) fails the hook. That covers `jcc`, short `jmp`, `loop` and, on x64, RIP-relative addressing.
@@ -93,21 +93,21 @@ Status: confirmed.
 
 - The F1 filter in [fixes.md](fixes.md) removes about 180 lines (the rewrites of `SV_PacketEvent` and `SV_ConnectionlessPacket`, the `SVC_RemoteCommand` wrapper, and the `SVC_Status`/`SVC_Info` hooks).
 - F4 option A removes the whole OpenJK API layer.
-- [Proxy_CVars.cpp](../../src/JKA_YBEProxy/Proxy_CVars.cpp):
-  - `Proxy_UpdateCvars` and `Proxy_OriginalEngine_UpdateCvars` have the same body, with a different table ([Proxy_CVars.cpp:79-135](../../src/JKA_YBEProxy/Proxy_CVars.cpp#L79-L135));
-  - the two registration functions too, apart from two prints ([Proxy_CVars.cpp:31-71](../../src/JKA_YBEProxy/Proxy_CVars.cpp#L31-L71)).
+- [Proxy_CVars.cpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_CVars.cpp):
+  - `Proxy_UpdateCvars` and `Proxy_OriginalEngine_UpdateCvars` have the same body, with a different table ([Proxy_CVars.cpp:79-135](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_CVars.cpp#L79-L135));
+  - the two registration functions too, apart from two prints ([Proxy_CVars.cpp:31-71](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_CVars.cpp#L31-L71)).
 
   Fix: one `static void Proxy_RegisterCvarTable(cvarTable_t* table, std::size_t size)` and one `static void Proxy_UpdateCvarTable(cvarTable_t* table, std::size_t size)`, called with each table.
 
 #### Applied
 
-Status: **applied**. The F1 and F4 parts were removed with F1 and F4. The two cvar tables now go through `Proxy_RegisterCvarTable` and `Proxy_UpdateCvarTable` in [Proxy_CVars.cpp](../../src/JKA_YBEProxy/Proxy_CVars.cpp). The two prints of the original-engine registration are kept. No behaviour change, so no entry in the patch notes.
+Status: **applied**. The F1 and F4 parts were removed with F1 and F4. The two cvar tables now go through `Proxy_RegisterCvarTable` and `Proxy_UpdateCvarTable` in [Proxy_CVars.cpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_CVars.cpp). The two prints of the original-engine registration are kept. No behaviour change, so no entry in the patch notes.
 
 ## A4. Tokenizer hardening
 
 Status: **applied**, see O7 in [other-engines.md](other-engines.md).
 
-[Proxy_cmd.cpp:34-36](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp#L34-L36) copies `text_in` into `cmd_cmd`, then tokenizes `text_in`, which is unbounded, instead of the bounded copy. The output buffer `cmd_tokenized` is `BIG_INFO_STRING + MAX_STRING_TOKENS` bytes ([`qcommon/cmd_common.cpp:292`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/cmd_common.cpp#L292)). Tokenizing `cmd_cmd` guarantees no overflow.
+[Proxy_cmd.cpp:34-36](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp#L34-L36) copies `text_in` into `cmd_cmd`, then tokenizes `text_in`, which is unbounded, instead of the bounded copy. The output buffer `cmd_tokenized` is `BIG_INFO_STRING + MAX_STRING_TOKENS` bytes ([`qcommon/cmd_common.cpp:292`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/cmd_common.cpp#L292)). Tokenizing `cmd_cmd` guarantees no overflow.
 
 The original engine also tokenizes `text_in` ([`qcommon/cmd_common.cpp:409-410`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/cmd_common.cpp#L409-L410)), and so do ioq3 and OpenJK. No caller found in the source passes more than `BIG_INFO_STRING` characters. This is hardening, not a regression.
 
@@ -163,16 +163,16 @@ Comes out of the F1 discussion: a pinned loader that holds the hooks and trampol
 
 ## A7. Minor observations
 
-- **Confirmed, source only.** [Proxy_OriginalAPI_Wrappers.cpp:53-69](../../src/JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.cpp#L53-L69): `Proxy_OriginalAPI_VM_Call` calls the proxy's `vmMain` directly and bypasses the engine's `VM_Call`, which sets `currentVM`. `VM_DllSyscall` uses `currentVM` ([`qcommon/vm.cpp:377`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/vm.cpp#L377)).
+- **Confirmed, source only.** [Proxy_OriginalAPI_Wrappers.cpp:53-69](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.cpp#L53-L69): `Proxy_OriginalAPI_VM_Call` calls the proxy's `vmMain` directly and bypasses the engine's `VM_Call`, which sets `currentVM`. `VM_DllSyscall` uses `currentVM` ([`qcommon/vm.cpp:377`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/vm.cpp#L377)).
   - `VM_Free` sets `currentVM` to `NULL` ([`qcommon/vm.cpp:624`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/vm.cpp#L624)).
   - The next `VM_Call` (`GAME_INIT`) sets it to the game VM and never restores `NULL`, because it only restores a non-null previous value ([`qcommon/vm.cpp:800, 826-827`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/vm.cpp#L800)).
   - On a dedicated server, where only the game VM exists, `currentVM` is therefore always the game VM when the proxy runs. It works, but it would break with a second VM (listen server).
-- **Confirmed, lower impact.** [Proxy_sv_client.cpp:671-819](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L671-L819): `Proxy_SV_VerifyPaks_f` checks for duplicates in O(n²), and flood protection only applies from `CS_ACTIVE`. That flood rule is inherited from the original ([`server/sv_client.cpp:1620-1623`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L1620-L1623)).
+- **Confirmed, lower impact.** [Proxy_sv_client.cpp:671-819](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L671-L819): `Proxy_SV_VerifyPaks_f` checks for duplicates in O(n²), and flood protection only applies from `CS_ACTIVE`. That flood rule is inherited from the original ([`server/sv_client.cpp:1620-1623`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L1620-L1623)).
   - The loop only runs when `sv_pure` is on and the cgame/ui checksums match.
   - A list that fails gets the client dropped. To repeat the command, a client must send a valid list, and its size is bounded by the server's pak count, because every checksum must be unique and known to the server.
-- **Confirmed.** [Proxy_sv_client.cpp:31-32](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L31-L32): the message "lost %i clientCommands" prints `seq - lastClientCommand + 1` (should be `- 1`). Cosmetic, same in the original ([`server/sv_client.cpp:1607-1608`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L1607-L1608)).
-- **Refuted.** [Proxy_Engine_ClientCommand.cpp:76](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp#L76): "a name containing `\"` can break the `print` command".
-  - The tokenizer ends a token at `"` ([Proxy_cmd.cpp:73-99](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp#L73-L99)). Neither the connect packet nor the `userinfo` command can put a `"` in the userinfo, and `cl->name` comes from the userinfo.
+- **Confirmed.** [Proxy_sv_client.cpp:31-32](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L31-L32): the message "lost %i clientCommands" prints `seq - lastClientCommand + 1` (should be `- 1`). Cosmetic, same in the original ([`server/sv_client.cpp:1607-1608`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L1607-L1608)).
+- **Refuted.** [Proxy_Engine_ClientCommand.cpp:76](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp#L76): "a name containing `\"` can break the `print` command".
+  - The tokenizer ends a token at `"` ([Proxy_cmd.cpp:73-99](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/qcommon/Proxy_cmd.cpp#L73-L99)). Neither the connect packet nor the `userinfo` command can put a `"` in the userinfo, and `cl->name` comes from the userinfo.
   - A quoted token can contain a newline. A name with a newline only breaks the layout of the `netStatus` table. Cosmetic.
 
 #### Applied
@@ -185,9 +185,9 @@ Request of the author. Today every human player gets the proxy name and version 
 
 New cvar `proxy_sv_disableWelcomeMessage`: archived, any engine, default `0` (message sent, as today), `1` disables it.
 
-- [Proxy_Header.hpp](../../src/JKA_YBEProxy/Proxy_Header.hpp), `Proxy_CVars_t`: add `vmCvar_t proxy_sv_disableWelcomeMessage;`.
-- [Proxy_CVars.cpp](../../src/JKA_YBEProxy/Proxy_CVars.cpp), `proxyCVarTable`: add `{ &proxy.cvars.proxy_sv_disableWelcomeMessage, "proxy_sv_disableWelcomeMessage", "0", CVAR_ARCHIVE, 0, qfalse },`.
-- [Proxy_SharedAPI.cpp](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp), `Proxy_SharedAPI_ClientBegin`: still clear `sendWelcomeMessage`, but only send the message when the cvar is `0`:
+- [Proxy_Header.hpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_Header.hpp), `Proxy_CVars_t`: add `vmCvar_t proxy_sv_disableWelcomeMessage;`.
+- [Proxy_CVars.cpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_CVars.cpp), `proxyCVarTable`: add `{ &proxy.cvars.proxy_sv_disableWelcomeMessage, "proxy_sv_disableWelcomeMessage", "0", CVAR_ARCHIVE, 0, qfalse },`.
+- [Proxy_SharedAPI.cpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_SharedAPI.cpp), `Proxy_SharedAPI_ClientBegin`: still clear `sendWelcomeMessage`, but only send the message when the cvar is `0`:
 
   ```cpp
   if (currentClientData->sendWelcomeMessage)

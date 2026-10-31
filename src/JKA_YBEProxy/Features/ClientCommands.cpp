@@ -2,7 +2,6 @@
 #include "JKA_YBEProxy/Features/ClientCommands.hpp"
 #include "JKA_YBEProxy/Ports/game/g_cmds.hpp"
 #include "JKA_YBEProxy/Ports/server/sv_game.hpp"
-#include "JKA_YBEProxy/Engine/EngineState.hpp"
 
 namespace ybeproxy::features::client_commands
 {

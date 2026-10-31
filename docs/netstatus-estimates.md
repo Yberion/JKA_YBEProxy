@@ -1,6 +1,6 @@
 # Estimating a client's cl_timenudge and network ping from the server
 
-State: 2026-10-28. Code: `src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_NetStatus.cpp`, shown by `/netStatus` (`Proxy_Engine_ClientCommand.cpp`). Simulations: [`netstatus-simulation.py`](netstatus-simulation.py).
+State: 2026-10-28. Code: `src/JKA_YBEProxy/Engine/NetStatus.cpp` (namespace `ybeproxy::engine::netstatus`), shown by `/netStatus` (`Engine/NetStatusCommands.cpp`). Simulations: [`netstatus-simulation.py`](netstatus-simulation.py).
 
 ## 1. Summary
 
@@ -105,7 +105,7 @@ The mean has the smallest largest error (2.6 ms) and keeps one sign. What is lef
 
 ## 4. Simulation of the client
 
-`Proxy_Engine_NetStatus_SimulateClient(I, F, k)` runs the rules of section 2 with no network delay and no timenudge, and returns `D + T` computed as in section 3.3. Its inputs are measured:
+`netstatus::SimulateClient(I, F, k)` runs the rules of section 2 with no network delay and no timenudge, and returns `D + T` computed as in section 3.3. Its inputs are measured:
 
 - `I`: the snapshot interval of this client, the mean of the real send intervals (smoothed by 1/8, intervals of 1 to 1000 ms), rounded;
 - `F`: the median difference between two usercmds in a row over the window;
@@ -138,7 +138,7 @@ python docs/netstatus-simulation.py
 
 It holds two models of the client, both with server time equal to real time:
 
-- `simulate_client`: the copy of `Proxy_Engine_NetStatus_SimulateClient`, line for line.
+- `simulate_client`: the copy of `netstatus::SimulateClient`, line for line.
 - `run_client`: the same rules with a network. Each snapshot and each packet gets a delay from a distribution per direction, and a share of the frames can be 1 ms longer. The snapshots the client receives out of order are dropped, as the client does. It returns what the proxy sees, the delay and round trip samples with their arrival times, and `estimate` computes `timeNudge` from them as the proxy does.
 
 Its output:
@@ -265,11 +265,11 @@ The phase moves slowly with the clock drift between client and server, so the er
 
 | Function | Hook | Work |
 | --- | --- | --- |
-| `Proxy_Engine_NetStatus_FrameClock` | `GAME_RUN_FRAME` (`Proxy_Main.cpp`) | clock offset, each game frame |
-| `Proxy_Engine_NetStatus_SnapshotSent` | `SV_SendMessageToClient` (`Patches/server/Proxy_sv_snapshot.cpp`) | send time and sequence of each message; snapshot interval and server lateness |
-| `Proxy_Engine_NetStatus_PacketReceived` | `SV_UserMove` (`Patches/server/Proxy_sv_client.cpp`) | round trip, packet count, delay and frame samples; once per second: `netPing`, `timeNudge` |
-| `Proxy_Engine_NetStatus_SimulateClient` | | section 4, when its inputs change |
-| `Proxy_Engine_NetStatus_GetRates` | `/netStatus` | `fps`, `packets`, `trueSnaps` |
+| `FrameClock` | `GAME_RUN_FRAME` (`Module/GameExports.cpp`) | clock offset, each game frame |
+| `SnapshotSent` | `SV_SendMessageToClient` (`Engine/Hooks/server/sv_snapshot.cpp`) | send time and sequence of each message; snapshot interval and server lateness |
+| `PacketReceived` | `SV_UserMove` (`Engine/Hooks/server/sv_client.cpp`) | round trip, packet count, delay and frame samples; once per second: `netPing`, `timeNudge` |
+| `SimulateClient` | | section 4, when its inputs change |
+| `GetRates` | `/netStatus` | `fps`, `packets`, `trueSnaps` |
 
 All of it runs only with `proxy_sv_enableNetStatus 1` and the original engine. Per client: about 10 KB (`netEstimate_t`: 64 round trips, 128 window samples, 1 024 packets). Per packet: a few operations. Per second and client: a walk over the round trips (64) and the packets of the last second, and a partial sort of at most 128 frame lengths (`std::nth_element`).
 

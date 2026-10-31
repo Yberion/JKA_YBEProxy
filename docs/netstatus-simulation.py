@@ -7,7 +7,7 @@ Python 3.10+, standard library only, deterministic (fixed seeds), a few seconds.
 
 Two models of the client time, both copies of the retail code (jediacademy codemp/client, the same in OpenJK and
 TaystJK), with server time = real time:
-- simulate_client: no network, regular frames, integers. The same code as Proxy_Engine_NetStatus_SimulateClient.
+- simulate_client: no network, regular frames, integers. The same code as netstatus::SimulateClient.
 - run_client: the same rules with network delays per direction, frames that are sometimes 1 ms longer, and a
   cl_timenudge. It plays the real client, and the proxy estimate is computed from what it sends.
 """
@@ -80,7 +80,7 @@ def pick(values: Sequence[float], statistic: Statistic) -> float:
 @functools.lru_cache(maxsize=None)
 def simulate_client(interval: int, frame_ms: int, frames_per_packet: int, statistic: Statistic = "mean",
                     phases: int = 4, warm: int = 30, snapshots: int = 130, packets: int = 10) -> tuple[float, float]:
-    """Run the client time rules with no network delay and no timenudge, as Proxy_Engine_NetStatus_SimulateClient.
+    """Run the client time rules with no network delay and no timenudge, as netstatus::SimulateClient.
 
     Server time and client time are the same clock, in integer ms. Each phase shifts the first client frame by a part
     of a frame against the snapshots, starts near the balance (serverTimeDelta = -interval - 5), lets warm snapshots
@@ -98,7 +98,7 @@ def simulate_client(interval: int, frame_ms: int, frames_per_packet: int, statis
 
     Returns:
         The statistic of the delays (cmd.serverTime minus the time the packet arrives) and the round trip as
-        Proxy_Engine_NetStatus_PacketReceived computes it: the mean round trip minus half the time between two
+        netstatus::PacketReceived computes it: the mean round trip minus half the time between two
         packets, never below the smallest one. Their sum is S in docs/netstatus-estimates.md.
     """
     delays: list[int] = []

@@ -26,6 +26,28 @@ This is an educational project.
 - If the engine is the original 1.01 binary, the proxy also hooks and patches engine functions in memory. See [docs/trampoline-hook.md](docs/trampoline-hook.md).
 - On `GAME_SHUTDOWN`, the proxy removes its engine patches and unloads the original game module.
 
+## Source layout
+
+The folders of `src/JKA_YBEProxy/` follow the namespaces of the code (`ybeproxy::...`):
+
+| Folder | Namespace | Content |
+| --- | --- | --- |
+| `Proxy.hpp`, `Proxy.cpp` | `ybeproxy` | The state shared by the whole proxy (`proxy`): the clients, the cvars, the original game module |
+| `Platform.hpp` | | The differences between Windows and Linux |
+| `Module/` | `ybeproxy::module` | The boundary with the engine and the original game: `Main.cpp` (`dllEntry`, `vmMain`, which only routes the commands), `GameExports` (the `vmMain` commands, `gameExport_t`), `GameImports` (the system calls of the original game, `gameImport_t`), `GameLibrary` (loads the original game module), `EngineApi` (`proxy.trap`, the engine functions for the proxy) |
+| `Features/` | `ybeproxy::features::<feature>` | What the proxy adds, on any engine: bans, chat, client and console commands, connection checks, cvars, userinfo |
+| `Engine/` | `ybeproxy::engine` | The original engine only: addresses (`Addresses.hpp`), its variables and functions (`EngineState`), the hook list and byte patches (`Patches`), and the features that need the engine (`NetStatus`, `Rate`, `RateLimit`, `Challenge`, `Restart`) |
+| `Engine/Hooks/` | `ybeproxy::engine::hooks` | The replacements of engine functions, one file per engine file. `Proxy_X` replaces `X`, `Original_X` calls the original |
+| `HookUtils/` | `HookUtils` | The trampoline hooks, with no knowledge of the game |
+| `Ports/` | `ybeproxy::ports` | Code copied from the engine or the game |
+
+Rules:
+
+- `Module/` calls `Features/` and `Engine/`. Its handlers only call the features.
+- `Features/` does not use `Engine/`, except `Features/Cvars.cpp`, which registers the cvars of the original engine. A feature that needs the engine goes in `Engine/`.
+- A function or a variable used by one file only is `static` in that file, and so is the state of a feature.
+- The engine unloads the module, so the proxy, at each map change: all the state of the proxy starts again from zero.
+
 ## Supported servers
 
 | Engine | `version` string used for detection | What the proxy does |
