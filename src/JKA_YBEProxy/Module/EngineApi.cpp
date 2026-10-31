@@ -200,9 +200,6 @@ void trap_TraceCapsule(trace_t* results, const vec3_t start, const vec3_t mins, 
 qboolean trap_EntityContactCapsule(const vec3_t mins, const vec3_t maxs, const sharedEntity_t* ent) {
 	return proxy.originalSystemCall(G_ENTITY_CONTACTCAPSULE, mins, maxs, ent);
 }
-int trap_SP_GetStringTextString(const char* text, char* buffer, int bufferLength) {
-	return proxy.originalSystemCall(SP_GETSTRINGTEXTSTRING, text, buffer, bufferLength);
-}
 qboolean trap_ROFF_Clean(void) {
 	return proxy.originalSystemCall(G_ROFF_CLEAN);
 }
