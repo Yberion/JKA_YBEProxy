@@ -9,6 +9,7 @@
 
 - **Create a plugin system.** See A6 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
 - A command that explains each column of [`/netStatus`](features.md#netstatus-shownet), for the players who run it (name to choose, for example `/explainNetStatus`).
+- [`proxyconfig`](features.md#proxyconfig): also print the main server settings, engine and game cvars that are not the proxy's: `sv_hostname`, `sv_maxclients`, `sv_privateClients`, `sv_fps`, `sv_pure`, `fraglimit`, `timelimit`, with their value only (their default depends on the engine and the mod). `sv_maxRate` goes next to `sv_minRate` on the original engine, and with the server settings on the others.
 
 ### Bugs
 
