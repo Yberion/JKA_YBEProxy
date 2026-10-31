@@ -9,7 +9,6 @@
 
 - **Create a plugin system.** See A6 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
 - A command that explains each column of [`/netStatus`](features.md#netstatus-shownet), for the players who run it (name to choose, for example `/explainNetStatus`).
-- [`proxyconfig`](features.md#proxyconfig): also print the main server settings, engine and game cvars that are not the proxy's: `sv_hostname`, `sv_maxclients`, `sv_privateClients`, `sv_fps`, `sv_pure`, `fraglimit`, `timelimit`, with their value only (their default depends on the engine and the mod). `sv_maxRate` goes next to `sv_minRate` on the original engine, and with the server settings on the others.
 
 ### Bugs
 
@@ -34,7 +33,7 @@ Found by reading the code of the other engines (2026-10-31), not reproduced. Mos
 
 ### Features and fixes
 
-- `proxyconfig` command: the version, the engine it runs on, and every proxy cvar with its value and its default, see [features.md](features.md#proxyconfig).
+- `proxyconfig` command: the version, the engine it runs on, every proxy cvar with its value and its default, and the main server settings with their value, see [features.md](features.md#proxyconfig).
 - Snaps policy: `sv_minSnaps` and `sv_maxSnaps` (the engine kept `snaps` between 1 and 30 whatever `sv_fps` was), and a `userSnaps` column in `/netStatus`, see [features.md](features.md#sv_minsnaps-sv_maxsnaps).
 - Rate policy: `sv_minRate`, and the `userRate` and `trueRate` columns in `/netStatus`, see [features.md](features.md#sv_minrate).
 - Persist bans across server restarts: the IP bans are stored in `ybeproxy_bans.txt`, up to 1024, and `ban` and `unban` take a client number, see [features.md](features.md#addip-removeip-listip).

@@ -6,6 +6,8 @@ static cvarTable_t proxyOriginalEngineCVarTable[] =
 {
 	{ &proxy.originalEngineCvars.proxy_sv_pingFix, "proxy_sv_pingFix", "0", CVAR_ARCHIVE, 0, qfalse },
 	{ &proxy.originalEngineCvars.proxy_sv_enableNetStatus, "proxy_sv_enableNetStatus", "0", CVAR_ARCHIVE, 0, qfalse },
+	// The engine's cvar, with its default and flags: registering it changes nothing
+	{ &proxy.originalEngineCvars.sv_maxRate, "sv_maxRate", "0", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
 	// The flags of the engine's sv_maxRate
 	{ &proxy.originalEngineCvars.sv_minRate, "sv_minRate", "0", CVAR_ARCHIVE | CVAR_SERVERINFO, 0, qfalse },
 	// 0: no floor, and a cap of sv_fps
@@ -188,4 +190,26 @@ void Proxy_CVars_PrintConfig(void)
 	}
 
 	Proxy_PrintCvarTable(proxyCVarTable, proxyCVarTableSize);
+
+	// Engine and game cvars, value only: their default depends on the engine and the mod
+	static const char* const serverSettings[] = {
+		"sv_hostname", "sv_maxclients", "sv_privateClients", "sv_fps", "sv_maxRate", "sv_pure", "fraglimit", "timelimit"
+	};
+
+	proxy.trap->Print("\n%-36s %s\n", "server setting", "value");
+	proxy.trap->Print("------------------------------------ ----------\n");
+
+	for (const char* name : serverSettings)
+	{
+		// Already listed with the cvars of the original engine, next to sv_minRate
+		if (proxy.isOriginalEngine && !std::strcmp(name, "sv_maxRate"))
+		{
+			continue;
+		}
+
+		char value[MAX_CVAR_VALUE_STRING];
+
+		proxy.trap->Cvar_VariableStringBuffer(name, value, sizeof(value));
+		proxy.trap->Print("%-36s %s\n", name, value);
+	}
 }
