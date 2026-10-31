@@ -1,5 +1,4 @@
 #include "JKA_YBEProxy/Engine/EngineState.hpp"
-#include "JKA_YBEProxy/Engine/Utils.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/qcommon/common.hpp"
 
 ProxyServer_t server = {};

@@ -1,6 +1,6 @@
 #include "JKA_YBEProxy/Proxy.hpp"
 #include "JKA_YBEProxy/Engine/NetStatus.hpp"
-#include "JKA_YBEProxy/Engine/Utils.hpp"
+#include "JKA_YBEProxy/Engine/EngineState.hpp"
 
 #include <algorithm>
 #include <cmath>

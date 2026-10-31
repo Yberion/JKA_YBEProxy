@@ -5,6 +5,12 @@
 // The commands of the game module (gameExport_t) that the proxy handles before the original game, one per vmMain
 // command. They only call the features
 
+// GAME_INIT: before the original game runs it, and after
+void Proxy_SharedAPI_Init(void);
+void Proxy_SharedAPI_InitDone(void);
+// GAME_SHUTDOWN: before the original game runs it
+void Proxy_SharedAPI_Shutdown(void);
+void Proxy_SharedAPI_RunFrame(int levelTime);
 const char* Proxy_SharedAPI_ClientConnect(int clientNum, qboolean firstTime, qboolean isBot);
 // Called when the game accepted the client
 void Proxy_SharedAPI_ClientConnected(int clientNum, qboolean isBot);

@@ -1,7 +1,18 @@
-#include "JKA_YBEProxy/Proxy.hpp"
 #include "JKA_YBEProxy/Module/GameLibrary.hpp"
+#include "JKA_YBEProxy/Proxy.hpp"
+#include "JKA_YBEProxy/Module/GameImports.hpp"
 
-void Proxy_LoadGameLibrary(void)
+#define FS_GAME_CVAR "fs_game"
+
+#define DEFAULT_BASE_GAME_FOLDER_NAME "base"
+
+#define PROXY_LIBRARY_SLASH "/"
+#define PROXY_LIBRARY_NAME "JKA_YBEProxy"
+#define PROXY_LIBRARY_DOT "."
+
+#define PROXY_LIBRARY PROXY_LIBRARY_SLASH PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT
+
+static void Proxy_LoadGameLibrary(void)
 {
 	char basePath[MAX_OSPATH] = { 0 };
 	char gameDir[MAX_OSPATH] = { 0 };
@@ -49,4 +60,58 @@ void Proxy_LoadGameLibrary(void)
 
 		exit(EXIT_FAILURE);
 	}
+}
+
+static void Proxy_GetOriginalGameAPI(void)
+{
+	// 1) Original Engine -> Load the Proxy dllEntry (store the original server's systemCall function pointer in originalSystemCall)
+	// 2) The Proxy get the Original dllEntry
+	// 3) The Proxy send our own Proxy systemCall function pointer to the Original dllEntry
+	// 4) If there is a call to our Proxy's systemCall function it will call the Original systemCall function at the end of it
+	proxy.originalDllEntry = (dllEntryFuncPtr_t)YBEProxy_GetFunctionAddress(proxy.jampgameHandle, "dllEntry");
+
+	if (!proxy.originalDllEntry)
+	{
+		proxy.trap->Print("================================================================\n");
+		proxy.trap->Print("----- Proxy: Failed to find dllEntry(), exiting\n");
+		proxy.trap->Print("================================================================\n");
+
+		exit(EXIT_FAILURE);
+	}
+
+	// Engine -> Proxy vmMain -> Original vmMain
+	proxy.originalVmMain = (vmMainFuncPtr_t)YBEProxy_GetFunctionAddress(proxy.jampgameHandle, "vmMain");
+
+	if (!proxy.originalVmMain)
+	{
+		proxy.trap->Print("================================================================\n");
+		proxy.trap->Print("----- Proxy: Failed to find vmMain(), exiting\n");
+		proxy.trap->Print("================================================================\n");
+
+		exit(EXIT_FAILURE);
+	}
+
+	// "Send our own Proxy systemCall function pointer to the Original dllEntry"
+	proxy.originalDllEntry(Proxy_OriginalAPI_VM_DllSyscall);
+}
+
+void Proxy_GameLibrary_Load(void)
+{
+	proxy.trap->Print("----- Proxy: Loading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
+
+	Proxy_LoadGameLibrary();
+
+	Proxy_GetOriginalGameAPI();
+
+	proxy.trap->Print("----- Proxy: %s properly loaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
+}
+
+void Proxy_GameLibrary_Unload(void)
+{
+	proxy.trap->Print("----- Proxy: Unloading original game library %s\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
+
+	// We can close the original game library
+	YBEProxy_CloseLibrary(proxy.jampgameHandle);
+
+	proxy.trap->Print("----- Proxy: %s properly unloaded\n", PROXY_LIBRARY_NAME PROXY_LIBRARY_DOT PROXY_LIBRARY_EXT);
 }

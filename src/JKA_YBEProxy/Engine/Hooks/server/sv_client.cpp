@@ -2,7 +2,7 @@
 #include "JKA_YBEProxy/Engine/NetStatus.hpp"
 #include "JKA_YBEProxy/Module/GameImports.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/qcommon/cmd.hpp"
-#include "JKA_YBEProxy/Engine/Utils.hpp"
+#include "JKA_YBEProxy/Engine/EngineState.hpp"
 #include "JKA_YBEProxy/Engine/Rate.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/server/sv_ccmds.hpp"
 #include "JKA_YBEProxy/Engine/Hooks/server/sv_client.hpp"
