@@ -211,13 +211,13 @@ What moves where:
 
 What it lets you delete:
 
-- The rewrites of `SV_PacketEvent` and `SV_ConnectionlessPacket`, the `SVC_RemoteCommand` wrapper, and the `SVC_Status`/`SVC_Info` hooks: about 180 lines in [Proxy_sv_main.cpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp#L89-L272), and the matching entries in [Proxy_Engine_Patch.cpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.cpp#L14-L44).
+- The rewrites of `SV_PacketEvent` and `SV_ConnectionlessPacket`, the `SVC_RemoteCommand` wrapper, and the `SVC_Status`/`SVC_Info` hooks: about 180 lines in [Proxy_sv_main.cpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp#L89-L272), and the matching entries in [Proxy_Engine_Patch.cpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.cpp#L14-L44).
 - The cvar `proxy_sv_enableRconCmdCooldown`, replaced by F6.
 
 What must stay:
 
 - The inline patches on `SVC_RemoteCommand`: the timer NOP and the `SV_OUTPUTBUF_LENGTH` byte. They patch the original code, which still runs.
-- The `Com_EndRedirect` call in `GAME_SHUTDOWN` ([Proxy_Main.cpp:111-115](../../src/JKA_YBEProxy/Proxy_Main.cpp#L111-L115)). Correction: it does not become useless, only its comment is wrong.
+- The `Com_EndRedirect` call in `GAME_SHUTDOWN` ([Proxy_Main.cpp:111-115](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_Main.cpp#L111-L115)). Correction: it does not become useless, only its comment is wrong.
   - The original `SVC_RemoteCommand` does call `Com_EndRedirect`, but only once `Cmd_ExecuteString` returns, that is after the whole map load ([`server/sv_main.cpp:490-533`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_main.cpp#L490-L533)).
   - While a redirect is active, the original `Com_Printf` returns early, without the console or the log file ([`qcommon/common.cpp`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/common.cpp), `Com_Printf`). The proxy's `Com_Printf` does the same.
   - Ending the redirect in `GAME_SHUTDOWN` sends the rest of the map load output to the server console and log, instead of the rcon client. The later `Com_EndRedirect` of the original then does nothing, because `rd_flush` is already `NULL`.
@@ -282,12 +282,12 @@ ioq3 and OpenJK keep the original order.
 Consequence: the game module receives the raw userinfo from the connect packet, and a malicious client never has to send a `userinfo` command afterwards. These proxy fixes are bypassed by setting the bad value before connecting:
 
 - the forcepowers crash fix. In the source, a bad `forcepowers` set before connecting reaches `BG_LegalizedForcePowers`. No crash was reproduced: the bug is an out-of-bounds read, which only crashes when it reaches unmapped memory;
-- the model length fix. `Proxy_SV_UserinfoChanged` runs after `GAME_CLIENT_CONNECT`, and its comment ([Proxy_sv_client.cpp:464-466](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L464-L466)) describes the connection order backwards;
+- the model length fix. `Proxy_SV_UserinfoChanged` runs after `GAME_CLIENT_CONNECT`, and its comment ([Proxy_sv_client.cpp:464-466](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L464-L466)) describes the connection order backwards;
 - name cleaning. Anti-cheat messages print an empty name.
 
 ### Fix
 
-1. Move the body of `Proxy_SharedAPI_ClientUserinfoChanged` ([Proxy_SharedAPI.cpp:232-339](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L232-L339)) into one function:
+1. Move the body of `Proxy_SharedAPI_ClientUserinfoChanged` ([Proxy_SharedAPI.cpp:232-339](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L232-L339)) into one function:
 
    ```cpp
    // Cleans the userinfo of a client in place.
@@ -299,7 +299,7 @@ Consequence: the game module receives the raw userinfo from the connect packet, 
 
    It must also close the bypass described in O8 of [other-engines.md](other-engines.md): refuse a userinfo with a key present twice (case-insensitive), and refuse the client when an `Info_SetValueForKey` fails. Otherwise a long userinfo keeps the bad value.
 
-2. Userinfo change path (`GAME_CLIENT_USERINFO_CHANGED` in [Proxy_Main.cpp:203-209](../../src/JKA_YBEProxy/Proxy_Main.cpp#L203-L209), and `Proxy_OpenJKAPI_ClientUserinfoChanged`):
+2. Userinfo change path (`GAME_CLIENT_USERINFO_CHANGED` in [Proxy_Main.cpp:203-209](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_Main.cpp#L203-L209), and `Proxy_OpenJKAPI_ClientUserinfoChanged`):
 
    ```cpp
    const char* reason = Proxy_SharedAPI_SanitizeUserinfo((int)arg0);
@@ -313,7 +313,7 @@ Consequence: the game module receives the raw userinfo from the connect packet, 
    }
    ```
 
-3. Connect path (`GAME_CLIENT_CONNECT` in [Proxy_Main.cpp:156-162](../../src/JKA_YBEProxy/Proxy_Main.cpp#L156-L162), and `Proxy_OpenJKAPI_ClientConnect`), for both values of `firstTime`, before forwarding:
+3. Connect path (`GAME_CLIENT_CONNECT` in [Proxy_Main.cpp:156-162](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_Main.cpp#L156-L162), and `Proxy_OpenJKAPI_ClientConnect`), for both values of `firstTime`, before forwarding:
 
    ```cpp
    if (!isBot)
@@ -329,7 +329,7 @@ Consequence: the game module receives the raw userinfo from the connect packet, 
 
    Then send the welcome message, as today.
 
-4. Fix the comment at [Proxy_sv_client.cpp:464-466](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L464-L466). On connect, `SV_UserinfoChanged` runs after the game.
+4. Fix the comment at [Proxy_sv_client.cpp:464-466](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L464-L466). On connect, `SV_UserinfoChanged` runs after the game.
 
 Why `DropClient` must not be called during `GAME_CLIENT_CONNECT`:
 
@@ -364,7 +364,7 @@ Steps 1 to 4, with one part left out:
 
 Status: **confirmed** for the comparison bugs (proxy code and [q_string.cpp](../../src/sdk/qcommon/q_string.cpp)). The ghost configstring is **source only**, and was inferred before: now checked.
 
-[Proxy_SharedAPI.cpp:263](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L263) does `Q_stricmpn(val, "darksidetools", len)` with `len = strlen(model)`:
+[Proxy_SharedAPI.cpp:263](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L263) does `Q_stricmpn(val, "darksidetools", len)` with `len = strlen(model)`:
 
 - An empty or missing model gives `len == 0`, and `Q_stricmpn(..., 0)` returns 0. `Info_ValueForKey` returns `""` for a missing key. The player is kicked, with a public "cheating" message.
 - Any prefix matches: `d`, `da`, `dark`… are kicked.
@@ -416,11 +416,11 @@ The problems:
   - `proxy_sv_modelPathLength = 0`, so `len >= 0` is always true: **every model is forced to kyle** on each userinfo change.
   - `proxy_sv_maxCallVoteMapRestartValue = 0`: every `callvote map_restart N` with N > 0 is refused.
   - No startup banner or log (todo item "Add log in server console when using OpenJK API").
-- The `RunFrame` wrapper ([Proxy_OpenJKAPI_Wrappers.cpp:74-77](../../src/JKA_YBEProxy/Wrappers/Proxy_OpenJKAPI_Wrappers.cpp#L74-L77)) updates neither `svsTime` nor the cvars:
-  - `/myratio` never gets past its cooldown, because `svsTime` stays 0 ([Proxy_ClientCommand.cpp:47](../../src/JKA_YBEProxy/Proxy_ClientCommand.cpp#L47)). This is the cause of the todo item "Fix `/myratio` on OpenJK API".
+- The `RunFrame` wrapper ([Proxy_OpenJKAPI_Wrappers.cpp:74-77](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Wrappers/Proxy_OpenJKAPI_Wrappers.cpp#L74-L77)) updates neither `svsTime` nor the cvars:
+  - `/myratio` never gets past its cooldown, because `svsTime` stays 0 ([Proxy_ClientCommand.cpp:47](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_ClientCommand.cpp#L47)). This is the cause of the todo item "Fix `/myratio` on OpenJK API".
   - Cvar changes are ignored.
-- `GetUsercmd` ([Proxy_OpenJKAPI_Wrappers.cpp:9-14](../../src/JKA_YBEProxy/Wrappers/Proxy_OpenJKAPI_Wrappers.cpp#L9-L14)) sanitises before the engine fills `cmd`, so it does nothing. The original API path does it in the right order ([Proxy_OriginalAPI_Wrappers.cpp:35-45](../../src/JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.cpp#L35-L45)).
-- Fallback when the retail jampgame has no `GetModuleAPI` ([Proxy_Main.cpp:248-257](../../src/JKA_YBEProxy/Proxy_Main.cpp#L248-L257)): it calls `Proxy_GetOriginalGameAPI`, then returns `nullptr`, so OpenJK stops with `ERR_FATAL`. The message the proxy prints just before is misleading.
+- `GetUsercmd` ([Proxy_OpenJKAPI_Wrappers.cpp:9-14](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Wrappers/Proxy_OpenJKAPI_Wrappers.cpp#L9-L14)) sanitises before the engine fills `cmd`, so it does nothing. The original API path does it in the right order ([Proxy_OriginalAPI_Wrappers.cpp:35-45](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Wrappers/Proxy_OriginalAPI_Wrappers.cpp#L35-L45)).
+- Fallback when the retail jampgame has no `GetModuleAPI` ([Proxy_Main.cpp:248-257](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_Main.cpp#L248-L257)): it calls `Proxy_GetOriginalGameAPI`, then returns `nullptr`, so OpenJK stops with `ERR_FATAL`. The message the proxy prints just before is misleading.
 - The userinfo is not sanitised in `ClientConnect` (see F2).
 - The welcome message never reaches the client. The proxy sends it during `GAME_CLIENT_CONNECT`, while the slot is still `CS_FREE`, and OpenJK's `SV_AddServerCommand` drops every command to a client below `CS_PRIMED` ([`codemp/server/sv_main.cpp:124-126`](https://github.com/JACoders/OpenJK/blob/260c59c2907187af555a676fe0cc798893bf7757/codemp/server/sv_main.cpp#L124-L126)). The retail engine has no such check. This is an engine difference, not an API one: both options below leave it as is.
 
@@ -439,7 +439,7 @@ Result:
 - Every F4 bug disappears. The cvars, `GAME_RUN_FRAME`, `/myratio` and the usercmd fix run on OpenJK through code that already works on the original engine.
 - Both OpenJK cases work: OpenJK engine with the retail jampgame, and OpenJK engine with an OpenJK jampgame. Checked: the legacy path of the OpenJK game (`TranslateSyscalls` in `codemp/game/g_syscalls.c`) only uses syscalls of the retail `G_*` enum (171 of its 189), and the proxy forwards every syscall it does not handle. On a 64-bit OpenJK server, the proxy and the game must be 64-bit builds; the retail jampgame only exists in 32-bit.
 - A2 (bridge) is no longer needed: OpenJK with the retail jampgame works.
-- Deleted: `GetModuleAPI` in [Proxy_Main.cpp](../../src/JKA_YBEProxy/Proxy_Main.cpp#L225-L274), [Proxy_OpenJKAPI_Wrappers.cpp](../../src/JKA_YBEProxy/Wrappers/Proxy_OpenJKAPI_Wrappers.cpp), and the `*OpenJKAPI*` fields of `proxy`.
+- Deleted: `GetModuleAPI` in [Proxy_Main.cpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_Main.cpp#L225-L274), [Proxy_OpenJKAPI_Wrappers.cpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Wrappers/Proxy_OpenJKAPI_Wrappers.cpp), and the `*OpenJKAPI*` fields of `proxy`.
 - Cost: each call goes through OpenJK's legacy `GVM_*` wrappers, one more `switch`. Negligible.
 - To test on a real OpenJK server: loading, cvars, `/myratio`, a map change. `/netStatus` stays disabled on OpenJK (`isOriginalEngine` is false).
 
@@ -451,7 +451,7 @@ Welcome message, with either option: set a flag in `GAME_CLIENT_CONNECT` when `f
 2. Wrap `RunFrame`: `Proxy_UpdateAllCvars()`, `proxy.proxyData.svsTime = levelTime`, then call the original. OpenJK passes `svs.time`, as `GAME_RUN_FRAME` does.
 3. `GetUsercmd`: call the engine first, then `Proxy_SharedAPI_GetUsercmd`.
 4. `ClientConnect`: F2.
-5. Fill the import copy before calling the original `GetModuleAPI` (move [Proxy_Main.cpp:270-271](../../src/JKA_YBEProxy/Proxy_Main.cpp#L270-L271) before line 266). Then it no longer depends on how the game stores the pointer.
+5. Fill the import copy before calling the original `GetModuleAPI` (move [Proxy_Main.cpp:270-271](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_Main.cpp#L270-L271) before line 266). Then it no longer depends on how the game stores the pointer.
 6. Retail jampgame on OpenJK: A2 bridge, or at least a clear `trap->Error` message instead of `Proxy_GetOriginalGameAPI` plus `nullptr`.
 
 ### Applied
@@ -466,7 +466,7 @@ Status: **source only**, checked.
 - `Cvar_Get` ORs the flags into an existing cvar: `var->flags |= flags` ([`qcommon/cvar.cpp`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/cvar.cpp), `Cvar_Get`).
 - The engine registers `sv_fps` with `CVAR_TEMP`.
 
-[Proxy_CVars.cpp:20-21](../../src/JKA_YBEProxy/Proxy_CVars.cpp#L20-L21):
+[Proxy_CVars.cpp:20-21](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_CVars.cpp#L20-L21):
 
 - `sv_gametype` does not exist as a cvar. The proxy creates a bogus cvar `sv_gametype`, set to 0, with `CVAR_SERVERINFO`:
   - it shows up in the serverinfo;
@@ -508,8 +508,8 @@ Status: **source only** for the original engine. **Confirmed** for ioq3, Quake3e
 
 Today:
 
-- By default the engine timer is NOPed ([Proxy_Engine_Patch.cpp:97-98](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.cpp#L97-L98)) and `proxy_sv_enableRconCmdCooldown` is 0: the rcon password can be brute-forced with no limit.
-- With the cooldown on, it is global and updated **before** the password check ([Proxy_sv_main.cpp:128-134](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp#L128-L134)). Anyone can lock the admins out: the "rcon disabler" again.
+- By default the engine timer is NOPed ([Proxy_Engine_Patch.cpp:97-98](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.cpp#L97-L98)) and `proxy_sv_enableRconCmdCooldown` is 0: the rcon password can be brute-forced with no limit.
+- With the cooldown on, it is global and updated **before** the password check ([Proxy_sv_main.cpp:128-134](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp#L128-L134)). Anyone can lock the admins out: the "rcon disabler" again.
 - `getstatus`/`getinfo`: the server can be used as a DRDoS amplifier.
 
 Constraint: attackers can spoof source IPs, so every packet can come from a different address. Admins must keep a working rcon during such a flood. The one thing a spoofing attacker cannot fake is the password.
@@ -617,7 +617,7 @@ Side effects:
 
 The fix above, in the F1 filter, with these choices:
 
-- Bucket table: a modified version of OpenJK's `std::map`, in [Proxy_Engine_RateLimit.cpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_RateLimit.cpp). It is capped at 65536 addresses, and a new address beyond the cap is dropped. Times are unsigned, so the buckets stay right when `Sys_Milliseconds` wraps after about 24.8 days. Only `NA_IP` addresses are limited, as Quake3e.
+- Bucket table: a modified version of OpenJK's `std::map`, in [Proxy_Engine_RateLimit.cpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_RateLimit.cpp). It is capped at 65536 addresses, and a new address beyond the cap is dropped. Times are unsigned, so the buckets stay right when `Sys_Milliseconds` wraps after about 24.8 days. Only `NA_IP` addresses are limited, as Quake3e.
 - The optional `getchallenge` limit is done, and `connect` gets it too, as Quake3e. It is per address only, and shares the `getstatus`/`getinfo` buckets.
 - Each dropped request is printed only with `developer 1`, as ioq3 and Quake3e.
 - `proxy_sv_enableRconCmdCooldown` is deleted.
@@ -637,7 +637,7 @@ Status: **source only**, checked.
 - `Com_WriteConfig_f` calls `COM_DefaultExtension(filename, ..., ".cfg")` ([`qcommon/common.cpp:1515-1527`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/common.cpp#L1515-L1527)). It adds `.cfg` only when the name has no `.` after its last `/` ([`game/q_shared.c:112-131`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/q_shared.c#L112-L131)).
 - `FS_FOpenFileWrite` writes to `fs_homepath/fs_game/<name>` with no check on the extension or on `..` ([`qcommon/files.cpp:864-897`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/files.cpp#L864-L897)).
 
-[Proxy_sv_main.cpp:137-144](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp#L137-L144) only blocks a name that is at least 5 characters long and has a 3-letter extension other than `.cfg`:
+[Proxy_sv_main.cpp:137-144](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp#L137-L144) only blocks a name that is at least 5 characters long and has a 3-letter extension other than `.cfg`:
 
 - `x.so`, `x.js` or `jampgamei386.so` get through.
 - It can also be bypassed with `vstr` or `exec`: the command then runs later from the Cbuf.
@@ -686,7 +686,7 @@ void Proxy_Com_WriteConfig_f(void)
 - `COM_DefaultExtension` and `COM_CompareExtension` are declared in [q_shared.hpp:606-607](../../src/sdk/qcommon/q_shared.hpp#L606-L607) but not defined in the repository. Port them from OpenJK [`codemp/qcommon/q_shared.c:130-170`](https://github.com/JACoders/OpenJK/blob/260c59c2907187af555a676fe0cc798893bf7757/codemp/qcommon/q_shared.c#L130-L170).
 - It also covers `vstr`, `exec` and the server console, because the check sits in the command itself.
 - It is safe for F1: `writeconfig` never reloads the VM, so this hook is a leaf.
-- Address of `Com_WriteConfig_f`, found in the retail binaries (see F1 for the files): `0x410680` on Windows, `0x8074d64` on Linux. Both are registered by `Cmd_AddCommand("writeconfig", ...)` (at `0x411507` and `0x8074b55`), and both print `Usage: writeconfig <filename>`. Add them to [Proxy_Engine_Wrappers.hpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp) as `{ 0x410680, 0x8074d64 }`.
+- Address of `Com_WriteConfig_f`, found in the retail binaries (see F1 for the files): `0x410680` on Windows, `0x8074d64` on Linux. Both are registered by `Cmd_AddCommand("writeconfig", ...)` (at `0x411507` and `0x8074b55`), and both print `Usage: writeconfig <filename>`. Add them to [Proxy_Engine_Wrappers.hpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp) as `{ 0x410680, 0x8074d64 }`.
 - **Windows needed A1 first** (done, `Attach` now relocates a copied `e8`/`e9 rel32`). The Windows function starts with `sub esp, 0x40` (3 bytes) then `call Cmd_Argc` (`e8 rel32`). The trampoline copies these 8 bytes as they are, so the copied `call` would jump to a wrong address. `GetTramp` must relocate a copied `e8`/`e9 rel32` before this hook can be added (see A1). Linux starts with `push ebp; mov ebp, esp; sub esp, 0x50` (6 bytes): no problem.
 - Then delete the check in `Proxy_SVC_RemoteCommand`.
 
@@ -700,7 +700,7 @@ The OpenJK behaviour (refuse), with the `..` check and the reserved names, done 
 
 Status: **confirmed** in the proxy code. The risk is corrected: theoretical with the retail game.
 
-- [Proxy_sv_game.cpp:16-26](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_game.cpp#L16-L26) validates `s.number`, but indexes with `num`, computed by pointer arithmetic and never bounds-checked.
+- [Proxy_sv_game.cpp:16-26](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_game.cpp#L16-L26) validates `s.number`, but indexes with `num`, computed by pointer arithmetic and never bounds-checked.
 - The jediacademy, OpenJK and ioq3 originals all index with `s.number` ([`server/sv_game.cpp:70-75`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_game.cpp#L70-L75)).
 - Origin, confirmed by the author: JK2MV's `mv_fixplayerghosting` fix, which uses the same pointer arithmetic against the "player ghosting" bug where players can walk through an affected player (JK2MV [`src/server/sv_game.cpp:34-41, 71-90`](https://github.com/mvdevs/jk2mv/blob/7d601454c3db68492289d4d4e3dc30bff39e4246/src/server/sv_game.cpp#L34-L41), [`CVARS.rst`](https://github.com/mvdevs/jk2mv/blob/7d601454c3db68492289d4d4e3dc30bff39e4246/CVARS.rst)). The fix keeps it and only adds the bounds checks that JK2MV has.
 
@@ -761,7 +761,7 @@ As written above, alignment test included.
 Status: **source only**, checked. The impact is **corrected**: it is a netcode change for a real player. The fix is **corrected** too: the first version left `Proxy_SV_UserMove` unchanged, and a human with a ping of 0 would then show wrong `fps` and `packets` values.
 
 - Without `proxy_sv_pingFix`, `messageSent` and `messageAcked` both use `svs.time` ([`server/sv_snapshot.cpp:667`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_snapshot.cpp#L667), [`server/sv_client.cpp:1715`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L1715)), which only changes once per server frame. A client whose round trip is shorter than one frame (50 ms at `sv_fps 20`) shows a ping of 0.
-- [Proxy_Engine_ClientCommand.cpp:57-64](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp#L57-L64) treats any client with a ping below 1 as a bot, and sets `cl->snapshotMsec = 1`.
+- [Proxy_Engine_ClientCommand.cpp:57-64](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp#L57-L64) treats any client with a ping below 1 as a bot, and sets `cl->snapshotMsec = 1`.
 - `snapshotMsec` caps the snapshot rate ([`server/sv_snapshot.cpp:681-692`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_snapshot.cpp#L681-L692)). It is normally at least 33 ms, because `snaps` is clamped to 1-30 ([`server/sv_client.cpp:1488-1497`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_client.cpp#L1488-L1497)).
 - With `snapshotMsec = 1`, that player gets a snapshot every server frame, limited only by `rate`, instead of their `snaps` value. That is a gameplay "feeling" change, triggered by a display command, and it lasts until the player's next userinfo change.
 
@@ -769,7 +769,7 @@ Status: **source only**, checked. The impact is **corrected**: it is a netcode c
 
 Two changes.
 
-1. Do not write to `cl`. In [Proxy_Engine_ClientCommand.cpp:57-73](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp#L57-L73):
+1. Do not write to `cl`. In [Proxy_Engine_ClientCommand.cpp:57-73](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_ClientCommand.cpp#L57-L73):
 
    ```cpp
    // Bots have no snapshot rate: avoid the division by zero without touching the engine state
@@ -785,7 +785,7 @@ Two changes.
 
    `NA_BOT` is the test `Proxy_SV_Status_f` already uses.
 
-2. Record the usercmd statistics of a human with a ping of 0. `Proxy_SV_UserMove` skips every client with a ping below 1 ([Proxy_sv_client.cpp:183-187](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L183-L187)), so it never fills `cmdStats` for such a human. Delete that test:
+2. Record the usercmd statistics of a human with a ping of 0. `Proxy_SV_UserMove` skips every client with a ping below 1 ([Proxy_sv_client.cpp:183-187](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L183-L187)), so it never fills `cmdStats` for such a human. Delete that test:
 
    ```cpp
    // Proxy -------------->
@@ -808,35 +808,35 @@ Both changes, as written above.
 
 Status per point:
 
-- **F10.1. Refuted.** [Proxy_CVars.cpp:148](../../src/JKA_YBEProxy/Proxy_CVars.cpp#L148), `frame == sv_fps`: "if `sv_fps` is lowered below the frame counter, the cvars are never updated again".
+- **F10.1. Refuted.** [Proxy_CVars.cpp:148](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_CVars.cpp#L148), `frame == sv_fps`: "if `sv_fps` is lowered below the frame counter, the cvars are never updated again".
   - `proxy.cvars.sv_fps` is a vmCvar. It only changes inside `Proxy_UpdateCvars`, which runs when `frame == sv_fps`, and then `frame` restarts from 1.
   - The new value is at least 1: the engine resets an `sv_fps` below 1 to 10 at the start of `SV_Frame` ([`server/sv_main.cpp:847-848`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_main.cpp#L847-L848)), before `GAME_RUN_FRAME`.
   - The counter always reaches the new value. No fix needed.
   - Applied: nothing.
-- **F10.2. Source only.** [Proxy_Engine_Client.cpp:111](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.cpp#L111): `1000 / svFps` divides by zero if `sv_fps` is set to 0.
+- **F10.2. Source only.** [Proxy_Engine_Client.cpp:111](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Client.cpp#L111): `1000 / svFps` divides by zero if `sv_fps` is set to 0.
   - The engine resets it only at the start of the next `SV_Frame`, and the packets of the same event loop are processed before that.
   - Only an rcon user can set `sv_fps 0`.
   - Fix: `+ (svFps > 0 ? 1000 / svFps : 0)`, or return early when `svFps <= 0`.
   - Applied: the early return. The usercmd data is kept and used at the next call.
-- **F10.3. Corrected.** [Proxy_SharedAPI.cpp:46-52](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L46-L52): `ClientDisconnect` only resets the client data if `isConnected` is set, and that flag is only set in `ClientBegin`.
+- **F10.3. Corrected.** [Proxy_SharedAPI.cpp:46-52](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L46-L52): `ClientDisconnect` only resets the client data if `isConnected` is set, and that flag is only set in `ClientBegin`.
   - Only `cleanName` can be stale. The usercmd statistics and the timers are only written after `ClientBegin`: `SV_UserMove` enters the world (`GAME_CLIENT_BEGIN`) before it processes the first usercmd.
   - The next client in the slot gets a new `cleanName` on its first userinfo change, or on connect once F2 is done.
   - Fix: drop the `isConnected` test and always reset.
   - Applied: as written.
-- **F10.4. Confirmed, harmless today.** [Proxy_SharedAPI.cpp:87-133](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L87-L133): command names are compared by prefix.
+- **F10.4. Confirmed, harmless today.** [Proxy_SharedAPI.cpp:87-133](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L87-L133): command names are compared by prefix.
   - `"team",4` also matches `teamvote`, `"say",3` already covers `say_team`, and `"gc",2` matches anything that starts with `gc`.
   - Each over-matched command also needs the argument condition (`follow1`, a client number…). `teamvote follow1` is dropped, but it means nothing to the game anyway.
-  - The arguments are compared by prefix too. `!Q_stricmpn(cmd_arg2, "saber_droid", 6)` ([Proxy_SharedAPI.cpp:113](../../src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L113)) only compares `saber_`, so `npc spawn` is refused for every NPC type that starts with `saber_`, not only `saber_droid`. Whether base has other `saber_*` NPC types was not checked.
+  - The arguments are compared by prefix too. `!Q_stricmpn(cmd_arg2, "saber_droid", 6)` ([Proxy_SharedAPI.cpp:113](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_SharedAPI.cpp#L113)) only compares `saber_`, so `npc spawn` is refused for every NPC type that starts with `saber_`, not only `saber_droid`. Whether base has other `saber_*` NPC types was not checked.
   - The game compares all these names whole, with `Q_stricmp`: the commands (`game/g_cmds.c`, `ClientCommand`), `spawn` ([`game/NPC_spawn.c:4197`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/NPC_spawn.c#L4197)), the NPC type ([`game/NPC_stats.c:1123`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/NPC_stats.c#L1123)), `follow1`/`follow2` ([`game/g_cmds.c:771-775`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_cmds.c#L771-L775)) and the vote names ([`game/g_cmds.c:2015-2023`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_cmds.c#L2015-L2023)). An exact comparison in the proxy therefore blocks everything the game would act on, and nothing more.
   - Fix: `Q_stricmp` on the command names and on these arguments, except `jkaDST_`, which must stay a prefix.
   - Applied: as written.
-- **F10.5. Refuted.** [Proxy_sv_ccmds.cpp:71](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.cpp#L71), `gametypeNames[sv_gametype->integer]`: "the clamp only sets the latched value".
+- **F10.5. Refuted.** [Proxy_sv_ccmds.cpp:71](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_ccmds.cpp#L71), `gametypeNames[sv_gametype->integer]`: "the clamp only sets the latched value".
   - `trap_Cvar_Set` goes through `Cvar_Set`, which is `Cvar_Set2(..., force = qtrue)` ([`server/sv_game.cpp:535-537`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_game.cpp#L535-L537), [`qcommon/cvar.cpp:402-404`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/cvar.cpp#L402-L404)). That skips the latch and sets the value at once.
   - `G_InitGame` clamps `g_gametype` to `[0, GT_MAX_GAME_TYPE)` right after registering it ([`game/g_main.c:824-841`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_main.c#L824-L841)), and `gametypeNames` has `GT_MAX_GAME_TYPE` (10) entries.
   - `rcon g_gametype 99` is latched, then clamped at the next `GAME_INIT`, before `status` can run.
   - A bound check costs one line and the code comment already asks for it. Optional.
   - Applied: the optional bound check.
-- **F10.6. Corrected.** [Proxy_Files.cpp:24-38](../../src/JKA_YBEProxy/Proxy_Files.cpp#L24-L38):
+- **F10.6. Corrected.** [Proxy_Files.cpp:24-38](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_Files.cpp#L24-L38):
   - The `memcpy` is not bounded. Windows only: `MAX_OSPATH` is 256 there, and `PATH_MAX` (4096) on Linux. `fs_game` has `CVAR_INIT`, so only the command line can set it.
   - The path is relative to the current directory instead of `fs_basepath`/`fs_homepath`.
   - A failure calls `exit()`.
@@ -844,7 +844,7 @@ Status per point:
   - Applied: the bounded path from `fs_basepath`, and the error now prints the full path. `exit()` is kept, by decision of the author:
     - the engine itself stops (`ERR_FATAL`) when it cannot load a game module;
     - an `ERR_DROP` version was tried and reverted: the server stayed up with no map, and rcon did not work, because `Com_EventLoop` only passes packets to the server while `com_sv_running` is set.
-- **F10.7. Corrected: intended, one edge case.** [Proxy_ClientCommand.cpp:13-20](../../src/JKA_YBEProxy/Proxy_ClientCommand.cpp#L13-L20): `ratioString` uses `kill - death` in the green branch and `kill - (death - suicides)` in the red one.
+- **F10.7. Corrected: intended, one edge case.** [Proxy_ClientCommand.cpp:13-20](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/Proxy_ClientCommand.cpp#L13-L20): `ratioString` uses `kill - death` in the green branch and `kill - (death - suicides)` in the red one.
   - Intent, per the author (with screenshots): "Kills" is `PERS_SCORE`, which loses 1 point per suicide, and "Deaths" (`PERS_KILLED`) counts the suicide too ([`game/g_combat.c:2571-2630`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_combat.c#L2571-L2630)). The color comes from `kill - death`. A player who is behind only because of a suicide shows `0` in red, not `-1`.
     - 1 kill: Kills 1, Deaths 0 gives `+1` in green.
     - 1 kill, then 1 suicide: Kills 0, Deaths 1, Suicides 1 gives `0` in red.
@@ -860,7 +860,7 @@ Status per point:
 
   - Applied differently, by decision of the author: `kill - death` in both colors, and no clamp. The number then matches the Kills and Deaths shown and the ratio, which uses the same two values: Kills 2, Deaths 3, Suicides 2 shows `-1` in red. One kill then one suicide now shows `-1` in red instead of `0`.
 
-- **F10.8. Corrected: `== -1` is intended.** [Proxy_sv_main.cpp:50](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp#L50): `SV_CalcPings` skips `messageAcked == -1` instead of `<= 0` ([`server/sv_main.cpp:684`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_main.cpp#L684)).
+- **F10.8. Corrected: `== -1` is intended.** [Proxy_sv_main.cpp:50](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_main.cpp#L50): `SV_CalcPings` skips `messageAcked == -1` instead of `<= 0` ([`server/sv_main.cpp:684`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_main.cpp#L684)).
   - Origin: `proxy_sv_pingFix` is a port of JK2MV's `sv_pingFix`. JK2MV changed `<= 0` to `== -1` on purpose, in commit [`0301bea`](https://github.com/mvdevs/jk2mv/commit/0301bea) "Fix sv_pingFix on servers running for more than 25 days" (JK2MV [`src/server/sv_main.cpp:946`](https://github.com/mvdevs/jk2mv/blob/7d601454c3db68492289d4d4e3dc30bff39e4246/src/server/sv_main.cpp#L946)).
   - With `proxy_sv_pingFix 1`, the timestamps come from `Sys_Milliseconds`, a signed `int` that turns negative after about 24.8 days of uptime. `<= 0` would then skip every frame, and every ping would show 999. Do not revert it.
   - What remains: a frame not acknowledged yet holds -1 ([`server/sv_snapshot.cpp:668`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_snapshot.cpp#L668)), but a frame never used since the client was cleared on connect holds 0, and counts as a delay of 0. That only lasts for the first 32 snapshots (`PACKET_BACKUP`), about 1.6 s at 20 snapshots per second, just after a connect. JK2MV has the same transient. Quake3e avoids it by using 0 as the "not acknowledged" marker ([`code/server/sv_snapshot.c:694`](https://github.com/ec-/Quake3e/blob/3173cef096dd0cb2fea26d91bce71049061f5a13/code/server/sv_snapshot.c#L694), [`sv_main.c:1064`](https://github.com/ec-/Quake3e/blob/3173cef096dd0cb2fea26d91bce71049061f5a13/code/server/sv_main.c#L1064)).
@@ -873,7 +873,7 @@ Status: **confirmed**, observed on the retail server on 2026-10-24 while testing
 
 - `Info_Print` copies each userinfo value into `char value[512]` with no bound, and each key into `char key[512]` ([`qcommon/common.cpp:509-543`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/qcommon/common.cpp#L509-L543)). A value of 512 characters or more overflows the stack buffer.
 - `SV_DumpUser_f` is its only server-side caller ([`server/sv_ccmds.cpp:938`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_ccmds.cpp#L938)). On the client side it reads `Cvar_InfoString`, bounded by the cvar system, so only the server path is exposed.
-- A client sets such a value with the `userinfo` command. `Proxy_SV_UpdateUserinfo_f` stores the raw string into `cl->userinfo` up to `MAX_INFO_STRING` (1024), with no per-value limit ([Proxy_sv_client.cpp:652](../../src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L652)). The connect packet does the same in `SV_DirectConnect`.
+- A client sets such a value with the `userinfo` command. `Proxy_SV_UpdateUserinfo_f` stores the raw string into `cl->userinfo` up to `MAX_INFO_STRING` (1024), with no per-value limit ([Proxy_sv_client.cpp:652](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Patches/server/Proxy_sv_client.cpp#L652)). The connect packet does the same in `SV_DirectConnect`.
 - Trigger: an admin `rcon dumpuser <name>`. The value comes from an unprivileged client, so a client plants it and the server dies on the next routine `dumpuser`.
 - O8's `G_ValidateUserinfo` does not close it: a 790-character value in an otherwise valid userinfo under 1024 characters passes every O8 check (size, slash count, key counts). A legitimate userinfo never has a value that long: `name` is 32, `model` about 64, the saber names and colours all well under 512.
 - OpenJK and ioq3 size these buffers `BIG_INFO_VALUE` (8192), which holds any value from a `MAX_INFO_STRING` userinfo (OpenJK [`codemp/qcommon/common.cpp:490-492`](https://github.com/JACoders/OpenJK/blob/260c59c2907187af555a676fe0cc798893bf7757/codemp/qcommon/common.cpp#L490)).

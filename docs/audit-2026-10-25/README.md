@@ -2,6 +2,8 @@
 
 Audit done on 2026-10-24 against version `0.19.0 Beta` (commit [`57d9a59`](https://github.com/Yberion/JKA_YBEProxy/commit/57d9a59)). Second review on the same day: every claim was checked again against the sources, then corrected. Each item now has a verification status. A third pass corrected the F9 fix and added a point to F10. F11 (`dumpuser` crash) was added on 2026-10-24, confirmed by observation.
 
+The links to the proxy sources point to commit [`630d610`](https://github.com/Yberion/JKA_YBEProxy/commit/630d610e4773285ea1f1f355014f555e4dbe67eb), the last one before the sources were reorganized on 2026-10-31 (folders, files and names changed, see the README).
+
 ## Files
 
 - [fixes.md](fixes.md): bugs and security issues to fix, ranked by severity (F1 to F11). All applied: each section ends with what was applied and the choices made.
@@ -13,7 +15,7 @@ Audit done on 2026-10-24 against version `0.19.0 Beta` (commit [`57d9a59`](https
 
 - Read in full: everything under `src/JKA_YBEProxy`, except `Proxy_Translate_SystemCalls.cpp` (skimmed) and `LengthDisassembler` (HDE: only its flags were checked).
 - Read in part: `src/sdk` (`server.hpp`, `sv_client.cpp`, `q_string.cpp`, `sys_public.hpp`, `q_shared.hpp`).
-- The retail binaries were only read (disassembled with capstone) for the checks listed below. The other addresses in [Proxy_Engine_Wrappers.hpp](../../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp) were not checked one by one.
+- The retail binaries were only read (disassembled with capstone) for the checks listed below. The other addresses in [Proxy_Engine_Wrappers.hpp](https://github.com/Yberion/JKA_YBEProxy/blob/630d610e4773285ea1f1f355014f555e4dbe67eb/src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp) were not checked one by one.
 
 ## Sources
 

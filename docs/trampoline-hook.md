@@ -142,12 +142,12 @@ Result: `addFive(1)` returns `7`. The call goes to `addOne`, which calls the ori
 
 | Element | Where | Role |
 | --- | --- | --- |
-| `HookUtils::HookEntry` | [HookUtils.hpp](../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp) | Hook name, target address, pointer that receives the trampoline (`Original_X`), replacement function (`Proxy_X`) |
-| `HookUtils::Attach` | [HookUtils.hpp](../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp), [HookUtils.cpp](../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.cpp) (`AttachHook`) | Decodes and checks the instructions (step 3.1), builds the trampoline (steps 3.2, 3.4), then writes the `jmp` (step 3.3). Checks everything before touching the engine, and returns a `Status`; a failure stops the server |
-| `HookUtils::Detach` | [HookUtils.hpp](../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.hpp) | Copies the original bytes (saved by `Attach`, not read from the trampoline) back and frees the trampoline |
-| `HookUtils::Patch`, `Patch_NOP_Bytes` | [HookUtils.cpp](../src/JKA_YBEProxy/RuntimePatch/HookUtils/HookUtils.cpp) | Inline patches with no trampoline (one byte, or a block of `nop`) |
-| Hook list | [Proxy_Engine_Patch.cpp](../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Patch.cpp) | Every hook, attached on `GAME_INIT` and detached on `GAME_SHUTDOWN` |
-| Addresses | [Proxy_Engine_Wrappers.hpp](../src/JKA_YBEProxy/RuntimePatch/Engine/Proxy_Engine_Wrappers.hpp) | `{ Windows, Linux }` address of each engine function, variable and cvar |
+| `HookUtils::HookEntry` | [HookUtils.hpp](../src/JKA_YBEProxy/HookUtils/HookUtils.hpp) | Hook name, target address, pointer that receives the trampoline (`Original_X`), replacement function (`Proxy_X`) |
+| `HookUtils::Attach` | [HookUtils.hpp](../src/JKA_YBEProxy/HookUtils/HookUtils.hpp), [HookUtils.cpp](../src/JKA_YBEProxy/HookUtils/HookUtils.cpp) (`AttachHook`) | Decodes and checks the instructions (step 3.1), builds the trampoline (steps 3.2, 3.4), then writes the `jmp` (step 3.3). Checks everything before touching the engine, and returns a `Status`; a failure stops the server |
+| `HookUtils::Detach` | [HookUtils.hpp](../src/JKA_YBEProxy/HookUtils/HookUtils.hpp) | Copies the original bytes (saved by `Attach`, not read from the trampoline) back and frees the trampoline |
+| `HookUtils::Patch`, `Patch_NOP_Bytes` | [HookUtils.cpp](../src/JKA_YBEProxy/HookUtils/HookUtils.cpp) | Inline patches with no trampoline (one byte, or a block of `nop`) |
+| Hook list | [Engine/Patches.cpp](../src/JKA_YBEProxy/Engine/Patches.cpp) | Every hook, attached on `GAME_INIT` and detached on `GAME_SHUTDOWN`. The replacement functions are in [Engine/Hooks/](../src/JKA_YBEProxy/Engine/Hooks/), one file per engine file |
+| Addresses | [Engine/Addresses.hpp](../src/JKA_YBEProxy/Engine/Addresses.hpp) | `{ Windows, Linux }` address of each engine function, variable and cvar |
 
 The proxy only patches the engine when the `version` cvar matches the original 1.01 Windows or Linux binary.
 
@@ -157,7 +157,7 @@ The proxy only patches the engine when the `version` cvar matches the original 1
 - **`static` functions.** In the original binaries, the compiler may have inlined a `static` function into its callers, or given it a non-standard calling convention (arguments in registers). Check the disassembly first:
   - The function is standalone, and callers use `call` with the arguments on the stack: a normal trampoline works.
   - The function is inlined: the inlined call sites never reach its address, so a hook there misses them. Hook the callers instead (copy them into the proxy), or filter in a non-static function higher up the call chain. F1 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md) does this for `SVC_RemoteCommand`, `SVC_Status` and `SVC_Info`.
-  - The function uses a non-standard convention: write an assembly stub that reads the arguments where the binary puts them, then calls the C++ function. See `Proxy_Shell.hpp`.
+  - The function uses a non-standard convention: write an assembly stub that reads the arguments where the binary puts them, then calls the C++ function. The `SV_PacketEvent` filter stub in [Engine/Patches.cpp](../src/JKA_YBEProxy/Engine/Patches.cpp) is an example of a stub written as machine code.
 - **Calling convention.** The replacement function must use exactly the same calling convention and arguments as the original: `cdecl` in general, `QDECL` for variadic functions.
 - **Unloading.** The engine unloads and reloads the game module, which is the proxy, on every map change. If a hook function is still on the call stack at that moment, it returns into unloaded code. This is the likely cause of the `rcon map` / `rcon map_restart` crash. When a hook can lead to a map change, use a filter that returns, then a `jmp` to the original. The proxy does this at the entry of `SV_PacketEvent`, see F1 in [audit-2026-10-25/fixes.md](audit-2026-10-25/fixes.md).
 - **Wrong binary.** The only check is the `version` cvar string. Checking the expected bytes at each address before patching would be safer, see A1 in [audit-2026-10-25/improvements.md](audit-2026-10-25/improvements.md).
