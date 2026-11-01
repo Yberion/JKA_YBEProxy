@@ -3,6 +3,7 @@
 #include "JKA_YBEProxy/Module/GameImports.hpp"
 #include "JKA_YBEProxy/Module/Main.hpp"
 #include "JKA_YBEProxy/Features/Chat.hpp"
+#include "JKA_YBEProxy/Features/ClientCommands.hpp"
 
 #include <cstdarg>
 
@@ -82,6 +83,18 @@ intptr_t QDECL Syscall(intptr_t command, ...)
 			GetUsercmd((int)args[0], (usercmd_t*)args[1]);
 			
 			return response;
+		}
+		//==================================================
+		case G_ARGV: // (int n, char* buffer, int bufferLength)
+		//==================================================
+		{
+			// An argument of the client command that the proxy replaces for the game (vote, callvote kick)
+			if (features::client_commands::GameArgv((int)args[0], (char*)args[1], (int)args[2]))
+			{
+				return 0;
+			}
+
+			break;
 		}
 		//==================================================
 		case G_SEND_SERVER_COMMAND: // (int clientNum, const char* text)

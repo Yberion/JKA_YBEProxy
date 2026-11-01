@@ -385,6 +385,17 @@ F6.2, `callvote kick <name>`: the proxy looks the name up itself.
 
 Limit: when the name is not found, that message comes before the game's own checks (vote in progress, spectator…).
 
+### Applied
+
+As designed above ([ClientCommands.cpp](../../src/JKA_YBEProxy/Features/ClientCommands.cpp), [GameImports.cpp](../../src/JKA_YBEProxy/Module/GameImports.cpp), [GameExports.cpp](../../src/JKA_YBEProxy/Module/GameExports.cpp)):
+
+- `ReplaceArguments` sets the arguments for the game, called by the proxy's `ClientCommand` once every check passed. `ClientCommandDone` clears them. A command that a check drops never sets any, so nothing can stay for the next command.
+- `GameArgv` answers the game's `G_ARGV` for arguments 1 and 2 when they are set. Argument 0, the command name, is never replaced.
+- The name lookup walks the `MAX_CLIENTS` slots, as the proxy's unique names do: a slot at or above `sv_maxclients` never has a `CS_PLAYERS`. The name is cut to `MAX_NETNAME` before the comparison, as OpenJK does.
+- The not-found message is sent from `Allowed`, which drops the vote.
+
+Not compiled.
+
 ## F7. `modelFullPath` overflow, only with the cheat cvar `d_perPlayerGhoul2` (Low)
 
 Status: **confirmed (binary)** for the branch, on Linux only. The overflow itself is **confirmed (source)**.

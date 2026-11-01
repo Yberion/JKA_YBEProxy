@@ -14,6 +14,45 @@ static constexpr std::size_t maxCommandLength = 512;
 // Number of entries of gc_orders in the game (g_cmds.c)
 static constexpr int gcOrdersCount = 7;
 
+// Arguments given to the game instead of the client's, for the command it runs now, by argument number (0 unused). An
+// empty one is not replaced
+static char gameArgv[3][16];
+
+// The slot of the client with this name, compared without colors and case as OpenJK does, or -1. The game only looked in
+// the first numConnectedClients slots, and kept the name of a client who left: every slot with a CS_PLAYERS is looked at
+// here, the game empties it when a client leaves
+static int ClientNumberFromName(const char* name)
+{
+	char wanted[MAX_NETNAME];
+
+	Q_strncpyz(wanted, name, sizeof(wanted));
+	Q_StripColor(wanted);
+
+	for (int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		char info[MAX_INFO_STRING];
+
+		proxy.trap->GetConfigstring(CS_PLAYERS + i, info, sizeof(info));
+
+		if (!info[0])
+		{
+			continue;
+		}
+
+		char netname[MAX_NETNAME];
+
+		Q_strncpyz(netname, Info_ValueForKey(info, "n"), sizeof(netname));
+		Q_StripColor(netname);
+
+		if (!Q_stricmp(netname, wanted))
+		{
+			return i;
+		}
+	}
+
+	return -1;
+}
+
 /*
 ==================
 MyRatio
@@ -186,6 +225,15 @@ bool Allowed(int clientNum, const char* cmd)
 			return false;
 		}
 
+		// Fix: callvote kick <name>, the proxy looks the name up (see ClientNumberFromName), and the game gets the vote as
+		// clientkick <slot> (ReplaceArguments). Same message as the game when nobody has this name
+		if (!Q_stricmp(cmd_arg1, "kick") && ClientNumberFromName(cmd_arg2) < 0)
+		{
+			proxy.trap->SendServerCommand(clientNum, va("print \"there is no client named '%s' currently on the server.\n\"", cmd_arg2));
+
+			return false;
+		}
+
 		// Fix: callvote capturelimit with wrong values
 		if (!Q_stricmp(cmd_arg1, "capturelimit"))
 		{
@@ -279,6 +327,55 @@ bool Run(int clientNum, const char* cmd)
 	}
 
 	return false;
+}
+
+void ReplaceArguments(const char* cmd)
+{
+	ClientCommandDone();
+
+	char arg1[MAX_TOKEN_CHARS];
+
+	proxy.trap->Argv(1, arg1, sizeof(arg1));
+
+	// The game tests msg[0] == 'y' || msg[1] == 'Y' || msg[1] == '1', a typo of Quake 3: "vote Y" and "vote 1" counted as
+	// no. Same rule as ioq3 and OpenJK, a missing answer is no
+	if (!Q_stricmp(cmd, "vote"))
+	{
+		Q_strncpyz(gameArgv[1], (arg1[0] == 'y' || arg1[0] == 'Y' || arg1[0] == '1') ? "yes" : "no", sizeof(gameArgv[1]));
+	}
+	// The game's kick branch builds the same vote ("clientkick <slot>", shown as "kick <name>") as its clientkick branch.
+	// Allowed already dropped the vote when nobody has this name
+	else if (!Q_stricmp(cmd, "callvote") && !Q_stricmp(arg1, "kick"))
+	{
+		char name[MAX_TOKEN_CHARS];
+
+		proxy.trap->Argv(2, name, sizeof(name));
+
+		const int target = ClientNumberFromName(name);
+
+		if (target >= 0)
+		{
+			Q_strncpyz(gameArgv[1], "clientkick", sizeof(gameArgv[1]));
+			Com_sprintf(gameArgv[2], sizeof(gameArgv[2]), "%i", target);
+		}
+	}
+}
+
+void ClientCommandDone(void)
+{
+	std::memset(gameArgv, 0, sizeof(gameArgv));
+}
+
+bool GameArgv(int n, char* buffer, int bufferLength)
+{
+	if (n < 1 || n >= static_cast<int>(ARRAY_LEN(gameArgv)) || !gameArgv[n][0])
+	{
+		return false;
+	}
+
+	Q_strncpyz(buffer, gameArgv[n], bufferLength);
+
+	return true;
 }
 
 } // namespace ybeproxy::features::client_commands

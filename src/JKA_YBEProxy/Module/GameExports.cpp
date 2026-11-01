@@ -204,6 +204,7 @@ qboolean ClientCommand(int clientNum)
 	}
 
 	features::chat::ClientCommand(clientNum, cmd);
+	features::client_commands::ReplaceArguments(cmd);
 
 	return qtrue;
 }
@@ -211,6 +212,7 @@ qboolean ClientCommand(int clientNum)
 void ClientCommandDone(void)
 {
 	features::chat::ClientCommandDone();
+	features::client_commands::ClientCommandDone();
 }
 
 /*
