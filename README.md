@@ -12,6 +12,7 @@ This is an educational project.
 - [Patch notes](docs/patchnotes.md)
 - [Todo](docs/todo.md)
 - [Trampoline hooks](docs/trampoline-hook.md): how the engine hooks work.
+- [Release](docs/release.md): how the release archives are built and published.
 - [Audit](docs/audit-2026-10-25/README.md): known bugs, improvements, and the combat "feeling" investigation.
 
 ## How it works
@@ -167,7 +168,7 @@ cmake --build --preset linux-x86-release
 
 The output is `build/linux-x86-release/bin/jampgamei386.so`. `file` on it must show `ELF 32-bit LSB shared object, Intel 80386`. `linux-x86-debug`, `linux-x64-release` and `linux-x64-debug` exist too.
 
-`libstdc++` and `libgcc` are linked into the `.so`, so the server needs no C++ library. It still needs a glibc at least as recent as the one the `.so` was built with, otherwise the server cannot load it (`version 'GLIBC_2.xx' not found`). Build on the server itself, or on a distribution that is not newer than the server's.
+`libstdc++` and `libgcc` are linked into the `.so`, so the server needs no C++ library. It still needs a glibc at least as recent as the one the `.so` was built with, otherwise the server cannot load it (`version 'GLIBC_2.xx' not found`). Build on the server itself, or on a distribution that is not newer than the server's. The release `.so` is built on Ubuntu 20.04 for that reason, see [docs/release.md](docs/release.md#3-linux-build).
 
 ### Options
 
