@@ -11,6 +11,9 @@ namespace ybeproxy::features::client_commands
 // whole in a buffer of 1024 bytes; no command of the game needs more than this
 static constexpr std::size_t maxCommandLength = 512;
 
+// Number of entries of gc_orders in the game (g_cmds.c)
+static constexpr int gcOrdersCount = 7;
+
 /*
 ==================
 MyRatio
@@ -138,7 +141,10 @@ bool Allowed(int clientNum, const char* cmd)
 	proxy.trap->Argv(2, cmd_arg2, sizeof(cmd_arg2));
 
 	// Fix: crach gc
-	if (!Q_stricmp(cmd, "gc") && atoi(cmd_arg1) >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients"))
+	// The order is an index of the game's gc_orders: the game also accepts gcOrdersCount, one past the end, and sends
+	// what it reads there as a text (crash). It already refuses a negative player or order
+	if (!Q_stricmp(cmd, "gc") &&
+		(atoi(cmd_arg1) >= proxy.trap->Cvar_VariableIntegerValue("sv_maxclients") || atoi(cmd_arg2) >= gcOrdersCount))
 	{
 		return false;
 	}

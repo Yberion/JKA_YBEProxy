@@ -263,7 +263,7 @@ Engine: Any.
 - It drops commands that contain `;`, except `say`, `say_team` and `tell`. This prevents command injection.
 - It drops `say`, `say_team` and `tell` with more than 256 characters (crash fix).
 - It drops any command longer than 512 characters, name and arguments together (crash fix). During the intermission, the game turns any command it does not know into a public chat message and logs it whole in a buffer of 1024 bytes.
-- It drops `gc` with a client number equal to or above `sv_maxclients` (crash fix).
+- It drops `gc` with a client number equal to or above `sv_maxclients`, or with an order above `6` (crash fix). The game also accepts the order `7`, one past the end of its list of orders.
 - It drops `npc spawn ragnos` and `npc spawn saber_droid` (crash fix).
 - It drops `team follow1` and `team follow2` (spectator follow crash fix).
 - `callteamvote` is disabled: it is useless in basejka and breaks the UI on some custom clients.

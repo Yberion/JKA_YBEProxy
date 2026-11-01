@@ -12,10 +12,10 @@ The links to the proxy sources point to commit `ae62510`.
 
 ## Scope
 
-- Checked: each claim of the first pass, in the retail source, the proxy and the other engines. F1 to F4 and F7 were also checked on the retail Linux game module.
+- Checked: each claim of the first pass, in the retail source, the proxy and the other engines. F1 to F4 were also checked on the retail game modules, Linux and Windows, and F7 on the Linux one.
+- Tested by the author: F3 without the fix, on a Windows server (`gc 1 7` sends `Free For All`, no crash) and on a Linux server (crash).
 - Not checked:
-  - The retail Windows game module: `jampgamex86.dll` is not on the machine. On Windows, F1 to F4 are confirmed by the source only. What follows `gc_orders` in that DLL (F3) is unknown.
-  - Nothing was run: no reproduction on a server.
+  - Apart from that test, nothing was run: no other reproduction on a server.
   - The leads listed in [Not checked](#not-checked).
 
 ## Sources
@@ -34,11 +34,14 @@ Multiplayer code only (`codemp`). Each repository was read at the commit below, 
 
 A path without a repository root, such as `game/g_cmds.c:1835`, is in jediacademy `codemp`.
 
-## Retail binary
+## Retail binaries
 
-Linux game module `jampgamei386.so`: 2026696 bytes, dated 2003-11-10 (same date as `linuxjampded` 1.0.1.1), SHA-1 `5adc80bf7309ceded9846d2c6c006451b9326278`. In the test install `E:\Git\jka\server\base` it is renamed `JKA_YBEProxy.so`, and `jampgamei386.so` is the proxy. Built with gcc 2.95, non-PIC (calls resolved by `.rel.text` relocations), symbols kept (mangled names). Read with capstone and pyelftools, nothing executed.
+Both game modules are in `tmp_src` (not in git). Read with capstone, pefile and pyelftools, nothing executed.
 
-Facts checked on it:
+- Linux `jampgamei386.so`: 2026696 bytes, dated 2003-11-10 (same date as `linuxjampded` 1.0.1.1), SHA-1 `5adc80bf7309ceded9846d2c6c006451b9326278`. Built with gcc 2.95, non-PIC (calls resolved by `.rel.text` relocations), symbols kept (mangled names). In the test install `E:\Git\jka\server\base` it is renamed `JKA_YBEProxy.so`, and `jampgamei386.so` is the proxy.
+- Windows `jampgamex86.dll`: 1200128 bytes, built 2003-11-06, SHA-1 `af88d9528cb2cd214cfe3520acd5ddd3c54f8a1f`. MSVC 7.0 linker, image base `0x20000000`, no symbols: each function was found from a string it uses. No `/GS` stack cookie.
+
+Facts checked on the Linux module:
 
 - `G_LogPrintf` (`0x880c4`): `vsprintf` without a size at `string + 7`, in a 1024-byte stack buffer right below the saved registers and the return address (F1).
 - `G_Printf` (`0x85ce4`): same `vsprintf` in 1024 bytes (F1).
@@ -48,11 +51,19 @@ Facts checked on it:
 - `BG_LegalizedForcePowers` (`0xea224`): nothing writes `final_Powers` before the read loop (F4).
 - `G_PlayerHasCustomSkeleton` (`0x1705c4`): always returns 0 (F7).
 
+Facts checked on the Windows module:
+
+- `G_LogPrintf` (`0x2008fd10`): `vsprintf` without a size at `string + 7`, in a 1024-byte stack buffer right below the return address (F1).
+- `ClientCommand`, intermission branch (`0x2007fed5`): `ConcatArgs(0)`, then `G_Say`, which calls `G_LogPrintf` (F1).
+- `Cmd_CallVote_f`, `clientkick` (`0x2007dd97`): compares the number with 32, then reads `client->pers.connected` without testing `client` (F2).
+- `gc_orders` (`0x2010ae5c`): the entry after the 7 orders points to `Free For All`, the first of `gameNames` (F3).
+- `BG_LegalizedForcePowers` (`0x2004a030`): nothing writes `final_Powers` before the read loop (F4).
+
 ## Verdict
 
 The first pass found real bugs: F1 to F5 are confirmed, and F1 and F3 are more serious than it said. Its write-up has errors:
 
-- F3 is a crash on the Linux retail server, not a "medium" read past the array.
+- F3 is a crash on the Linux retail server, not a "medium" read past the array. On Windows it only sends `Free For All` (tested by the author, and seen in the DLL).
 - F5 disconnects every client, not only the new ones, and its proxy fix removes the hats and capes of TaystJK and EternalJK players.
 - F6: the explanation of the vote bug is wrong (the argument is missing, not one character long).
 - H1 rests on a false claim about the tokenizer: its check can never trigger.
@@ -65,7 +76,7 @@ The first pass found real bugs: F1 to F5 are confirmed, and F1 and F3 are more s
 
 - ✅ F1: stack overflow in `G_LogPrintf` with a long command at intermission (Critical)
 - ✅ F2: crash with `callvote clientkick <n>` (High)
-- ⏳ F3: crash with `gc <player> 7` (High)
+- ✅ F3: crash with `gc <player> 7` (High on Linux, harmless text on Windows)
 - ⏳ F4: `forcepowers` with 16 or 17 digits of powers (Medium)
 - ⏳ F5: `color1` and `color2` fill the gamestate of every client (Medium)
 - ⏳ F6: vote parsing and name lookup of the game (Low, not security)

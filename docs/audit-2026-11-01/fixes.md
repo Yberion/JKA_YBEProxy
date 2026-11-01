@@ -4,7 +4,7 @@ Severity: Critical, High, Medium, Low. Paths are relative to the repository root
 
 Each item has a verification status:
 
-- **Confirmed (binary)**: checked in the jediacademy source and in the retail Linux game module (see [README.md](README.md#retail-binary)).
+- **Confirmed (binary)**: checked in the jediacademy source and in the retail game modules, Linux and Windows (see [README.md](README.md#retail-binaries)).
 - **Confirmed (source)**: checked in the jediacademy source only. That source is close to retail, but not identical.
 - **Corrected**: the first pass was wrong or incomplete. The text below is the corrected one.
 - **Refuted**: the claim was wrong. It stays here, marked, so that nobody adds it back.
@@ -46,6 +46,15 @@ A write of 1073 bytes from `ebp-0x408` ends at `ebp+0x29`: it overwrites the sav
 `ClientCommand__Fi` at `0x130024`, intermission branch: `0x1304c1` to `0x1304d4` calls `Cmd_Say_f` (`0x12c8f4`, static, no symbol) with `(ent, 0, 1)`. `Cmd_Say_f` calls `ConcatArgs(0)` at `0x12c92b`.
 
 `G_Printf__FPCce` at `0x85ce4`: `text` at `ebp-0x400`, `vsprintf` at `0x85d04`, no size.
+
+Windows, `G_LogPrintf` at `0x2008fd10` (found from its `%3i:%i%i ` string):
+
+- `sub esp, 0x400 ; push esi`: `string` is at `esp+4`, 0x400 bytes, and the return address comes right after it. No `/GS` cookie.
+- `0x2008fd8e`: `vsprintf( string + 7, fmt, args )`, three arguments, no size.
+
+Any write past the 1024 bytes reaches the return address: with a 1-character name the text already overwrites it.
+
+Windows, intermission branch of `ClientCommand` (`0x2007fed5`, after the test of the `CANNOT_TASK_INTERMISSION` list): `Cmd_Say_f` is inlined. It calls `ConcatArgs(0)` (`0x2007b3a0`), then `G_Say( ent, NULL, 0, text )` (`0x2007d240`), which calls `G_LogPrintf` with `say: %s: %s\n` at `0x2007d2a6`.
 
 ### Who can trigger it
 
@@ -103,6 +112,8 @@ Status: **confirmed (binary)**. Not reproduced on a server.
 - `0x12d470` `imul edi, eax, 0x5ec`, `0x12d476` `mov ecx, [edi + g_entities + 0x360]` (`client`).
 - `0x12d47c` `mov edx, [ecx + 0x610]` (`pers.connected`), with no test of `ecx`. A `NULL` client reads address `0x610`.
 
+Windows, `clientkick` branch of `Cmd_CallVote_f` (found from its `invalid client number` string): `0x2007dd97` `cmp eax, 0x20 ; jge`, then `0x2007dda4` `mov edx, [ecx + 0x20631340]` (`g_entities[n].client`) and `0x2007ddb0` `mov ecx, [edx + 0x610]`, with no test of `edx`. Same crash.
+
 ### Who can trigger it
 
 Any player who can vote, with the defaults:
@@ -138,12 +149,14 @@ if (!Q_stricmp(cmd_arg1, "clientkick") &&
 
 Written with the range check that the other votes of `Allowed` already use ([ClientCommands.cpp](../../src/JKA_YBEProxy/Features/ClientCommands.cpp)): `clientkick` accepts `0` to `sv_maxclients - 1`, the same rule as the sketch above. Added to the vote table of [features.md](../features.md#client-commands). Not compiled.
 
-## F3. Crash with `gc <player> 7` (High)
+## F3. Crash with `gc <player> 7` (High on Linux)
 
 Status:
 
-- Bug: **confirmed (binary)**. Not reproduced on a server.
-- Severity: **corrected**. The first pass said Medium, "crash or memory sent as text". On the Linux retail server it is a crash. Windows unknown: the retail DLL is not on the machine.
+- Bug: **confirmed (binary)** on Linux and Windows. **Reproduced** by the author on both, without the fix.
+- Severity: **corrected**. The first pass said Medium, "crash or memory sent as text". It depends on what the compiler put after the array:
+  - Linux retail server: the entry is not a pointer. The author reproduced the crash.
+  - Windows retail server (1.0.1.0), tested by the author without the fix: `gc 1 7` sends `Free For All` to the player, no crash. `Free For All` is the first entry of `gameNames`, the array that follows `gc_orders` in `g_cmds.c`: the Windows DLL keeps both arrays one after the other.
 
 ### Cause
 
@@ -157,7 +170,9 @@ Status:
 - `0x12ccae` `test ebx, ebx ; jl` and `0x12ccb2` `cmp ebx, 7 ; jbe`: the order 7 passes.
 - `0x12ccd7` `mov esi, [ebx*4 + 0x1d31a4]`: `gc_orders` is at `0x1d31a4`.
 
-`0x1d31a4` to `0x1d31bc` hold the 7 relocated pointers. `0x1d31c0` holds `0x6e697270`, with no relocation: the bytes `"prin"`, start of the string stored after the array. `G_Say` copies the text with `Q_strncpyz` and reads at `0x6e697270`, an address the process does not map in normal use. The server crashes.
+`0x1d31a4` to `0x1d31bc` hold the 7 relocated pointers. `0x1d31c0` holds `0x6e697270`, with no relocation: the bytes `"prin"`, start of the string stored after the array, `print "there is no client named '%s' currently on the server.\n"` (this module has no `.rodata`: gcc put the strings in `.data`). `G_Say` copies the text with `Q_strncpyz` and reads at `0x6e697270`, an address the process does not map in normal use. The server crashes.
+
+Windows: `gc_orders` is at `0x2010ae5c` (found from `hold your position`). The entry after the 7 orders, `0x2010ae78`, is the first pointer of `gameNames`, to `Free For All`. That is what the author's test showed: no crash, the text `Free For All` sent to the player.
 
 ### Who can trigger it
 
@@ -187,6 +202,10 @@ if (!Q_stricmp(cmd, "gc") &&
 
 The first pass also dropped a negative player. Not needed: the game already returns on a negative player (`0x12cca5`).
 
+### Applied
+
+The existing `gc` check of `Allowed` ([ClientCommands.cpp](../../src/JKA_YBEProxy/Features/ClientCommands.cpp)) also drops an order of `gcOrdersCount` (7) or more. A negative order is not tested: the game already refuses it (`0x12ccae`). Not compiled.
+
 ## F4. `forcepowers` with 16 or 17 digits of powers (Medium)
 
 Status:
@@ -210,6 +229,8 @@ A digit from 4 to 9 is also used as a column before it is cut to 3 (line 553): i
 ### Retail binary
 
 `BG_LegalizedForcePowers__FPci8qbooleanN32` at `0xea224`: `final_Powers` is at `ebp-0xf8`. The first write to it is the read loop at `0xea400`. Nothing sets it before: no `memset`, no store.
+
+Windows, `BG_LegalizedForcePowers` at `0x2004a030` (found from its `7-1-032330000000001333` string): `final_Powers` is at `esp+0x20`, right below `powerBuf`. The first write to it is the read loop at `0x2004a206`. Nothing sets it before.
 
 ### Other engines
 
@@ -358,7 +379,7 @@ Limit: when the name is not found, that message comes before the game's own chec
 
 ## F7. `modelFullPath` overflow, only with the cheat cvar `d_perPlayerGhoul2` (Low)
 
-Status: **confirmed (binary)** for the branch. The overflow itself is **confirmed (source)**.
+Status: **confirmed (binary)** for the branch, on Linux only. The overflow itself is **confirmed (source)**.
 
 ### Cause
 
