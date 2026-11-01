@@ -270,6 +270,10 @@ if (seps == 2 && (forcePowers[i] < '0' || forcePowers[i] > '3'))
 
 The retail client always sends `<rank>-<side>-` followed by 18 digits from `0` to `3` (22 characters): nothing legitimate is refused.
 
+### Applied
+
+As written above, in the `forcepowers` check of `Sanitize` ([Userinfo.cpp](../../src/JKA_YBEProxy/Features/Userinfo.cpp)): at least 18 digits after the second `-`, and each of them from `0` to `3`. The rank and side digits are not limited, as before: the game replaces the rank and checks the side itself. Checked with a port of the rule on every shape of 22 to 24 characters (10 accepted, all with 18 digits or more), and on the 37 `forcepowers` of the base bots (`botfiles/*.jkb` in `assets1.pk3`), which all pass. Not compiled.
+
 ## F5. `color1` and `color2` fill the gamestate of every client (Medium)
 
 Status:

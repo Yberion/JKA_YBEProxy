@@ -322,6 +322,7 @@ const char* Sanitize(int clientNum, bool validate, bool* isAntiCheat)
 	if (len >= 22 && len <= 24)
 	{
 		byte seps = 0;
+		std::size_t powersStart = 0;
 
 		for (std::size_t i = 0; i < len; i++)
 		{
@@ -343,13 +344,28 @@ const char* Sanitize(int clientNum, bool validate, bool* isAntiCheat)
 				break;
 			}
 
+			// A power level above 3 is used as a column of bgForcePowerCost before the game cuts it to 3. OpenJK stops
+			// reading the powers at such a digit
+			if (seps == 2 && forcePowers[i] > '3')
+			{
+				badForce = qtrue;
+				break;
+			}
+
 			if (forcePowers[i] == '-')
 			{
 				seps++;
+				powersStart = i + 1;
 			}
 		}
 
 		if (seps != 2)
+		{
+			badForce = qtrue;
+		}
+		// The game reads NUM_FORCE_POWERS digits after the second '-'. With fewer, BG_LegalizedForcePowers keeps the
+		// missing entries uninitialised and uses them as an index (crash)
+		else if (len - powersStart < static_cast<std::size_t>(NUM_FORCE_POWERS))
 		{
 			badForce = qtrue;
 		}
