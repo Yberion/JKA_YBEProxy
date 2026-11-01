@@ -330,6 +330,10 @@ for (const char* colorKey : { "color1", "color2" })
 
 Decision of the author: 15 characters, as OpenJK.
 
+### Applied
+
+As written above, in `Sanitize` ([Userinfo.cpp](../../src/JKA_YBEProxy/Features/Userinfo.cpp)), before the `forcepowers` check. The keys are walked through a `static const char* const` array rather than a braced list, which would need `<initializer_list>`. Not compiled.
+
 ## F6. Vote parsing and name lookup of the game (Low, not security)
 
 Status:

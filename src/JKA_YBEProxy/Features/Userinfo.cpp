@@ -310,6 +310,28 @@ const char* Sanitize(int clientNum, bool validate, bool* isAntiCheat)
 		}
 	}
 
+	// Fix: color1 and color2 go as they are into the CS_PLAYERS configstring of the player, which is part of the gamestate
+	// of every client (16000 characters at most). Same limit as OpenJK: TaystJK and EternalJK put a hat or a cape name
+	// after the color
+	static const char* const colorKeys[] = { "color1", "color2" };
+
+	for (const char* colorKey : colorKeys)
+	{
+		val = Info_ValueForKey(userinfo, colorKey);
+
+		if (std::strlen(val) > 15)
+		{
+			char color[16];
+
+			Q_strncpyz(color, val, sizeof(color));
+
+			if (!Info_SetValueForKey(userinfo, colorKey, color))
+			{
+				return "Userinfo string length exceeded.";
+			}
+		}
+	}
+
 	//Fix forcepowers crash
 	char forcePowers[30];
 	

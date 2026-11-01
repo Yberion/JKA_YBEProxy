@@ -78,7 +78,7 @@ The first pass found real bugs: F1 to F5 are confirmed, and F1 and F3 are more s
 - ✅ F2: crash with `callvote clientkick <n>` (High)
 - ✅ F3: crash with `gc <player> 7` (High on Linux, harmless text on Windows)
 - ✅ F4: `forcepowers` with 16 or 17 digits of powers (Medium)
-- ⏳ F5: `color1` and `color2` fill the gamestate of every client (Medium)
+- ✅ F5: `color1` and `color2` fill the gamestate of every client (Medium)
 - ⏳ F6: vote parsing and name lookup of the game (Low, not security)
 - ❌ F7: `modelFullPath` overflow, only with the cheat cvar `d_perPlayerGhoul2` (Low)
 - H1: refuse `"` and control characters in chat. Refuted, nothing to do.
