@@ -23,7 +23,7 @@
 // ==================================================
 
 #define YBEPROXY_NAME "YbeProxy"
-#define YBEPROXY_VERSION "1.0.0 Beta"
+#define YBEPROXY_VERSION "1.0.0"
 #define YBEPROXY_BY_AUTHOR "by Yberion"
 
 // ==================================================
