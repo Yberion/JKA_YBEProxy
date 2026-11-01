@@ -81,6 +81,10 @@ if (std::strlen(cmd) + 1 + std::strlen(argsConcat) > maxCommandLength)
 - No command of the base game needs that much. Chat is cut at 150, and the proxy already drops `say` over 256.
 - Another option would be to drop only unknown commands at intermission, as OpenJK does. The proxy would have to know when the game is in intermission. The single limit is simpler and covers any other path.
 
+### Applied
+
+As written above, in `Allowed` ([ClientCommands.cpp](../../src/JKA_YBEProxy/Features/ClientCommands.cpp)): a command line longer than 512 characters is dropped without a message, after the anti-cheat and mute checks and before the other ones. Not compiled.
+
 ## F2. Crash with `callvote clientkick <n>` (High)
 
 Status: **confirmed (binary)**. Not reproduced on a server.

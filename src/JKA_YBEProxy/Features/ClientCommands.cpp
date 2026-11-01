@@ -7,6 +7,10 @@
 namespace ybeproxy::features::client_commands
 {
 
+// Longest command line (name, space and arguments) a client may send to the game. The game logs some command lines
+// whole in a buffer of 1024 bytes; no command of the game needs more than this
+static constexpr std::size_t maxCommandLength = 512;
+
 /*
 ==================
 MyRatio
@@ -105,6 +109,14 @@ bool Allowed(int clientNum, const char* cmd)
 
 	// Todo (not sure): Check in the entier command + args?
 	const char* argsConcat = ports::ConcatArgs(1);
+
+	// Fix: stack overflow in the game's G_LogPrintf (vsprintf in a buffer of 1024 bytes)
+	// At intermission the game turns every command it does not know into a public chat message of the whole command
+	// line, and logs it before cutting it: the limit on "say", "say_team" and "tell" below does not cover that
+	if (std::strlen(cmd) + 1 + std::strlen(argsConcat) > maxCommandLength)
+	{
+		return false;
+	}
 
 	if (!Q_stricmp(cmd, "say") || !Q_stricmp(cmd, "say_team") || !Q_stricmp(cmd, "tell"))
 	{

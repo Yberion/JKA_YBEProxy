@@ -63,7 +63,7 @@ The first pass found real bugs: F1 to F5 are confirmed, and F1 and F3 are more s
 
 ### [fixes.md](fixes.md)
 
-- ⏳ F1: stack overflow in `G_LogPrintf` with a long command at intermission (Critical)
+- ✅ F1: stack overflow in `G_LogPrintf` with a long command at intermission (Critical)
 - ⏳ F2: crash with `callvote clientkick <n>` (High)
 - ⏳ F3: crash with `gc <player> 7` (High)
 - ⏳ F4: `forcepowers` with 16 or 17 digits of powers (Medium)
