@@ -55,6 +55,11 @@ else()
   # Keep the symbols of the statically linked libstdc++ inside the .so: another libstdc++ already loaded in the
   # process (OpenJK) must not replace them
   target_link_options(${PROJECT_NAME} PRIVATE -Wl,--exclude-libs,ALL)
+  # The proxy loads the original game module with dlopen, dlsym and dlclose. Before glibc 2.34, these functions are in
+  # libdl, not in libc, so the proxy must be linked with libdl. Otherwise a build on an older system does not list libdl
+  # in the dependencies of the .so. Since glibc 2.34 they are in libc, and libdl is an empty library kept for
+  # compatibility, so linking it changes nothing on a recent system
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_DL_LIBS})
   target_compile_definitions(${PROJECT_NAME} PRIVATE "ARCH_STRING=\"${YBEPROXY_ARCH}\"")
 endif()
 
