@@ -430,6 +430,44 @@ modelBaseLength > maxModelBaseLength ||
 
 Decision of the author: not fixed.
 
+## F8. A kick vote can kick the next client of the slot (Low)
+
+Status: **confirmed (source)**, vote execution **confirmed (binary)** on Linux. Reported by the author, after F6: the target of a kick vote leaves right after the vote passes, and another player is kicked.
+
+### Cause
+
+A kick vote stores a slot number, not a client: `callvote kick <name>` and `callvote clientkick <n>` both build the vote `clientkick <slot>` when the vote is called ([`game/g_cmds.c:2084-2118`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_cmds.c#L2084-L2118)). The game then runs it late:
+
+- the vote lasts up to 30 seconds ([`VOTE_TIME`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/bg_public.h#L39));
+- once it passes, the game waits 3 more seconds (`level.voteExecuteTime = level.time + 3000`, [`game/g_main.c:3314`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_main.c#L3314));
+- then it sends `clientkick <slot>` to the engine with `EXEC_APPEND` ([`game/g_main.c:3247-3249`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_main.c#L3247-L3249)). Linux binary: `CheckVote__Fv` at `0x89934` calls `trap_SendConsoleCommand( 2, va( "%s\n", level.voteString ) )` at `0x8997d`.
+
+The engine's `clientkick` ([`SV_KickNum_f`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_ccmds.cpp#L636-L662), through [`SV_GetPlayerByNum`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_ccmds.cpp#L89-L125)) drops whoever holds the slot at that moment. Nothing checks that it is still the client the vote was about.
+
+When a client leaves, its slot stays `CS_ZOMBIE` for `sv_zombietime` (2 seconds, [`server/sv_init.cpp:854`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_init.cpp#L854)), then becomes free ([`server/sv_main.cpp:726-737`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/server/sv_main.cpp#L726-L737)). A client who connects, or a bot that `bot_minplayers` adds, can then take it. If that happens before the kick runs, the new client is kicked instead of the target.
+
+### Who can trigger it
+
+The target of a kick vote, by leaving during the vote or right after it passed. The victim is whoever takes the slot: likely on a busy server, or with `bot_minplayers`. No crash.
+
+### Other engines
+
+OpenJK and TaystJK keep the same vote. Their `G_ClearVote`, called when a client leaves, only removes the ballot of that client ([OpenJK `g_client.c:3859-3874`](https://github.com/JACoders/OpenJK/blob/260c59c2907187af555a676fe0cc798893bf7757/codemp/game/g_client.c#L3859-L3874), [TaystJK `g_client.c:4800`](https://github.com/taysta/TaystJK/blob/7d99efb4a77a174d1a7853f2a8024daf78fa47b7/codemp/game/g_client.c#L4800)), not a vote that targets it.
+
+### Proxy fix (design, to approve)
+
+The proxy remembers who held each slot when the vote started, and drops the vote's kick if the slot changed hands:
+
+- The game starts a vote with `G_SET_CONFIGSTRING` of `CS_VOTE_TIME` with a value ([`game/g_cmds.c:2152`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_cmds.c#L2152)). The proxy sees that system call, and copies the address of every slot (`ClientData::address`, [Proxy.hpp:119-120](https://github.com/Yberion/JKA_YBEProxy/blob/ae62510d6857be29351812da153aceafe919ab11/src/JKA_YBEProxy/Proxy.hpp#L119-L120)). That address is set when the game accepts the client ([Connection.cpp:71](https://github.com/Yberion/JKA_YBEProxy/blob/ae62510d6857be29351812da153aceafe919ab11/src/JKA_YBEProxy/Features/Connection.cpp#L71)), cleared when it leaves ([GameExports.cpp:167](https://github.com/Yberion/JKA_YBEProxy/blob/ae62510d6857be29351812da153aceafe919ab11/src/JKA_YBEProxy/Module/GameExports.cpp#L167)), and empty for bots.
+- The game runs the vote with `G_SEND_CONSOLE_COMMAND`, `EXEC_APPEND` and the text `clientkick <slot>`. If the address of the slot is no longer the one it had when the vote started, the proxy drops the command and tells every player that the vote's kick is canceled because the player left.
+- Only the vote's command is checked. The game's other `clientkick`, the automatic kick of team killers ([`game/g_cmds.c:550-626`](https://github.com/jedis/jediacademy/blob/4bebb8ec23200ee150a9aa566cea6122c19eba44/codemp/game/g_cmds.c#L550-L626)), uses `EXEC_INSERT` and kicks the current client of the slot on purpose.
+
+Limits:
+
+- The target who comes back into the same slot with the same address is still kicked, as wanted.
+- Another client with the same address (LAN) who takes the slot is kicked too.
+- Bots have no address: a bot that takes the slot of a kicked bot is kicked.
+
 ## H1. Refuse `"` and control characters in `say`, `say_team` and `tell` (Refuted)
 
 Status: **refuted**. Nothing to do.
