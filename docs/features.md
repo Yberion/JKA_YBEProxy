@@ -274,6 +274,7 @@ Engine: Any.
     | Vote | Allowed values |
     | --- | --- |
     | `capturelimit` | `0` to `2147483647` |
+    | `clientkick` | `0` to `sv_maxclients - 1` (crash fix) |
     | `fraglimit` | `0` to `2147483647` |
     | `g_doWarmup` | `0` or `1` |
     | `map_restart` | `0` to `proxy_sv_maxCallVoteMapRestartValue` |

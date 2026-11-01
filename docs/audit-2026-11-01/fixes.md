@@ -134,6 +134,10 @@ if (!Q_stricmp(cmd_arg1, "clientkick") &&
 - `sv_maxclients` is latched: its value only changes at the map change, when the game reads it again. The `gc` check already reads it the same way.
 - The vote is dropped without a message. The game would print `invalid client number`.
 
+### Applied
+
+Written with the range check that the other votes of `Allowed` already use ([ClientCommands.cpp](../../src/JKA_YBEProxy/Features/ClientCommands.cpp)): `clientkick` accepts `0` to `sv_maxclients - 1`, the same rule as the sketch above. Added to the vote table of [features.md](../features.md#client-commands). Not compiled.
+
 ## F3. Crash with `gc <player> 7` (High)
 
 Status:

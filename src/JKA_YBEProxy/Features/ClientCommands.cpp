@@ -188,6 +188,16 @@ bool Allowed(int clientNum, const char* cmd)
 			checkNeeded = qtrue;
 		}
 
+		// Fix: callvote clientkick crash
+		// The game only compares the number with MAX_CLIENTS, then reads g_entities[n].client, which is NULL from
+		// sv_maxclients up to MAX_CLIENTS - 1
+		if (!Q_stricmp(cmd_arg1, "clientkick"))
+		{
+			minArg2Value = 0;
+			maxArg2Value = proxy.trap->Cvar_VariableIntegerValue("sv_maxclients") - 1;
+			checkNeeded = qtrue;
+		}
+
 		// Fix: callvote fraglimit with wrong values
 		if (!Q_stricmp(cmd_arg1, "fraglimit"))
 		{
