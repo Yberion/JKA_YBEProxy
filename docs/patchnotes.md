@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- A [kick vote](features.md#client-commands) whose target leaves before the kick runs is now canceled. The game kicks a slot number 3 seconds after the vote passes: a player or a bot who took the slot in the meantime was kicked instead. Any engine.
 - [`callvote kick <name>`](features.md#client-commands) finds the player in any slot: the game only looked at as many slots as there were players, so it missed a player placed after an empty slot, and could match the name of a player who had left. The proxy looks the name up without colors and case, as OpenJK does, and the game gets the vote as `clientkick <slot>`. Any engine.
 - [`vote Y` and `vote 1`](features.md#client-commands) now count as yes: the game only read a lowercase `y` (a typo kept from Quake 3). Any engine.
 - [`color1` and `color2`](features.md#userinfo) are cut to 15 characters, as OpenJK does. The game copied them whole into the player's entry of the gamestate, which every client keeps in 16000 characters: several players with long values could fill it, and every client was then dropped with `MAX_GAMESTATE_CHARS exceeded`. 15 characters keep the hats and capes of TaystJK and EternalJK. Any engine. Found by reading the code, not reproduced.

@@ -81,7 +81,7 @@ The first pass found real bugs: F1 to F5 are confirmed, and F1 and F3 are more s
 - ✅ F5: `color1` and `color2` fill the gamestate of every client (Medium)
 - ✅ F6: vote parsing and name lookup of the game (Low, not security)
 - ❌ F7: `modelFullPath` overflow, only with the cheat cvar `d_perPlayerGhoul2` (Low)
-- ⏳ F8: a kick vote can kick the next client of the slot (Low). Reported by the author.
+- ✅ F8: a kick vote can kick the next client of the slot (Low). Reported by the author.
 - H1: refuse `"` and control characters in chat. Refuted, nothing to do.
 
 ## Suggested order
@@ -90,17 +90,19 @@ The first pass found real bugs: F1 to F5 are confirmed, and F1 and F3 are more s
 2. F4: one test added to the `forcepowers` check in `Features/Userinfo.cpp`.
 3. F5: cut `color1` and `color2` at 15 characters.
 4. F6: argument replacement through `G_ARGV`, for `vote` and `callvote kick <name>`.
+5. F8: kick of a vote whose target left.
 
 ## Decisions of the author
 
 - F5: cut `color1` and `color2` at 15 characters, as OpenJK. Not the integer value of the first pass, which removes the TaystJK and EternalJK cosmetics.
 - F4: also refuse a power digit outside `0` to `3`, as OpenJK.
 - F7: not fixed.
+- F8: fixed in the proxy with the design in [fixes.md](fixes.md#f8-a-kick-vote-can-kick-the-next-client-of-the-slot-low).
 - F6: fixed in the proxy, without changing the game module: the proxy replaces the arguments that the game reads (`G_ARGV`) for `vote` and `callvote kick <name>`. Design in [fixes.md](fixes.md#f6-vote-parsing-and-name-lookup-of-the-game-low-not-security).
 
 ## Open questions for the author
 
-1. F8: approve the design in [fixes.md](fixes.md#proxy-fix-design-to-approve).
+None left.
 
 ## Not checked
 

@@ -281,6 +281,7 @@ Engine: Any.
     | `timelimit` | `0` to `35790` |
 
   - `kick <name>`: the proxy looks the name up in every slot, without colors and case, as OpenJK does, and the game gets the vote as `clientkick <slot>` (same vote, same text). The game only looked in some of the slots, so it could miss a player, or match the name of a player who had left. When nobody has this name, the proxy answers with the game's message.
+  - A kick vote (`kick` or `clientkick`) is canceled when its target leaves before the kick runs, with a message to every player. The game kicks a slot number when the vote passes, 3 seconds later: a client or bot that took the slot in the meantime was kicked instead. The proxy compares the address of the slot with the one it had when the vote started, so the target who comes back into the slot is still kicked.
 - `vote`: an answer that starts with `y`, `Y` or `1` counts as yes, any other as no, as ioq3 and OpenJK do. The game counted `vote Y` and `vote 1` as no.
 
 ### Userinfo

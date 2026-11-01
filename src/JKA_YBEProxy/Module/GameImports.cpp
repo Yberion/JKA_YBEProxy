@@ -4,6 +4,7 @@
 #include "JKA_YBEProxy/Module/Main.hpp"
 #include "JKA_YBEProxy/Features/Chat.hpp"
 #include "JKA_YBEProxy/Features/ClientCommands.hpp"
+#include "JKA_YBEProxy/Features/Votes.hpp"
 
 #include <cstdarg>
 
@@ -108,6 +109,26 @@ intptr_t QDECL Syscall(intptr_t command, ...)
 			}
 
 			args[1] = (intptr_t)text;
+
+			break;
+		}
+		//==================================================
+		case G_SEND_CONSOLE_COMMAND: // (int exec_when, const char* text)
+		//==================================================
+		{
+			// The kick of a vote whose target left (see Votes.cpp)
+			if (!features::votes::ConsoleCommand((int)args[0], (const char*)args[1]))
+			{
+				return 0;
+			}
+
+			break;
+		}
+		//==================================================
+		case G_SET_CONFIGSTRING: // (int num, const char* string)
+		//==================================================
+		{
+			features::votes::ConfigstringSet((int)args[0], (const char*)args[1]);
 
 			break;
 		}

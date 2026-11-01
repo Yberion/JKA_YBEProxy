@@ -35,7 +35,7 @@ The folders of `src/JKA_YBEProxy/` follow the namespaces of the code (`ybeproxy:
 | `Proxy.hpp`, `Proxy.cpp` | `ybeproxy` | The state shared by the whole proxy (`proxy`): the clients, the cvars, the original game module |
 | `Platform.hpp` | | The differences between Windows and Linux |
 | `Module/` | `ybeproxy::module` | The boundary with the engine and the original game: `Main.cpp` (`dllEntry`, `vmMain`, which only routes the commands), `GameExports` (the `vmMain` commands, `gameExport_t`), `GameImports` (the system calls of the original game, `gameImport_t`), `GameLibrary` (loads the original game module), `EngineApi` (`proxy.trap`, the engine functions for the proxy) |
-| `Features/` | `ybeproxy::features::<feature>` | What the proxy adds, on any engine: bans, chat, client and console commands, connection checks, cvars, userinfo |
+| `Features/` | `ybeproxy::features::<feature>` | What the proxy adds, on any engine: bans, chat, client and console commands, connection checks, cvars, userinfo, votes |
 | `Engine/` | `ybeproxy::engine` | The original engine only: addresses (`Addresses.hpp`), its variables and functions (`EngineState`), the hook list and byte patches (`Patches`), and the features that need the engine (`NetStatus`, `Rate`, `RateLimit`, `Challenge`, `Restart`) |
 | `Engine/Hooks/` | `ybeproxy::engine::hooks` | The replacements of engine functions, one file per engine file. `Proxy_X` replaces `X`, `Original_X` calls the original |
 | `HookUtils/` | `HookUtils` | The trampoline hooks, with no knowledge of the game |

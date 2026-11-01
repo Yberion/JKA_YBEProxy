@@ -454,7 +454,9 @@ The target of a kick vote, by leaving during the vote or right after it passed. 
 
 OpenJK and TaystJK keep the same vote. Their `G_ClearVote`, called when a client leaves, only removes the ballot of that client ([OpenJK `g_client.c:3859-3874`](https://github.com/JACoders/OpenJK/blob/260c59c2907187af555a676fe0cc798893bf7757/codemp/game/g_client.c#L3859-L3874), [TaystJK `g_client.c:4800`](https://github.com/taysta/TaystJK/blob/7d99efb4a77a174d1a7853f2a8024daf78fa47b7/codemp/game/g_client.c#L4800)), not a vote that targets it.
 
-### Proxy fix (design, to approve)
+### Proxy fix
+
+Decision of the author: fix it in the proxy, with the design below.
 
 The proxy remembers who held each slot when the vote started, and drops the vote's kick if the slot changed hands:
 
@@ -467,6 +469,16 @@ Limits:
 - The target who comes back into the same slot with the same address is still kicked, as wanted.
 - Another client with the same address (LAN) who takes the slot is kicked too.
 - Bots have no address: a bot that takes the slot of a kicked bot is kicked.
+
+### Applied
+
+As designed above, in a new feature, [Votes.cpp](../../src/JKA_YBEProxy/Features/Votes.cpp), called by two new cases of `Syscall` ([GameImports.cpp](../../src/JKA_YBEProxy/Module/GameImports.cpp)): `G_SET_CONFIGSTRING` and `G_SEND_CONSOLE_COMMAND`.
+
+- The vote's command is recognised by `EXEC_APPEND` and the prefix `clientkick `, compared without case: the game copies the vote type as the client typed it (`ClientKick 3` gives `ClientKick 3`), and the engine's commands ignore case.
+- The message to every player is `Vote kick canceled: the player left the server.`
+- The copy of the addresses is lost at each map change, as the proxy is reloaded, and so is the game's vote.
+
+Not compiled.
 
 ## H1. Refuse `"` and control characters in `say`, `say_team` and `tell` (Refuted)
 
